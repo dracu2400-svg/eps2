@@ -22,58 +22,43 @@
 
 /**
  * \brief System clocks functions implementation.
- * 
+ *
  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
- * 
- * \version 0.1.0
- * 
+ *
+ * \version 0.2.0 (Ported to STM32L4)
+ *
  * \date 2020/10/22
- * 
+ *
  * \addtogroup clocks
  * \{
  */
 
-#include <hal/pmm.h>
-#include <hal/ucs.h>
-#include <hal/sfr.h>
-
+#include "stm32l476xx.h"
 #include "clocks.h"
+
+/* External functions */
+extern void SystemClock_Config(void);
+extern void SystemCoreClockUpdate(void);
+extern uint32_t SystemCoreClock;
 
 int clocks_setup(clocks_config_t clks)
 {
-    /* Set VCore */
-    if (clks.mclk_hz >= 25000000UL)
-    {
-        PMM_setVCore(PMM_CORE_LEVEL_3);
-    }
-    else if (clks.mclk_hz >= 20000000UL)
-    {
-        PMM_setVCore(PMM_CORE_LEVEL_2);
-    }
-    else if (clks.mclk_hz >= 12000000UL)
-    {
-        PMM_setVCore(PMM_CORE_LEVEL_1);
-    }
-    else
-    {
-        PMM_setVCore(PMM_CORE_LEVEL_0);
-    }
+    /* Note: For STM32L4, the clock configuration is done in SystemClock_Config()
+     * which is called from main(). This function is kept for API compatibility
+     * but the actual configuration is hardcoded to 80 MHz from PLL.
+     *
+     * Clock tree for STM32L476RG:
+     * - MSI 4 MHz → PLL (×40 ÷ 2) → 80 MHz SYSCLK
+     * - HCLK  = SYSCLK = 80 MHz (AHB)
+     * - PCLK1 = HCLK/1 = 80 MHz (APB1)
+     * - PCLK2 = HCLK/1 = 80 MHz (APB2)
+     */
 
-    /* Set DCO FLL reference = REFO */
-    UCS_initClockSignal(UCS_FLLREF, UCS_REFOCLK_SELECT, UCS_CLOCK_DIVIDER_1);
+    /* Configure system clock to 80 MHz */
+    SystemClock_Config();
 
-    /* Set ACLK = REFO */
-    UCS_initClockSignal(UCS_ACLK, UCS_REFOCLK_SELECT, UCS_CLOCK_DIVIDER_1);
-
-    /* Set SMCLK = DCO/1 */
-    UCS_initClockSignal(UCS_SMCLK, UCS_DCOCLK_SELECT, UCS_CLOCK_DIVIDER_1);
-
-    /* Set Ratio and Desired MCLK Frequency and initialize DCO */
-    UCS_initFLLSettle(clks.aclk_hz, clks.mclk_hz/clks.aclk_hz);
-
-    /* Enable global oscillator fault flag */
-    SFR_clearInterrupt(SFR_OSCILLATOR_FAULT_INTERRUPT);
-    SFR_enableInterrupt(SFR_OSCILLATOR_FAULT_INTERRUPT);
+    /* Update SystemCoreClock variable */
+    SystemCoreClockUpdate();
 
     return 0;
 }
@@ -82,34 +67,39 @@ clocks_config_t clocks_read()
 {
     clocks_config_t clks;
 
-    clks.mclk_hz = UCS_getMCLK();
-    clks.smclk_hz = UCS_getSMCLK();
-    clks.aclk_hz = UCS_getACLK();
+    /* Update SystemCoreClock variable */
+    SystemCoreClockUpdate();
+
+    /* For STM32L4, map clocks to MSP430 equivalents:
+     * - MCLK (Master Clock) → SYSCLK (System Clock)
+     * - SMCLK (Sub-Master Clock) → PCLK1 (APB1 Clock)
+     * - ACLK (Auxiliary Clock) → LSI or LSE (Low Speed Clock)
+     */
+    clks.mclk_hz = SystemCoreClock;         /* 80 MHz */
+    clks.smclk_hz = SystemCoreClock;        /* 80 MHz (APB1 = AHB/1) */
+    clks.aclk_hz = 32000;                   /* 32 kHz (LSI approximation) */
 
     return clks;
 }
 
 /**
- * \brief CPU clock failure ISR.
+ * \brief NMI Handler (Not used for clock failures on STM32L4)
+ *
+ * On STM32L4, clock failures are handled by the RCC interrupt (RCC_IRQn).
+ * This NMI handler is kept for compatibility but does nothing.
  *
  * \return None.
  */
-#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-#pragma vector=UNMI_VECTOR
-__interrupt
-#elif defined(__GNUC__)
-__attribute__((interrupt(UNMI_VECTOR)))
-#endif
-void NMI_ISR()
+void NMI_Handler(void)
 {
-    static uint16_t status = 0;
-
-    do
+    /* For STM32L4, clock security system (CSS) can be enabled to detect
+     * HSE failures. If enabled, it generates an NMI interrupt.
+     * For now, we just trap here.
+     */
+    while(1)
     {
-        /* If it still can't clear the oscillator fault flags after the timeout, trap and wait here */
-        status = UCS_clearAllOscFlagsWithTimeout(1000);
+        /* Trap if NMI occurs */
     }
-    while(status != 0);
 }
 
 /** \} End of clocks group */

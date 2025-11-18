@@ -36,26 +36,42 @@
 #include <FreeRTOS.h>
 #include <task.h>
 
+#include "stm32l476xx.h"
 #include "devices/watchdog/watchdog.h"
 #include "system/clocks.h"
 #include "app/tasks/tasks.h"
 
-void main(void)
+/* External functions from system_stm32l4xx.c */
+extern void SystemInit(void);
+extern void SystemClock_Config(void);
+
+int main(void)
 {
+    /* STM32L4 system initialization (done in startup already, but called for completeness) */
+    SystemInit();
+
+    /* Configure system clock to 80 MHz */
+    SystemClock_Config();
+
     /* Watchdog device initialization */
     watchdog_init();
 
-    /* System clocks configuration */
-    clocks_setup((clocks_config_t){.mclk_hz = 32000000UL, .smclk_hz=32000000UL, .aclk_hz=32768});
+    /* System clocks setup (for compatibility with existing API) */
+    clocks_setup((clocks_config_t){.mclk_hz = 80000000UL, .smclk_hz=80000000UL, .aclk_hz=32000});
 
     /* Create all the tasks */
     create_tasks();
 
-    /* Start the scheduler */
+    /* Start the FreeRTOS scheduler */
     vTaskStartScheduler();
 
     /* Will only get here if there was insufficient memory to create the idle and/or timer task */
-    while(1);
+    while(1)
+    {
+        /* Trap here if scheduler fails */
+    }
+
+    return 0;  /* Never reached */
 }
 
 /** \} End of main group */

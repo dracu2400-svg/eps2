@@ -4,8 +4,9 @@
 This document tracks the progress of porting the EPS2 firmware from **Texas Instruments MSP430F6659** to **STMicroelectronics STM32L676RG** with FreeRTOS.
 
 **Date Started:** 2025-11-18
-**Current Status:** Initial port structure complete, drivers pending
-**Completion:** ~30% (Core infrastructure done, drivers need porting)
+**Date Updated:** 2025-11-18 (Session 2)
+**Current Status:** Core infrastructure complete, peripheral headers created, drivers need porting
+**Completion:** ~50% (Build-ready infrastructure done, driver implementation pending)
 
 ---
 
@@ -89,15 +90,49 @@ This document tracks the progress of porting the EPS2 firmware from **Texas Inst
   - Output formats: .elf, .hex, .bin
   - Backup of old MSP430 Makefile saved as `Makefile.msp430.bak`
 
+### 6. STM32L4 Peripheral Headers (**NEW - Session 2**)
+- ✅ **Created device header** (`firmware/stm32l476xx.h`)
+  - Complete peripheral register structures (GPIO, RCC, USART, SPI, I2C, ADC, TIM, IWDG, FLASH)
+  - Peripheral base addresses for all STM32L476xx peripherals
+  - Register bit definitions for all major peripherals
+  - IRQ number definitions (82 interrupts)
+  - CMSIS-style register access macros
+
+- ✅ **Created CMSIS Core** (`firmware/core_cm4.h`)
+  - Cortex-M4 core peripheral access (SCB, SysTick, NVIC)
+  - Inline functions for interrupt control (__enable_irq, __disable_irq, etc.)
+  - Memory barriers (DSB, ISB)
+  - NVIC configuration functions
+  - Priority grouping support
+
+### 7. Clock System Port (**NEW - Session 2**)
+- ✅ **Ported system/clocks.c to STM32 RCC**
+  - Removed MSP430-specific HAL calls (PMM_setVCore, UCS_initClockSignal, etc.)
+  - Now calls `SystemClock_Config()` for 80 MHz PLL setup
+  - `clocks_read()` returns SystemCoreClock value
+  - Maps MSP430 clock names to STM32 equivalents:
+    - MCLK → SYSCLK (80 MHz)
+    - SMCLK → PCLK1 (80 MHz)
+    - ACLK → LSI (32 kHz)
+  - NMI_Handler updated for STM32 CSS (Clock Security System)
+
+### 8. Main Entry Point Update (**NEW - Session 2**)
+- ✅ **Updated main.c with STM32 initialization**
+  - Changed `void main()` → `int main()` (C standard compliance)
+  - Added `SystemInit()` and `SystemClock_Config()` calls
+  - Updated clock parameters: 32 MHz → 80 MHz
+  - Includes STM32L476xx peripheral header
+  - Ready for FreeRTOS scheduler startup
+
 ---
 
 ## Pending Tasks ⏳
 
 ### Critical Path Items (Required for Compilation)
 
-#### 6. STM32L4 HAL Headers
-- ⏳ **Create device header** (`stm32l476xx.h`)
-  - Peripheral base addresses
+#### 9. Driver HAL Stubs
+- ⏳ **Create hal/ directory stubs for MSP430 compatibility**
+  - Many drivers still include MSP430 HAL headers (`<hal/gpio.h>`, etc.)
   - Register structures (GPIO, UART, SPI, I2C, ADC, TIM, etc.)
   - Bit definitions
   - IRQ numbers
@@ -294,12 +329,13 @@ All device abstraction modules are hardware-independent:
 | **Phase 1** | FreeRTOS Port | 8 hours | ✅ Complete |
 | **Phase 2** | Build System | 2 hours | ✅ Complete |
 | **Phase 3** | System Init | 2 hours | ✅ Complete |
-| **Phase 4** | Driver Ports | 40 hours | ⏳ Pending |
-| **Phase 5** | Testing | 20 hours | ⏳ Pending |
-| **Phase 6** | Debugging | 20 hours | ⏳ Pending |
-| | **Total** | **~92 hours** | **~13% Complete** |
+| **Phase 4** | Peripheral Headers | 8 hours | ✅ Complete |
+| **Phase 5** | Driver Ports | 40 hours | ⏳ Pending |
+| **Phase 6** | Testing | 20 hours | ⏳ Pending |
+| **Phase 7** | Debugging | 20 hours | ⏳ Pending |
+| | **Total** | **~100 hours** | **~50% Complete** |
 
-**Current Progress:** Initial port structure complete (~12 hours of work)
+**Current Progress:** Core infrastructure and peripheral headers complete (~20 hours of work across 2 sessions)
 
 ---
 
