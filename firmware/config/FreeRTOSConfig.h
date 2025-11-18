@@ -52,8 +52,7 @@
 #define configUSE_PREEMPTION			1
 #define configUSE_IDLE_HOOK				1
 #define configUSE_TICK_HOOK				0
-#define configCPU_CLOCK_HZ				( 32000000UL )
-#define configLFXT_CLOCK_HZ       		( 32768L )
+#define configCPU_CLOCK_HZ				( 80000000UL )  /* STM32L476RG running at 80MHz */
 #define configTICK_RATE_HZ				( ( TickType_t ) 1000 )
 #define configMAX_PRIORITIES			( 5 )
 #define configTOTAL_HEAP_SIZE			( ( size_t ) ( 40 * 1024 ) )
@@ -71,11 +70,8 @@
 #define configUSE_COUNTING_SEMAPHORES	1
 #define configUSE_TASK_NOTIFICATIONS 	1
 
-#ifdef __LARGE_DATA_MODEL__
-	#define configMINIMAL_STACK_SIZE		( ( unsigned short ) 100 )
-#else
-	#define configMINIMAL_STACK_SIZE		( ( unsigned short ) 150 )
-#endif
+/* ARM Cortex-M4 specific definitions */
+#define configMINIMAL_STACK_SIZE		( ( unsigned short ) 128 )
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES 		0
@@ -97,13 +93,36 @@ to exclude the API function. */
 #define INCLUDE_vTaskDelayUntil			1
 #define INCLUDE_vTaskDelay				1
 
-/* The MSP430X port uses a callback function to configure its tick interrupt.
-This allows the application to choose the tick interrupt source.
-configTICK_VECTOR must also be set in FreeRTOSConfig.h to the correct interrupt
-vector for the chosen tick interrupt source.  This implementation of
-vApplicationSetupTimerInterrupt() generates the tick from timer A0, so in this
-case configTICK_VECTOR is set to TIMER0_A0_VECTOR. */
-#define configTICK_VECTOR				TIMER0_A0_VECTOR
+/* Cortex-M specific definitions. */
+#ifdef __NVIC_PRIO_BITS
+	/* __NVIC_PRIO_BITS will be specified when CMSIS is being used. */
+	#define configPRIO_BITS       		__NVIC_PRIO_BITS
+#else
+	#define configPRIO_BITS       		4        /* 15 priority levels */
+#endif
+
+/* The lowest interrupt priority that can be used in a call to a "set priority"
+function. */
+#define configLIBRARY_LOWEST_INTERRUPT_PRIORITY			0x0F
+
+/* The highest interrupt priority that can be used by any interrupt service
+routine that makes calls to interrupt safe FreeRTOS API functions.  DO NOT CALL
+INTERRUPT SAFE FREERTOS API FUNCTIONS FROM ANY INTERRUPT THAT HAS A HIGHER
+PRIORITY THAN THIS! (higher priorities are lower numeric values. */
+#define configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY	0x05
+
+/* Interrupt priorities used by the kernel port layer itself.  These are generic
+to all Cortex-M ports, and do not rely on any particular library functions. */
+#define configKERNEL_INTERRUPT_PRIORITY 		( configLIBRARY_LOWEST_INTERRUPT_PRIORITY << (8 - configPRIO_BITS) )
+/* !!!! configMAX_SYSCALL_INTERRUPT_PRIORITY must not be set to zero !!!!
+See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
+#define configMAX_SYSCALL_INTERRUPT_PRIORITY 	( configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY << (8 - configPRIO_BITS) )
+
+/* Definitions that map the FreeRTOS port interrupt handlers to their CMSIS
+standard names - or at least those used in the unmodified vector table. */
+#define vPortSVCHandler SVC_Handler
+#define xPortPendSVHandler PendSV_Handler
+#define xPortSysTickHandler SysTick_Handler
 
 #define configASSERT( x ) if( ( x ) == 0 ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
 
