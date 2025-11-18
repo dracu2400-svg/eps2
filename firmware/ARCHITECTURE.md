@@ -4,14 +4,17 @@
 1. [Overview](#overview)
 2. [Hardware Platform](#hardware-platform)
 3. [Software Architecture](#software-architecture)
-4. [FreeRTOS Integration](#freertos-integration)
-5. [Driver Layer](#driver-layer)
-6. [Device Layer](#device-layer)
-7. [Application Layer](#application-layer)
-8. [Communication Protocols](#communication-protocols)
-9. [Memory Architecture](#memory-architecture)
-10. [Build System](#build-system)
-11. [Porting Notes](#porting-notes)
+4. [Data Flow Architecture](#data-flow-architecture)
+5. [Datapath Details](#datapath-details)
+6. [FreeRTOS Integration](#freertos-integration)
+7. [Driver Layer](#driver-layer)
+8. [Device Layer](#device-layer)
+9. [Application Layer](#application-layer)
+10. [Communication Protocols](#communication-protocols)
+11. [Interrupt Architecture](#interrupt-architecture)
+12. [Memory Architecture](#memory-architecture)
+13. [Build System](#build-system)
+14. [Porting Notes](#porting-notes)
 
 ---
 
@@ -149,6 +152,692 @@ firmware/
 ├── startup_stm32l676xx.s      # ARM startup code (vector table, reset handler)
 ├── STM32L676RGTx_FLASH.ld     # Linker script (1MB Flash, 128KB RAM)
 └── Makefile                    # Build system (ARM GCC toolchain)
+```
+
+---
+
+## Data Flow Architecture
+
+### Overview
+
+The EPS2 firmware processes data through multiple stages, from raw sensor readings to telemetry packets. Understanding the datapath is crucial for debugging, optimization, and system validation.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    PHYSICAL SENSORS & ACTUATORS                  │
+│  Solar Panels │ Batteries │ Temp Sensors │ Heaters │ DC-DC Conv│
+└────────┬────────────────────────────────────────────────────┬───┘
+         │                                                     │
+         ▼ Analog Signals                                     ▲ Control Signals
+┌─────────────────────────────────────────────────────────────────┐
+│                       HARDWARE PERIPHERALS                       │
+│      ADC        │    I2C/SPI    │    GPIO    │      TIM/PWM     │
+└────────┬────────────────────────────────────────────────────┬───┘
+         │ Interrupts (DMA, RXNE, ADC_EOC)                    │
+         ▼                                                     ▲
+┌─────────────────────────────────────────────────────────────────┐
+│                         DRIVER LAYER                             │
+│  ISR Handlers │ Register Access │ DMA Management │ Buffering   │
+└────────┬────────────────────────────────────────────────────┬───┘
+         │ Raw Data (ADC counts, I2C bytes)                   │
+         ▼                                                     ▲
+┌─────────────────────────────────────────────────────────────────┐
+│                         DEVICE LAYER                             │
+│  Calibration │ Filtering │ Unit Conversion │ State Machines    │
+└────────┬────────────────────────────────────────────────────┬───┘
+         │ Processed Data (Volts, Amps, °C)                   │
+         ▼                                                     ▲
+┌─────────────────────────────────────────────────────────────────┐
+│                      APPLICATION LAYER                           │
+│  Power Mgmt │ MPPT Algorithm │ Heater Control │ Telemetry      │
+└────────┬────────────────────────────────────────────────────┬───┘
+         │ Commands & Telemetry Packets                       │
+         ▼                                                     ▲
+┌─────────────────────────────────────────────────────────────────┐
+│                    COMMUNICATION LAYER (CSP)                     │
+│           UART/I2C Transport │ Packet Routing                   │
+└────────┬────────────────────────────────────────────────────────┘
+         │
+         ▼ Serial Data
+┌─────────────────────────────────────────────────────────────────┐
+│                     OBDH / GROUND STATION                        │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Data Flow Patterns
+
+#### 1. Sensor Acquisition Pipeline (Bottom-Up)
+
+**Example: Battery Voltage Measurement**
+
+```
+Physical Domain:
+Battery (7.4V) → Voltage Divider (1:3) → 2.47V analog signal
+                                                 ↓
+Hardware Layer (ADC):
+STM32 ADC1_IN1 (PC0) samples @ 1 kHz
+  - 12-bit resolution: 0-4095 counts
+  - VREF = 3.3V
+  - Raw ADC value: 2.47V → ~3040 counts
+  - DMA transfers to circular buffer (32 samples)
+  - ADC_EOC interrupt triggers every 32ms
+                                                 ↓
+Driver Layer (adc.c):
+void ADC_IRQHandler(void)
+{
+    if (ADC1->ISR & ADC_ISR_EOC)
+    {
+        adc_buffer[adc_index++] = ADC1->DR;  // Read data register
+        if (adc_index >= ADC_BUFFER_SIZE)
+        {
+            adc_index = 0;
+            xSemaphoreGiveFromISR(adc_complete_sem, NULL);  // Signal task
+        }
+    }
+}
+                                                 ↓
+Device Layer (voltage_sensor.c):
+uint16_t voltage_sensor_read_raw(void)
+{
+    // Average 32 ADC samples to reduce noise
+    uint32_t sum = 0;
+    for (int i = 0; i < 32; i++)
+        sum += adc_buffer[i];
+    return sum / 32;  // ~3040 counts average
+}
+
+float voltage_sensor_read(void)
+{
+    uint16_t raw = voltage_sensor_read_raw();
+
+    // Convert to voltage: ADC_counts * (VREF / 4095)
+    float adc_voltage = raw * (3.3f / 4095.0f);  // 2.47V
+
+    // Apply voltage divider correction (3:1)
+    float actual_voltage = adc_voltage * 3.0f;   // 7.41V
+
+    // Apply calibration offset/gain
+    float calibrated = (actual_voltage * cal_gain) + cal_offset;
+
+    return calibrated;  // 7.4V ± 0.01V
+}
+                                                 ↓
+Application Layer (bat_manager.c):
+void vBatteryMonitorTask(void *pvParameters)
+{
+    while(1)
+    {
+        // Read calibrated voltage
+        float v_bat = voltage_sensor_read();  // 7.4V
+
+        // Store in telemetry structure
+        telemetry.battery.voltage = v_bat;
+
+        // Check thresholds
+        if (v_bat < VBAT_UNDERVOLTAGE_THRESHOLD)
+        {
+            battery_enter_low_power_mode();
+        }
+        else if (v_bat > VBAT_OVERVOLTAGE_THRESHOLD)
+        {
+            battery_disconnect_charger();
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(100));  // 10 Hz update rate
+    }
+}
+                                                 ↓
+Telemetry Output:
+CSP packet: [NODE_ID][PORT][PAYLOAD: v_bat=7.4V, i_bat=0.5A, ...]
+```
+
+#### 2. Control Output Pipeline (Top-Down)
+
+**Example: Heater PWM Control**
+
+```
+Command Input:
+Ground station sends: CSP packet → "SET_HEATER 50%"
+                                                 ↓
+Application Layer (heater.c):
+void heater_set_duty_cycle(uint8_t duty_percent)
+{
+    // Validate input
+    if (duty_percent > 100)
+        duty_percent = 100;
+
+    // Store target duty cycle
+    heater_config.target_duty = duty_percent;
+
+    // Convert to timer compare value
+    uint16_t ccr_value = (TIM2->ARR * duty_percent) / 100;
+
+    // Update PWM immediately
+    pwm_set_duty_cycle(PWM_CH_HEATER, duty_percent);
+}
+                                                 ↓
+Device Layer (heater.c):
+void heater_update(void)
+{
+    // Temperature-based feedback control
+    float temp = temp_sensor_read();
+
+    if (temp < TARGET_TEMP - HYSTERESIS)
+    {
+        heater_duty_cycle = 100;  // Full power
+    }
+    else if (temp > TARGET_TEMP + HYSTERESIS)
+    {
+        heater_duty_cycle = 0;    // Off
+    }
+    else
+    {
+        // PID control within hysteresis band
+        heater_duty_cycle = pid_calculate(temp, TARGET_TEMP);
+    }
+
+    pwm_set_duty_cycle(PWM_CH_HEATER, heater_duty_cycle);
+}
+                                                 ↓
+Driver Layer (pwm.c):
+int pwm_set_duty_cycle(pwm_channel_t ch, uint8_t duty)
+{
+    // Calculate compare value
+    // TIM2 @ 1 kHz: ARR = 80000 (80MHz / 1kHz)
+    uint32_t ccr = (TIM2->ARR * duty) / 100;
+
+    // Update channel compare register
+    switch(ch)
+    {
+        case PWM_CH_HEATER:  // TIM2_CH1
+            TIM2->CCR1 = ccr;  // 50% → 40000
+            break;
+    }
+
+    return 0;
+}
+                                                 ↓
+Hardware Layer:
+TIM2->CCR1 = 40000
+  - Counter: 0 → 40000 → 80000 → repeat
+  - Output: HIGH (0-40000), LOW (40000-80000)
+  - Frequency: 1 kHz
+  - Duty cycle: 50%
+                                                 ↓
+Physical Output:
+GPIO PA15 (TIM2_CH1) → MOSFET gate → Heater element (50% average power)
+```
+
+---
+
+## Datapath Details
+
+### ADC Data Pipeline
+
+#### Configuration
+```c
+// ADC initialization (adc.c)
+void adc_init(void)
+{
+    // Enable ADC clock
+    RCC->AHB2ENR |= RCC_AHB2ENR_ADCEN;
+
+    // Configure ADC
+    ADC1->CFGR = ADC_CFGR_CONT     |  // Continuous conversion
+                 ADC_CFGR_DMAEN     |  // DMA enable
+                 ADC_CFGR_DMACFG;      // Circular DMA mode
+
+    // Set sampling time: 640.5 cycles @ 80 MHz = 8 µs
+    ADC1->SMPR1 = (7 << ADC_SMPR1_SMP1_Pos);  // Channel 1
+
+    // Regular sequence: CH1, CH2, CH3, CH4, CH15, CH16
+    ADC1->SQR1 = (6 << ADC_SQR1_L_Pos) |      // 6 channels
+                 (1 << ADC_SQR1_SQ1_Pos) |    // 1st: CH1
+                 (2 << ADC_SQR1_SQ2_Pos) |    // 2nd: CH2
+                 (3 << ADC_SQR1_SQ3_Pos) |    // 3rd: CH3
+                 (4 << ADC_SQR1_SQ4_Pos);     // 4th: CH4
+    ADC1->SQR2 = (15 << ADC_SQR2_SQ5_Pos) |   // 5th: CH15
+                 (16 << ADC_SQR2_SQ6_Pos);    // 6th: CH16
+
+    // Configure DMA
+    DMA1_Channel1->CCR = DMA_CCR_MINC   |  // Memory increment
+                         DMA_CCR_CIRC   |  // Circular mode
+                         DMA_CCR_PL_HIGH;  // High priority
+    DMA1_Channel1->CPAR = (uint32_t)&ADC1->DR;
+    DMA1_Channel1->CMAR = (uint32_t)adc_dma_buffer;
+    DMA1_Channel1->CNDTR = ADC_BUFFER_SIZE * 6;  // 6 channels
+
+    // Enable DMA
+    DMA1_Channel1->CCR |= DMA_CCR_EN;
+
+    // Enable ADC
+    ADC1->CR |= ADC_CR_ADEN;
+    while (!(ADC1->ISR & ADC_ISR_ADRDY));
+
+    // Start conversion
+    ADC1->CR |= ADC_CR_ADSTART;
+}
+```
+
+#### Data Buffer Structure
+```c
+// ADC DMA buffer (circular)
+#define ADC_CHANNELS        6
+#define ADC_SAMPLES_PER_CH  32
+
+// Memory layout: [CH1_0, CH2_0, ..., CH6_0, CH1_1, CH2_1, ..., CH6_31]
+volatile uint16_t adc_dma_buffer[ADC_CHANNELS * ADC_SAMPLES_PER_CH];
+
+// Organized buffer access
+typedef struct {
+    uint16_t ch1_samples[ADC_SAMPLES_PER_CH];  // Battery voltage
+    uint16_t ch2_samples[ADC_SAMPLES_PER_CH];  // Solar voltage
+    uint16_t ch3_samples[ADC_SAMPLES_PER_CH];  // Battery current
+    uint16_t ch4_samples[ADC_SAMPLES_PER_CH];  // Solar current
+    uint16_t ch15_samples[ADC_SAMPLES_PER_CH]; // Temperature 1
+    uint16_t ch16_samples[ADC_SAMPLES_PER_CH]; // Temperature 2
+} adc_buffer_t;
+
+adc_buffer_t adc_organized_buffer;
+```
+
+#### DMA Transfer Complete Handler
+```c
+void DMA1_Channel1_IRQHandler(void)
+{
+    if (DMA1->ISR & DMA_ISR_TCIF1)  // Transfer complete
+    {
+        // Clear interrupt flag
+        DMA1->IFCR = DMA_IFCR_CTCIF1;
+
+        // Reorganize interleaved data
+        for (int i = 0; i < ADC_SAMPLES_PER_CH; i++)
+        {
+            adc_organized_buffer.ch1_samples[i]  = adc_dma_buffer[i*6 + 0];
+            adc_organized_buffer.ch2_samples[i]  = adc_dma_buffer[i*6 + 1];
+            adc_organized_buffer.ch3_samples[i]  = adc_dma_buffer[i*6 + 2];
+            adc_organized_buffer.ch4_samples[i]  = adc_dma_buffer[i*6 + 3];
+            adc_organized_buffer.ch15_samples[i] = adc_dma_buffer[i*6 + 4];
+            adc_organized_buffer.ch16_samples[i] = adc_dma_buffer[i*6 + 5];
+        }
+
+        // Signal processing task
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        xSemaphoreGiveFromISR(adc_ready_sem, &xHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
+}
+```
+
+#### Signal Processing
+```c
+// Moving average filter
+uint16_t adc_moving_average(uint16_t *samples, uint16_t count)
+{
+    uint32_t sum = 0;
+    for (uint16_t i = 0; i < count; i++)
+    {
+        sum += samples[i];
+    }
+    return sum / count;
+}
+
+// Median filter (for noise rejection)
+uint16_t adc_median_filter(uint16_t *samples, uint16_t count)
+{
+    // Copy to temporary array
+    uint16_t temp[ADC_SAMPLES_PER_CH];
+    memcpy(temp, samples, count * sizeof(uint16_t));
+
+    // Simple bubble sort (count is small)
+    for (int i = 0; i < count - 1; i++)
+    {
+        for (int j = 0; j < count - i - 1; j++)
+        {
+            if (temp[j] > temp[j+1])
+            {
+                uint16_t swap = temp[j];
+                temp[j] = temp[j+1];
+                temp[j+1] = swap;
+            }
+        }
+    }
+
+    // Return median
+    return temp[count / 2];
+}
+
+// FIR low-pass filter (cutoff @ 10 Hz)
+float adc_fir_filter(uint16_t *samples, uint16_t count)
+{
+    // Simple 8-tap FIR filter coefficients (Hamming window)
+    const float coeffs[8] = {0.08, 0.13, 0.16, 0.18, 0.18, 0.16, 0.13, 0.08};
+
+    float sum = 0.0f;
+    for (int i = 0; i < 8; i++)
+    {
+        sum += samples[count - 8 + i] * coeffs[i];
+    }
+
+    return sum;
+}
+```
+
+### UART Data Pipeline
+
+#### Transmit Path (Polled Mode)
+```c
+int uart_write(uart_port_t port, uint8_t *data, uint16_t len)
+{
+    USART_TypeDef *usart = uart_get_instance(port);
+
+    for (uint16_t i = 0; i < len; i++)
+    {
+        // Wait for TX empty
+        while (!(usart->ISR & USART_ISR_TXE));
+
+        // Write data
+        usart->TDR = data[i];
+    }
+
+    // Wait for transmission complete
+    while (!(usart->ISR & USART_ISR_TC));
+
+    return len;
+}
+```
+
+#### Transmit Path (Interrupt Mode)
+```c
+// Circular buffer for TX
+typedef struct {
+    uint8_t buffer[UART_TX_BUFFER_SIZE];
+    volatile uint16_t head;
+    volatile uint16_t tail;
+    volatile uint16_t count;
+    SemaphoreHandle_t mutex;
+} uart_tx_buffer_t;
+
+uart_tx_buffer_t uart_tx_buffers[3];  // USART1, USART2, USART3
+
+int uart_write_async(uart_port_t port, uint8_t *data, uint16_t len)
+{
+    uart_tx_buffer_t *buf = &uart_tx_buffers[port];
+    USART_TypeDef *usart = uart_get_instance(port);
+
+    // Take mutex
+    xSemaphoreTake(buf->mutex, portMAX_DELAY);
+
+    // Copy data to circular buffer
+    for (uint16_t i = 0; i < len; i++)
+    {
+        buf->buffer[buf->head] = data[i];
+        buf->head = (buf->head + 1) % UART_TX_BUFFER_SIZE;
+        buf->count++;
+    }
+
+    // Enable TXE interrupt
+    usart->CR1 |= USART_CR1_TXEIE;
+
+    // Release mutex
+    xSemaphoreGive(buf->mutex);
+
+    return len;
+}
+
+void USART2_IRQHandler(void)
+{
+    USART_TypeDef *usart = USART2;
+    uart_tx_buffer_t *buf = &uart_tx_buffers[UART_PORT_2];
+
+    if (usart->ISR & USART_ISR_TXE)  // TX empty
+    {
+        if (buf->count > 0)
+        {
+            // Send next byte
+            usart->TDR = buf->buffer[buf->tail];
+            buf->tail = (buf->tail + 1) % UART_TX_BUFFER_SIZE;
+            buf->count--;
+        }
+        else
+        {
+            // Buffer empty, disable TXE interrupt
+            usart->CR1 &= ~USART_CR1_TXEIE;
+        }
+    }
+}
+```
+
+#### Receive Path (DMA + Idle Line Detection)
+```c
+#define UART_RX_DMA_BUFFER_SIZE  256
+
+uint8_t uart_rx_dma_buffer[UART_RX_DMA_BUFFER_SIZE];
+QueueHandle_t uart_rx_queue;
+
+void uart_init_rx_dma(void)
+{
+    // Configure DMA for USART2 RX
+    DMA1_Channel6->CCR = DMA_CCR_MINC   |  // Memory increment
+                         DMA_CCR_CIRC   |  // Circular mode
+                         DMA_CCR_PL_HIGH;  // High priority
+    DMA1_Channel6->CPAR = (uint32_t)&USART2->RDR;
+    DMA1_Channel6->CMAR = (uint32_t)uart_rx_dma_buffer;
+    DMA1_Channel6->CNDTR = UART_RX_DMA_BUFFER_SIZE;
+
+    // Enable DMA
+    DMA1_Channel6->CCR |= DMA_CCR_EN;
+
+    // Enable USART DMA RX and idle line interrupt
+    USART2->CR3 |= USART_CR3_DMAR;
+    USART2->CR1 |= USART_CR1_IDLEIE;
+
+    // Create queue for received data
+    uart_rx_queue = xQueueCreate(16, sizeof(uart_rx_packet_t));
+}
+
+void USART2_IRQHandler(void)
+{
+    if (USART2->ISR & USART_ISR_IDLE)  // Idle line detected
+    {
+        // Clear flag
+        USART2->ICR = USART_ICR_IDLECF;
+
+        // Calculate received bytes
+        uint16_t dma_remaining = DMA1_Channel6->CNDTR;
+        uint16_t received = UART_RX_DMA_BUFFER_SIZE - dma_remaining;
+
+        if (received > 0)
+        {
+            // Package data
+            uart_rx_packet_t packet;
+            packet.length = received;
+            memcpy(packet.data, uart_rx_dma_buffer, received);
+
+            // Send to queue (from ISR)
+            BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+            xQueueSendFromISR(uart_rx_queue, &packet, &xHigherPriorityTaskWoken);
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+
+            // Reset DMA
+            DMA1_Channel6->CCR &= ~DMA_CCR_EN;
+            DMA1_Channel6->CNDTR = UART_RX_DMA_BUFFER_SIZE;
+            DMA1_Channel6->CCR |= DMA_CCR_EN;
+        }
+    }
+}
+```
+
+### I2C Data Pipeline
+
+#### Master Write Transaction
+```c
+int i2c_write(uint8_t slave_addr, uint8_t *data, uint16_t len)
+{
+    I2C_TypeDef *i2c = I2C1;
+
+    // Wait for bus ready
+    while (i2c->ISR & I2C_ISR_BUSY);
+
+    // Configure transfer
+    i2c->CR2 = (slave_addr << 1)           |  // Slave address
+               (len << I2C_CR2_NBYTES_Pos) |  // Number of bytes
+               I2C_CR2_AUTOEND             |  // Auto-generate STOP
+               I2C_CR2_START;                 // Generate START
+
+    // Send data
+    for (uint16_t i = 0; i < len; i++)
+    {
+        // Wait for TXIS (TX interrupt status)
+        uint32_t timeout = 1000000;
+        while (!(i2c->ISR & I2C_ISR_TXIS) && --timeout);
+        if (timeout == 0)
+            return -1;  // Timeout
+
+        // Write data
+        i2c->TXDR = data[i];
+    }
+
+    // Wait for STOP flag
+    timeout = 1000000;
+    while (!(i2c->ISR & I2C_ISR_STOPF) && --timeout);
+    if (timeout == 0)
+        return -1;
+
+    // Clear STOP flag
+    i2c->ICR = I2C_ICR_STOPCF;
+
+    return len;
+}
+```
+
+#### Master Read Transaction
+```c
+int i2c_read(uint8_t slave_addr, uint8_t *data, uint16_t len)
+{
+    I2C_TypeDef *i2c = I2C1;
+
+    // Wait for bus ready
+    while (i2c->ISR & I2C_ISR_BUSY);
+
+    // Configure transfer
+    i2c->CR2 = (slave_addr << 1)           |  // Slave address
+               (len << I2C_CR2_NBYTES_Pos) |  // Number of bytes
+               I2C_CR2_RD_WRN              |  // Read direction
+               I2C_CR2_AUTOEND             |  // Auto-generate STOP
+               I2C_CR2_START;                 // Generate START
+
+    // Receive data
+    for (uint16_t i = 0; i < len; i++)
+    {
+        // Wait for RXNE (RX not empty)
+        uint32_t timeout = 1000000;
+        while (!(i2c->ISR & I2C_ISR_RXNE) && --timeout);
+        if (timeout == 0)
+            return -1;
+
+        // Read data
+        data[i] = i2c->RXDR;
+    }
+
+    // Wait for STOP flag
+    timeout = 1000000;
+    while (!(i2c->ISR & I2C_ISR_STOPF) && --timeout);
+    if (timeout == 0)
+        return -1;
+
+    // Clear STOP flag
+    i2c->ICR = I2C_ICR_STOPCF;
+
+    return len;
+}
+```
+
+### SPI Data Pipeline
+
+#### Full-Duplex Transfer
+```c
+int spi_transfer(spi_port_t port, uint8_t *tx_data, uint8_t *rx_data, uint16_t len)
+{
+    SPI_TypeDef *spi = spi_get_instance(port);
+
+    for (uint16_t i = 0; i < len; i++)
+    {
+        // Wait for TXE (TX empty)
+        while (!(spi->SR & SPI_SR_TXE));
+
+        // Write data
+        *(volatile uint8_t *)&spi->DR = tx_data[i];
+
+        // Wait for RXNE (RX not empty)
+        while (!(spi->SR & SPI_SR_RXNE));
+
+        // Read data
+        rx_data[i] = *(volatile uint8_t *)&spi->DR;
+    }
+
+    // Wait for BSY clear
+    while (spi->SR & SPI_SR_BSY);
+
+    return len;
+}
+```
+
+#### DMA-based Transfer (High Speed)
+```c
+int spi_transfer_dma(spi_port_t port, uint8_t *tx_data, uint8_t *rx_data, uint16_t len)
+{
+    SPI_TypeDef *spi = SPI1;
+
+    // Configure TX DMA (DMA1_Channel3)
+    DMA1_Channel3->CCR = 0;  // Disable
+    DMA1_Channel3->CPAR = (uint32_t)&spi->DR;
+    DMA1_Channel3->CMAR = (uint32_t)tx_data;
+    DMA1_Channel3->CNDTR = len;
+    DMA1_Channel3->CCR = DMA_CCR_MINC   |  // Memory increment
+                         DMA_CCR_DIR    |  // Memory to peripheral
+                         DMA_CCR_PL_HIGH;  // High priority
+
+    // Configure RX DMA (DMA1_Channel2)
+    DMA1_Channel2->CCR = 0;  // Disable
+    DMA1_Channel2->CPAR = (uint32_t)&spi->DR;
+    DMA1_Channel2->CMAR = (uint32_t)rx_data;
+    DMA1_Channel2->CNDTR = len;
+    DMA1_Channel2->CCR = DMA_CCR_MINC   |  // Memory increment
+                         DMA_CCR_TCIE   |  // Transfer complete interrupt
+                         DMA_CCR_PL_HIGH;  // High priority
+
+    // Enable SPI DMA
+    spi->CR2 |= SPI_CR2_TXDMAEN | SPI_CR2_RXDMAEN;
+
+    // Start DMA
+    DMA1_Channel2->CCR |= DMA_CCR_EN;  // RX first
+    DMA1_Channel3->CCR |= DMA_CCR_EN;  // Then TX
+
+    // Wait for completion (using semaphore)
+    xSemaphoreTake(spi_dma_complete_sem, portMAX_DELAY);
+
+    return len;
+}
+
+void DMA1_Channel2_IRQHandler(void)  // SPI1 RX DMA
+{
+    if (DMA1->ISR & DMA_ISR_TCIF2)  // Transfer complete
+    {
+        // Clear flag
+        DMA1->IFCR = DMA_IFCR_CTCIF2;
+
+        // Disable DMA
+        SPI1->CR2 &= ~(SPI_CR2_TXDMAEN | SPI_CR2_RXDMAEN);
+        DMA1_Channel2->CCR &= ~DMA_CCR_EN;
+        DMA1_Channel3->CCR &= ~DMA_CCR_EN;
+
+        // Signal completion
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        xSemaphoreGiveFromISR(spi_dma_complete_sem, &xHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
+}
 ```
 
 ---
@@ -555,6 +1244,433 @@ void vPowerMgmtTask(void *pvParameters)
 - CubeSat Space Protocol handling
 - Packet routing
 - Interface with OBDH (On-Board Data Handling)
+
+---
+
+## Interrupt Architecture
+
+### Interrupt Vector Table
+
+**STM32L476RG Interrupt Assignments:**
+
+| Vector | IRQ# | Handler | Priority | Purpose |
+|--------|------|---------|----------|---------|
+| 0-15 | - | System Exceptions | 0 (highest) | Reset, NMI, HardFault, MemManage, etc. |
+| 16 | 0 | WWDG_IRQHandler | 5 | Window Watchdog |
+| 19 | 3 | RTC_WKUP_IRQHandler | 10 | RTC Wakeup |
+| 24-26 | 8-10 | EXTI0-2_IRQHandler | 6 | External interrupts 0-2 |
+| 38 | 22 | DMA1_Channel1_IRQHandler | 4 | ADC DMA transfer complete |
+| 39 | 23 | DMA1_Channel2_IRQHandler | 5 | SPI1 RX DMA |
+| 40 | 24 | DMA1_Channel3_IRQHandler | 5 | SPI1 TX DMA |
+| 43 | 27 | DMA1_Channel6_IRQHandler | 7 | USART2 RX DMA |
+| 51 | 35 | TIM2_IRQHandler | 8 | Timer 2 (PWM update) |
+| 54 | 38 | I2C1_EV_IRQHandler | 7 | I2C1 Event |
+| 55 | 39 | I2C1_ER_IRQHandler | 7 | I2C1 Error |
+| 58 | 42 | SPI1_IRQHandler | 6 | SPI1 global |
+| 59 | 43 | SPI2_IRQHandler | 6 | SPI2 global |
+| 60 | 44 | USART1_IRQHandler | 7 | USART1 global |
+| 61 | 45 | USART2_IRQHandler | 7 | USART2 global (debug console) |
+| 62 | 46 | USART3_IRQHandler | 7 | USART3 global |
+| 71 | 55 | SysTick_Handler | 15 (lowest) | FreeRTOS tick (1 ms) |
+| - | -14 | PendSV_Handler | 15 (lowest) | FreeRTOS context switch |
+| - | -5 | SVC_Handler | 0 | FreeRTOS supervisor call |
+
+### Interrupt Priority Strategy
+
+**Priority Grouping:** 4 bits for preemption priority, 0 bits for sub-priority
+```c
+NVIC_SetPriorityGrouping(0);  // 16 preemption levels, no sub-priority
+```
+
+**Priority Levels (0 = highest, 15 = lowest):**
+```
+Level 0-3:  Critical System Events
+  - HardFault, MemManage, BusFault, UsageFault
+  - NMI, SVCall (FreeRTOS system calls)
+
+Level 4-5:  High-Priority Data Acquisition
+  - ADC DMA (Level 4): Ensures continuous sensor sampling
+  - SPI DMA (Level 5): Flash/sensor data transfers
+  - WWDG (Level 5): Window watchdog timeout
+
+Level 6-7:  Medium-Priority Communication
+  - UART interrupts (Level 7): Command/telemetry
+  - I2C interrupts (Level 7): Sensor communication
+  - SPI interrupts (Level 6): Direct register access
+
+Level 8-10: Low-Priority Timers & Events
+  - TIM2 (Level 8): PWM update events
+  - RTC (Level 10): Real-time clock wakeup
+
+Level 11-14: Background Tasks
+  - Reserved for future use
+
+Level 15: RTOS Kernel
+  - SysTick: FreeRTOS tick generation (1 kHz)
+  - PendSV: FreeRTOS context switching
+```
+
+### Interrupt Service Routine (ISR) Design
+
+**Best Practices:**
+```c
+// ISR Template (with FreeRTOS)
+void USARTx_IRQHandler(void)
+{
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+    // 1. Check interrupt source
+    if (USARTx->ISR & USART_ISR_RXNE)
+    {
+        // 2. Read data (clears flag)
+        uint8_t data = USARTx->RDR;
+
+        // 3. Minimal processing
+        uart_rx_buffer[uart_rx_head++] = data;
+
+        // 4. Signal task if needed
+        if (uart_rx_head >= UART_PACKET_SIZE)
+        {
+            xSemaphoreGiveFromISR(uart_rx_sem, &xHigherPriorityTaskWoken);
+        }
+    }
+
+    // 5. Clear other flags
+    if (USARTx->ISR & USART_ISR_ORE)
+    {
+        USARTx->ICR = USART_ICR_ORECF;  // Clear overrun error
+    }
+
+    // 6. Yield to higher priority task if needed
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+```
+
+**ISR Performance Metrics:**
+- **Maximum ISR Duration:** < 10 µs (< 800 CPU cycles @ 80 MHz)
+- **ADC DMA ISR:** ~5 µs (buffer reorganization)
+- **UART RX ISR:** ~2 µs (single byte handling)
+- **SysTick ISR:** ~8 µs (FreeRTOS tick processing)
+
+### Inter-Task Communication
+
+#### 1. Semaphores (Signaling)
+
+**Binary Semaphore** - Event notification:
+```c
+// Create semaphore
+SemaphoreHandle_t adc_ready_sem = xSemaphoreCreateBinary();
+
+// ISR signals task
+void DMA1_Channel1_IRQHandler(void)
+{
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    xSemaphoreGiveFromISR(adc_ready_sem, &xHigherPriorityTaskWoken);
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
+// Task waits for signal
+void vAdcProcessingTask(void *pvParameters)
+{
+    while(1)
+    {
+        // Wait for DMA complete (blocks task)
+        xSemaphoreTake(adc_ready_sem, portMAX_DELAY);
+
+        // Process ADC data
+        process_adc_samples();
+    }
+}
+```
+
+**Counting Semaphore** - Resource counting:
+```c
+// Create counting semaphore (max 10 buffers)
+SemaphoreHandle_t buffer_available_sem = xSemaphoreCreateCounting(10, 10);
+
+// Consumer takes buffer
+xSemaphoreTake(buffer_available_sem, pdMS_TO_TICKS(100));
+uint8_t *buf = get_free_buffer();
+
+// Producer releases buffer
+release_buffer(buf);
+xSemaphoreGive(buffer_available_sem);
+```
+
+#### 2. Queues (Data Transfer)
+
+**Queue Usage** - Inter-task data passing:
+```c
+typedef struct {
+    float voltage;
+    float current;
+    uint32_t timestamp;
+} sensor_data_t;
+
+// Create queue (10 elements)
+QueueHandle_t sensor_queue = xQueueCreate(10, sizeof(sensor_data_t));
+
+// Producer task
+void vSensorReadTask(void *pvParameters)
+{
+    sensor_data_t data;
+
+    while(1)
+    {
+        // Read sensors
+        data.voltage = adc_read_voltage();
+        data.current = adc_read_current();
+        data.timestamp = system_get_time();
+
+        // Send to queue (wait up to 100 ms if full)
+        xQueueSend(sensor_queue, &data, pdMS_TO_TICKS(100));
+
+        vTaskDelay(pdMS_TO_TICKS(100));  // 10 Hz
+    }
+}
+
+// Consumer task
+void vTelemetryTask(void *pvParameters)
+{
+    sensor_data_t data;
+
+    while(1)
+    {
+        // Receive from queue (wait indefinitely)
+        if (xQueueReceive(sensor_queue, &data, portMAX_DELAY) == pdTRUE)
+        {
+            // Package telemetry
+            telemetry_send(data);
+        }
+    }
+}
+```
+
+**Queue from ISR:**
+```c
+void USART2_IRQHandler(void)
+{
+    if (USART2->ISR & USART_ISR_IDLE)
+    {
+        uart_packet_t packet;
+        // ... fill packet ...
+
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        xQueueSendFromISR(uart_rx_queue, &packet, &xHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
+}
+```
+
+#### 3. Mutexes (Resource Protection)
+
+**Mutex Usage** - Protecting shared resources:
+```c
+// Create mutex
+SemaphoreHandle_t i2c_mutex = xSemaphoreCreateMutex();
+
+// Task 1: Read from I2C sensor
+void vSensor1Task(void *pvParameters)
+{
+    while(1)
+    {
+        // Take mutex (wait up to 100 ms)
+        if (xSemaphoreTake(i2c_mutex, pdMS_TO_TICKS(100)) == pdTRUE)
+        {
+            // I2C bus is now locked
+            i2c_read(SENSOR1_ADDR, data, len);
+
+            // Release mutex
+            xSemaphoreGive(i2c_mutex);
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
+// Task 2: Read from different I2C sensor
+void vSensor2Task(void *pvParameters)
+{
+    while(1)
+    {
+        if (xSemaphoreTake(i2c_mutex, pdMS_TO_TICKS(100)) == pdTRUE)
+        {
+            i2c_read(SENSOR2_ADDR, data, len);
+            xSemaphoreGive(i2c_mutex);
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+```
+
+**Priority Inheritance:** FreeRTOS mutexes support priority inheritance to prevent priority inversion.
+
+#### 4. Task Notifications (Lightweight Signaling)
+
+**Direct-to-task notification** (faster than semaphores):
+```c
+TaskHandle_t processing_task_handle;
+
+// Create task and save handle
+xTaskCreate(vProcessingTask, "Processing", 256, NULL, 3, &processing_task_handle);
+
+// ISR notifies task directly
+void DMA1_Channel1_IRQHandler(void)
+{
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+    // Increment notification value
+    vTaskNotifyGiveFromISR(processing_task_handle, &xHigherPriorityTaskWoken);
+
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
+// Task waits for notification
+void vProcessingTask(void *pvParameters)
+{
+    while(1)
+    {
+        // Wait for notification (decrements value)
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+        // Process data
+        process_data();
+    }
+}
+```
+
+#### 5. Event Groups (Multiple Event Synchronization)
+
+**Event bits** - Multiple events in one object:
+```c
+// Create event group
+EventGroupHandle_t system_events = xEventGroupCreate();
+
+// Event bit definitions
+#define EVENT_ADC_READY     (1 << 0)
+#define EVENT_UART_READY    (1 << 1)
+#define EVENT_SPI_READY     (1 << 2)
+#define EVENT_ALL_READY     (EVENT_ADC_READY | EVENT_UART_READY | EVENT_SPI_READY)
+
+// Tasks set bits
+void vAdcTask(void *pvParameters)
+{
+    while(1)
+    {
+        adc_acquire();
+        xEventGroupSetBits(system_events, EVENT_ADC_READY);
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+}
+
+// Synchronization task waits for all events
+void vSyncTask(void *pvParameters)
+{
+    while(1)
+    {
+        // Wait for all events (timeout: 1 second)
+        EventBits_t bits = xEventGroupWaitBits(
+            system_events,
+            EVENT_ALL_READY,      // Bits to wait for
+            pdTRUE,               // Clear on exit
+            pdTRUE,               // Wait for all bits
+            pdMS_TO_TICKS(1000)   // Timeout
+        );
+
+        if ((bits & EVENT_ALL_READY) == EVENT_ALL_READY)
+        {
+            // All systems ready
+            perform_synchronized_operation();
+        }
+    }
+}
+```
+
+### Task Synchronization Patterns
+
+#### Producer-Consumer Pattern
+```c
+/*
+ * Sensor reading task produces data at 10 Hz
+ * Telemetry task consumes data at 0.1 Hz
+ * Queue buffers intermediate data
+ */
+
+QueueHandle_t telemetry_queue;
+
+void vSensorProducer(void *pvParameters)
+{
+    sensor_data_t data;
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+
+    while(1)
+    {
+        // Read sensors
+        data.voltage = read_voltage();
+        data.current = read_current();
+        data.timestamp = xTaskGetTickCount();
+
+        // Send to queue (drop if full)
+        xQueueSend(telemetry_queue, &data, 0);
+
+        // Periodic execution (10 Hz)
+        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(100));
+    }
+}
+
+void vTelemetryConsumer(void *pvParameters)
+{
+    sensor_data_t data;
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+
+    while(1)
+    {
+        // Collect all queued data
+        while (xQueueReceive(telemetry_queue, &data, 0) == pdTRUE)
+        {
+            telemetry_append(data);
+        }
+
+        // Transmit telemetry packet
+        telemetry_transmit();
+
+        // Periodic execution (0.1 Hz = 10 seconds)
+        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(10000));
+    }
+}
+```
+
+#### Rendezvous Pattern (Barrier Synchronization)
+```c
+/*
+ * Multiple tasks synchronize at barrier point
+ * All tasks must reach barrier before any continue
+ */
+
+SemaphoreHandle_t barrier_sem;
+volatile uint8_t barrier_count = 0;
+#define BARRIER_TASKS 3
+
+void barrier_wait(void)
+{
+    taskENTER_CRITICAL();
+    barrier_count++;
+    if (barrier_count == BARRIER_TASKS)
+    {
+        barrier_count = 0;
+        // Release all waiting tasks
+        for (int i = 0; i < BARRIER_TASKS - 1; i++)
+            xSemaphoreGive(barrier_sem);
+        taskEXIT_CRITICAL();
+    }
+    else
+    {
+        taskEXIT_CRITICAL();
+        xSemaphoreTake(barrier_sem, portMAX_DELAY);
+    }
+}
+```
 
 ---
 
