@@ -1,0 +1,187 @@
+ARM GAS  /tmp/ccWFA5j4.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"main.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "main.c"
+  20              		.section	.text.main,"ax",%progbits
+  21              		.align	1
+  22              		.global	main
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	main:
+  28              	.LFB18:
+   1:main.c        **** /*
+   2:main.c        ****  * main.c
+   3:main.c        ****  * 
+   4:main.c        ****  * Copyright (C) 2019, SpaceLab.
+   5:main.c        ****  * 
+   6:main.c        ****  * This file is part of EPS 2.0.
+   7:main.c        ****  * 
+   8:main.c        ****  * EPS 2.0 is free software: you can redistribute it and/or modify
+   9:main.c        ****  * it under the terms of the GNU General Public License as published by
+  10:main.c        ****  * the Free Software Foundation, either version 3 of the License, or
+  11:main.c        ****  * (at your option) any later version.
+  12:main.c        ****  * 
+  13:main.c        ****  * EPS 2.0 is distributed in the hope that it will be useful,
+  14:main.c        ****  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  15:main.c        ****  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  16:main.c        ****  * GNU General Public License for more details.
+  17:main.c        ****  * 
+  18:main.c        ****  * You should have received a copy of the GNU General Public License
+  19:main.c        ****  * along with EPS 2.0. If not, see <http://www.gnu.org/licenses/>.
+  20:main.c        ****  * 
+  21:main.c        ****  */
+  22:main.c        **** 
+  23:main.c        **** /**
+  24:main.c        ****  * \brief Main file.
+  25:main.c        ****  * 
+  26:main.c        ****  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
+  27:main.c        ****  * 
+  28:main.c        ****  * \version 0.1.0
+  29:main.c        ****  * 
+  30:main.c        ****  * \date 2020/10/21
+ARM GAS  /tmp/ccWFA5j4.s 			page 2
+
+
+  31:main.c        ****  * 
+  32:main.c        ****  * \defgroup main Main file
+  33:main.c        ****  * \{
+  34:main.c        ****  */
+  35:main.c        **** 
+  36:main.c        **** #include <FreeRTOS.h>
+  37:main.c        **** #include <task.h>
+  38:main.c        **** 
+  39:main.c        **** #include "stm32l476xx.h"
+  40:main.c        **** #include "devices/watchdog/watchdog.h"
+  41:main.c        **** #include "system/clocks.h"
+  42:main.c        **** #include "app/tasks/tasks.h"
+  43:main.c        **** 
+  44:main.c        **** /* External functions from system_stm32l4xx.c */
+  45:main.c        **** extern void SystemInit(void);
+  46:main.c        **** extern void SystemClock_Config(void);
+  47:main.c        **** 
+  48:main.c        **** int main(void)
+  49:main.c        **** {
+  29              		.loc 1 49 1 view -0
+  30              		.cfi_startproc
+  31              		@ Volatile: function does not return.
+  32              		@ args = 0, pretend = 0, frame = 16
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34 0000 00B5     		push	{lr}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 4
+  37              		.cfi_offset 14, -4
+  38 0002 85B0     		sub	sp, sp, #20
+  39              	.LCFI1:
+  40              		.cfi_def_cfa_offset 24
+  50:main.c        ****     /* STM32L4 system initialization (done in startup already, but called for completeness) */
+  51:main.c        ****     SystemInit();
+  41              		.loc 1 51 5 view .LVU1
+  42 0004 FFF7FEFF 		bl	SystemInit
+  43              	.LVL0:
+  52:main.c        **** 
+  53:main.c        ****     /* Configure system clock to 80 MHz */
+  54:main.c        ****     SystemClock_Config();
+  44              		.loc 1 54 5 view .LVU2
+  45 0008 FFF7FEFF 		bl	SystemClock_Config
+  46              	.LVL1:
+  55:main.c        **** 
+  56:main.c        ****     /* Watchdog device initialization */
+  57:main.c        ****     watchdog_init();
+  47              		.loc 1 57 5 view .LVU3
+  48 000c FFF7FEFF 		bl	watchdog_init
+  49              	.LVL2:
+  58:main.c        **** 
+  59:main.c        ****     /* System clocks setup (for compatibility with existing API) */
+  60:main.c        ****     clocks_setup((clocks_config_t){.mclk_hz = 80000000UL, .smclk_hz=80000000UL, .aclk_hz=32000});
+  50              		.loc 1 60 5 view .LVU4
+  51              		.loc 1 60 35 is_stmt 0 view .LVU5
+  52 0010 054A     		ldr	r2, .L4
+  53 0012 01AB     		add	r3, sp, #4
+  54 0014 07CA     		ldm	r2, {r0, r1, r2}
+  55 0016 83E80700 		stm	r3, {r0, r1, r2}
+ARM GAS  /tmp/ccWFA5j4.s 			page 3
+
+
+  56              		.loc 1 60 5 view .LVU6
+  57 001a FFF7FEFF 		bl	clocks_setup
+  58              	.LVL3:
+  61:main.c        **** 
+  62:main.c        ****     /* Create all the tasks */
+  63:main.c        ****     create_tasks();
+  59              		.loc 1 63 5 is_stmt 1 view .LVU7
+  60 001e FFF7FEFF 		bl	create_tasks
+  61              	.LVL4:
+  64:main.c        **** 
+  65:main.c        ****     /* Start the FreeRTOS scheduler */
+  66:main.c        ****     vTaskStartScheduler();
+  62              		.loc 1 66 5 view .LVU8
+  63 0022 FFF7FEFF 		bl	vTaskStartScheduler
+  64              	.LVL5:
+  65              	.L2:
+  67:main.c        **** 
+  68:main.c        ****     /* Will only get here if there was insufficient memory to create the idle and/or timer task */
+  69:main.c        ****     while(1)
+  66              		.loc 1 69 5 view .LVU9
+  70:main.c        ****     {
+  71:main.c        ****         /* Trap here if scheduler fails */
+  72:main.c        ****     }
+  67              		.loc 1 72 5 view .LVU10
+  69:main.c        ****     {
+  68              		.loc 1 69 10 view .LVU11
+  69 0026 FEE7     		b	.L2
+  70              	.L5:
+  71              		.align	2
+  72              	.L4:
+  73 0028 00000000 		.word	.LANCHOR0
+  74              		.cfi_endproc
+  75              	.LFE18:
+  77              		.section	.rodata
+  78              		.align	2
+  79              		.set	.LANCHOR0,. + 0
+  80              	.LC0:
+  81 0000 00B4C404 		.word	80000000
+  82 0004 00B4C404 		.word	80000000
+  83 0008 007D0000 		.word	32000
+  84              		.text
+  85              	.Letext0:
+  86              		.file 2 "system/clocks.h"
+  87              		.file 3 "/usr/lib/gcc/arm-none-eabi/13.2.1/include/stdint.h"
+  88              		.file 4 "freertos/include/task.h"
+  89              		.file 5 "app/tasks/tasks.h"
+  90              		.file 6 "devices/watchdog/watchdog.h"
+ARM GAS  /tmp/ccWFA5j4.s 			page 4
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 main.c
+     /tmp/ccWFA5j4.s:21     .text.main:00000000 $t
+     /tmp/ccWFA5j4.s:27     .text.main:00000000 main
+     /tmp/ccWFA5j4.s:73     .text.main:00000028 $d
+     /tmp/ccWFA5j4.s:78     .rodata:00000000 $d
+
+UNDEFINED SYMBOLS
+SystemInit
+SystemClock_Config
+watchdog_init
+clocks_setup
+create_tasks
+vTaskStartScheduler

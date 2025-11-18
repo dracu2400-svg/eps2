@@ -127,9 +127,13 @@ typedef enum
  */
 typedef enum
 {
-    GPIO_MODE_OUTPUT=0,     /**< GPIO as output. */
-    GPIO_MODE_INPUT         /**< GPIO as input. */
+    GPIO_MODE_OUTPUT_PIN=0, /**< GPIO as output. */
+    GPIO_MODE_INPUT_PIN     /**< GPIO as input. */
 } gpio_modes_e;
+
+/* Aliases for compatibility */
+#define GPIO_MODE_OUTPUT    GPIO_MODE_OUTPUT_PIN
+#define GPIO_MODE_INPUT     GPIO_MODE_INPUT_PIN
 
 /**
  * \brief GPIO pin configuration.

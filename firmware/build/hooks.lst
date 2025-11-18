@@ -1,0 +1,676 @@
+ARM GAS  /tmp/ccFTpT40.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"hooks.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "system/hooks.c"
+  20              		.section	.text.vApplicationIdleHook,"ax",%progbits
+  21              		.align	1
+  22              		.global	vApplicationIdleHook
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	vApplicationIdleHook:
+  28              	.LFB18:
+   1:system/hooks.c **** /*
+   2:system/hooks.c ****  * hooks.c
+   3:system/hooks.c ****  *
+   4:system/hooks.c ****  * Copyright (C) 2019, SpaceLab.
+   5:system/hooks.c ****  *
+   6:system/hooks.c ****  * This file is part of EPS 2.0.
+   7:system/hooks.c ****  *
+   8:system/hooks.c ****  * EPS 2.0 is free software: you can redistribute it and/or modify
+   9:system/hooks.c ****  * it under the terms of the GNU General Public License as published by
+  10:system/hooks.c ****  * the Free Software Foundation, either version 3 of the License, or
+  11:system/hooks.c ****  * (at your option) any later version.
+  12:system/hooks.c ****  *
+  13:system/hooks.c ****  * EPS 2.0 is distributed in the hope that it will be useful,
+  14:system/hooks.c ****  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  15:system/hooks.c ****  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  16:system/hooks.c ****  * GNU General Public License for more details.
+  17:system/hooks.c ****  *
+  18:system/hooks.c ****  * You should have received a copy of the GNU General Public License
+  19:system/hooks.c ****  * along with EPS 2.0. If not, see <http://www.gnu.org/licenses/>.
+  20:system/hooks.c ****  *
+  21:system/hooks.c ****  */
+  22:system/hooks.c **** 
+  23:system/hooks.c **** /**
+  24:system/hooks.c ****  * \brief FreeRTOS hooks implementation (Ported to STM32L4).
+  25:system/hooks.c ****  *
+  26:system/hooks.c ****  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
+  27:system/hooks.c ****  *
+  28:system/hooks.c ****  * \version 0.2.0 (STM32L4 port)
+  29:system/hooks.c ****  *
+  30:system/hooks.c ****  * \date 2020/10/22
+ARM GAS  /tmp/ccFTpT40.s 			page 2
+
+
+  31:system/hooks.c ****  *
+  32:system/hooks.c ****  * \defgroup hooks FreeRTOS Hooks
+  33:system/hooks.c ****  * \ingroup system
+  34:system/hooks.c ****  * \{
+  35:system/hooks.c ****  */
+  36:system/hooks.c **** 
+  37:system/hooks.c **** #include <FreeRTOS.h>
+  38:system/hooks.c **** #include <task.h>
+  39:system/hooks.c **** #include "core_cm4.h"
+  40:system/hooks.c **** 
+  41:system/hooks.c **** void vApplicationIdleHook(void)
+  42:system/hooks.c **** {
+  29              		.loc 1 42 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+  43:system/hooks.c ****     /* Called on each iteration of the idle task.
+  44:system/hooks.c ****      * Enter sleep mode (Wait For Interrupt) to reduce power consumption.
+  45:system/hooks.c ****      * The CPU will wake up on any interrupt.
+  46:system/hooks.c ****      */
+  47:system/hooks.c ****     __WFI();
+  34              		.loc 1 47 5 view .LVU1
+  35              	.LBB8:
+  36              	.LBI8:
+  37              		.file 2 "./core_cm4.h"
+   1:./core_cm4.h  **** /**
+   2:./core_cm4.h  ****   ******************************************************************************
+   3:./core_cm4.h  ****   * @file     core_cm4.h
+   4:./core_cm4.h  ****   * @brief    CMSIS Cortex-M4 Core Peripheral Access Layer Header File
+   5:./core_cm4.h  ****   * @version  V1.0.0
+   6:./core_cm4.h  ****   * @date     2025-01-18
+   7:./core_cm4.h  ****   *
+   8:./core_cm4.h  ****   * @note     This is a minimal CMSIS core header for STM32L4 port.
+   9:./core_cm4.h  ****   *           For production use, replace with official ARM CMSIS package.
+  10:./core_cm4.h  ****   ******************************************************************************
+  11:./core_cm4.h  ****   */
+  12:./core_cm4.h  **** 
+  13:./core_cm4.h  **** #ifndef __CORE_CM4_H_GENERIC
+  14:./core_cm4.h  **** #define __CORE_CM4_H_GENERIC
+  15:./core_cm4.h  **** 
+  16:./core_cm4.h  **** #ifdef __cplusplus
+  17:./core_cm4.h  ****  extern "C" {
+  18:./core_cm4.h  **** #endif
+  19:./core_cm4.h  **** 
+  20:./core_cm4.h  **** #include <stdint.h>
+  21:./core_cm4.h  **** 
+  22:./core_cm4.h  **** /* Define compiler macros */
+  23:./core_cm4.h  **** #if defined (__GNUC__)
+  24:./core_cm4.h  ****   #define __ASM            __asm
+  25:./core_cm4.h  ****   #define __INLINE         inline
+  26:./core_cm4.h  ****   #define __STATIC_INLINE  static inline
+  27:./core_cm4.h  ****   #define __WEAK           __attribute__((weak))
+  28:./core_cm4.h  ****   #define __PACKED         __attribute__((packed))
+  29:./core_cm4.h  **** #endif
+  30:./core_cm4.h  **** 
+  31:./core_cm4.h  **** /* CMSIS compiler control architecture macros */
+ARM GAS  /tmp/ccFTpT40.s 			page 3
+
+
+  32:./core_cm4.h  **** #if ((defined (__ARM_ARCH_7M__      ) && (__ARM_ARCH_7M__      == 1)) || \
+  33:./core_cm4.h  ****      (defined (__ARM_ARCH_7EM__     ) && (__ARM_ARCH_7EM__     == 1))  )
+  34:./core_cm4.h  ****   #include "cmsis_gcc.h"
+  35:./core_cm4.h  **** #else
+  36:./core_cm4.h  ****   #error "This core_cm4.h requires an ARM Cortex-M4 compiler"
+  37:./core_cm4.h  **** #endif
+  38:./core_cm4.h  **** 
+  39:./core_cm4.h  **** /* IO definitions (access restrictions to peripheral registers) */
+  40:./core_cm4.h  **** #ifdef __cplusplus
+  41:./core_cm4.h  ****   #define   __I     volatile             /*!< Defines 'read only' permissions */
+  42:./core_cm4.h  **** #else
+  43:./core_cm4.h  ****   #define   __I     volatile const       /*!< Defines 'read only' permissions */
+  44:./core_cm4.h  **** #endif
+  45:./core_cm4.h  **** #define     __O     volatile             /*!< Defines 'write only' permissions */
+  46:./core_cm4.h  **** #define     __IO    volatile             /*!< Defines 'read / write' permissions */
+  47:./core_cm4.h  **** 
+  48:./core_cm4.h  **** /* following defines should be used for structure members */
+  49:./core_cm4.h  **** #define     __IM     volatile const      /*! Defines 'read only' structure member permissions */
+  50:./core_cm4.h  **** #define     __OM     volatile            /*! Defines 'write only' structure member permissions */
+  51:./core_cm4.h  **** #define     __IOM    volatile            /*! Defines 'read / write' structure member permissions */
+  52:./core_cm4.h  **** 
+  53:./core_cm4.h  **** /**
+  54:./core_cm4.h  ****   \brief  Structure type to access the System Control Block (SCB).
+  55:./core_cm4.h  ****  */
+  56:./core_cm4.h  **** typedef struct
+  57:./core_cm4.h  **** {
+  58:./core_cm4.h  ****   __I  uint32_t CPUID;                  /*!< Offset: 0x000 (R/ )  CPUID Base Register */
+  59:./core_cm4.h  ****   __IO uint32_t ICSR;                   /*!< Offset: 0x004 (R/W)  Interrupt Control and State Regis
+  60:./core_cm4.h  ****   __IO uint32_t VTOR;                   /*!< Offset: 0x008 (R/W)  Vector Table Offset Register */
+  61:./core_cm4.h  ****   __IO uint32_t AIRCR;                  /*!< Offset: 0x00C (R/W)  Application Interrupt and Reset C
+  62:./core_cm4.h  ****   __IO uint32_t SCR;                    /*!< Offset: 0x010 (R/W)  System Control Register */
+  63:./core_cm4.h  ****   __IO uint32_t CCR;                    /*!< Offset: 0x014 (R/W)  Configuration Control Register */
+  64:./core_cm4.h  ****   __IO uint8_t  SHP[12U];               /*!< Offset: 0x018 (R/W)  System Handlers Priority Register
+  65:./core_cm4.h  ****   __IO uint32_t SHCSR;                  /*!< Offset: 0x024 (R/W)  System Handler Control and State 
+  66:./core_cm4.h  ****   __IO uint32_t CFSR;                   /*!< Offset: 0x028 (R/W)  Configurable Fault Status Registe
+  67:./core_cm4.h  ****   __IO uint32_t HFSR;                   /*!< Offset: 0x02C (R/W)  HardFault Status Register */
+  68:./core_cm4.h  ****   __IO uint32_t DFSR;                   /*!< Offset: 0x030 (R/W)  Debug Fault Status Register */
+  69:./core_cm4.h  ****   __IO uint32_t MMFAR;                  /*!< Offset: 0x034 (R/W)  MemManage Fault Address Register 
+  70:./core_cm4.h  ****   __IO uint32_t BFAR;                   /*!< Offset: 0x038 (R/W)  BusFault Address Register */
+  71:./core_cm4.h  ****   __IO uint32_t AFSR;                   /*!< Offset: 0x03C (R/W)  Auxiliary Fault Status Register *
+  72:./core_cm4.h  ****   __I  uint32_t PFR[2U];                /*!< Offset: 0x040 (R/ )  Processor Feature Register */
+  73:./core_cm4.h  ****   __I  uint32_t DFR;                    /*!< Offset: 0x048 (R/ )  Debug Feature Register */
+  74:./core_cm4.h  ****   __I  uint32_t ADR;                    /*!< Offset: 0x04C (R/ )  Auxiliary Feature Register */
+  75:./core_cm4.h  ****   __I  uint32_t MMFR[4U];               /*!< Offset: 0x050 (R/ )  Memory Model Feature Register */
+  76:./core_cm4.h  ****   __I  uint32_t ISAR[5U];               /*!< Offset: 0x060 (R/ )  Instruction Set Attributes Regist
+  77:./core_cm4.h  ****        uint32_t RESERVED0[5U];
+  78:./core_cm4.h  ****   __IO uint32_t CPACR;                  /*!< Offset: 0x088 (R/W)  Coprocessor Access Control Regist
+  79:./core_cm4.h  **** } SCB_Type;
+  80:./core_cm4.h  **** 
+  81:./core_cm4.h  **** /**
+  82:./core_cm4.h  ****   \brief  Structure type to access the System Timer (SysTick).
+  83:./core_cm4.h  ****  */
+  84:./core_cm4.h  **** typedef struct
+  85:./core_cm4.h  **** {
+  86:./core_cm4.h  ****   __IO uint32_t CTRL;                   /*!< Offset: 0x000 (R/W)  SysTick Control and Status Regist
+  87:./core_cm4.h  ****   __IO uint32_t LOAD;                   /*!< Offset: 0x004 (R/W)  SysTick Reload Value Register */
+  88:./core_cm4.h  ****   __IO uint32_t VAL;                    /*!< Offset: 0x008 (R/W)  SysTick Current Value Register */
+ARM GAS  /tmp/ccFTpT40.s 			page 4
+
+
+  89:./core_cm4.h  ****   __I  uint32_t CALIB;                  /*!< Offset: 0x00C (R/ )  SysTick Calibration Register */
+  90:./core_cm4.h  **** } SysTick_Type;
+  91:./core_cm4.h  **** 
+  92:./core_cm4.h  **** /**
+  93:./core_cm4.h  ****   \brief  Structure type to access the Nested Vectored Interrupt Controller (NVIC).
+  94:./core_cm4.h  ****  */
+  95:./core_cm4.h  **** typedef struct
+  96:./core_cm4.h  **** {
+  97:./core_cm4.h  ****   __IO uint32_t ISER[8U];               /*!< Offset: 0x000 (R/W)  Interrupt Set Enable Register */
+  98:./core_cm4.h  ****        uint32_t RESERVED0[24U];
+  99:./core_cm4.h  ****   __IO uint32_t ICER[8U];               /*!< Offset: 0x080 (R/W)  Interrupt Clear Enable Register *
+ 100:./core_cm4.h  ****        uint32_t RSERVED1[24U];
+ 101:./core_cm4.h  ****   __IO uint32_t ISPR[8U];               /*!< Offset: 0x100 (R/W)  Interrupt Set Pending Register */
+ 102:./core_cm4.h  ****        uint32_t RESERVED2[24U];
+ 103:./core_cm4.h  ****   __IO uint32_t ICPR[8U];               /*!< Offset: 0x180 (R/W)  Interrupt Clear Pending Register 
+ 104:./core_cm4.h  ****        uint32_t RESERVED3[24U];
+ 105:./core_cm4.h  ****   __IO uint32_t IABR[8U];               /*!< Offset: 0x200 (R/W)  Interrupt Active bit Register */
+ 106:./core_cm4.h  ****        uint32_t RESERVED4[56U];
+ 107:./core_cm4.h  ****   __IO uint8_t  IP[240U];               /*!< Offset: 0x300 (R/W)  Interrupt Priority Register (8Bit
+ 108:./core_cm4.h  ****        uint32_t RESERVED5[644U];
+ 109:./core_cm4.h  ****   __O  uint32_t STIR;                   /*!< Offset: 0xE00 ( /W)  Software Trigger Interrupt Regist
+ 110:./core_cm4.h  **** }  NVIC_Type;
+ 111:./core_cm4.h  **** 
+ 112:./core_cm4.h  **** /* Memory mapping of Core Hardware */
+ 113:./core_cm4.h  **** #define SCS_BASE            (0xE000E000UL)                            /*!< System Control Space Bas
+ 114:./core_cm4.h  **** #define SysTick_BASE        (SCS_BASE +  0x0010UL)                    /*!< SysTick Base Address */
+ 115:./core_cm4.h  **** #define NVIC_BASE           (SCS_BASE +  0x0100UL)                    /*!< NVIC Base Address */
+ 116:./core_cm4.h  **** #define SCB_BASE            (SCS_BASE +  0x0D00UL)                    /*!< System Control Block Bas
+ 117:./core_cm4.h  **** 
+ 118:./core_cm4.h  **** #define SCB                 ((SCB_Type       *)     SCB_BASE      )   /*!< SCB configuration struct
+ 119:./core_cm4.h  **** #define SysTick             ((SysTick_Type   *)     SysTick_BASE  )   /*!< SysTick configuration st
+ 120:./core_cm4.h  **** #define NVIC                ((NVIC_Type      *)     NVIC_BASE     )   /*!< NVIC configuration struc
+ 121:./core_cm4.h  **** 
+ 122:./core_cm4.h  **** /* SysTick Control / Status Register Definitions */
+ 123:./core_cm4.h  **** #define SysTick_CTRL_COUNTFLAG_Pos         16U                                            /*!< SysT
+ 124:./core_cm4.h  **** #define SysTick_CTRL_COUNTFLAG_Msk         (1UL << SysTick_CTRL_COUNTFLAG_Pos)            /*!< SysT
+ 125:./core_cm4.h  **** 
+ 126:./core_cm4.h  **** #define SysTick_CTRL_CLKSOURCE_Pos          2U                                            /*!< SysT
+ 127:./core_cm4.h  **** #define SysTick_CTRL_CLKSOURCE_Msk         (1UL << SysTick_CTRL_CLKSOURCE_Pos)            /*!< SysT
+ 128:./core_cm4.h  **** 
+ 129:./core_cm4.h  **** #define SysTick_CTRL_TICKINT_Pos            1U                                            /*!< SysT
+ 130:./core_cm4.h  **** #define SysTick_CTRL_TICKINT_Msk           (1UL << SysTick_CTRL_TICKINT_Pos)              /*!< SysT
+ 131:./core_cm4.h  **** 
+ 132:./core_cm4.h  **** #define SysTick_CTRL_ENABLE_Pos             0U                                            /*!< SysT
+ 133:./core_cm4.h  **** #define SysTick_CTRL_ENABLE_Msk            (1UL << SysTick_CTRL_ENABLE_Pos)               /*!< SysT
+ 134:./core_cm4.h  **** 
+ 135:./core_cm4.h  **** /* SysTick Reload Register Definitions */
+ 136:./core_cm4.h  **** #define SysTick_LOAD_RELOAD_Pos             0U                                            /*!< SysT
+ 137:./core_cm4.h  **** #define SysTick_LOAD_RELOAD_Msk            (0xFFFFFFUL /*<< SysTick_LOAD_RELOAD_Pos*/)    /*!< SysT
+ 138:./core_cm4.h  **** 
+ 139:./core_cm4.h  **** /* SysTick Current Register Definitions */
+ 140:./core_cm4.h  **** #define SysTick_VAL_CURRENT_Pos             0U                                            /*!< SysT
+ 141:./core_cm4.h  **** #define SysTick_VAL_CURRENT_Msk            (0xFFFFFFUL /*<< SysTick_VAL_CURRENT_Pos*/)    /*!< SysT
+ 142:./core_cm4.h  **** 
+ 143:./core_cm4.h  **** /**
+ 144:./core_cm4.h  ****   \brief   Enable IRQ Interrupts
+ 145:./core_cm4.h  ****   \details Enables IRQ interrupts by clearing the I-bit in the CPSR.
+ARM GAS  /tmp/ccFTpT40.s 			page 5
+
+
+ 146:./core_cm4.h  ****            Can only be executed in Privileged modes.
+ 147:./core_cm4.h  ****  */
+ 148:./core_cm4.h  **** __STATIC_INLINE void __enable_irq(void)
+ 149:./core_cm4.h  **** {
+ 150:./core_cm4.h  ****   __ASM volatile ("cpsie i" : : : "memory");
+ 151:./core_cm4.h  **** }
+ 152:./core_cm4.h  **** 
+ 153:./core_cm4.h  **** /**
+ 154:./core_cm4.h  ****   \brief   Disable IRQ Interrupts
+ 155:./core_cm4.h  ****   \details Disables IRQ interrupts by setting the I-bit in the CPSR.
+ 156:./core_cm4.h  ****            Can only be executed in Privileged modes.
+ 157:./core_cm4.h  ****  */
+ 158:./core_cm4.h  **** __STATIC_INLINE void __disable_irq(void)
+ 159:./core_cm4.h  **** {
+ 160:./core_cm4.h  ****   __ASM volatile ("cpsid i" : : : "memory");
+ 161:./core_cm4.h  **** }
+ 162:./core_cm4.h  **** 
+ 163:./core_cm4.h  **** /**
+ 164:./core_cm4.h  ****   \brief   Data Synchronization Barrier
+ 165:./core_cm4.h  ****   \details Acts as a special kind of Data Memory Barrier.
+ 166:./core_cm4.h  ****            It completes when all explicit memory accesses before this instruction complete.
+ 167:./core_cm4.h  ****  */
+ 168:./core_cm4.h  **** __STATIC_INLINE void __DSB(void)
+ 169:./core_cm4.h  **** {
+ 170:./core_cm4.h  ****   __ASM volatile ("dsb 0xF":::"memory");
+ 171:./core_cm4.h  **** }
+ 172:./core_cm4.h  **** 
+ 173:./core_cm4.h  **** /**
+ 174:./core_cm4.h  ****   \brief   Instruction Synchronization Barrier
+ 175:./core_cm4.h  ****   \details Instruction Synchronization Barrier flushes the pipeline in the processor,
+ 176:./core_cm4.h  ****            so that all instructions following the ISB are fetched from cache or memory,
+ 177:./core_cm4.h  ****            after the instruction has been completed.
+ 178:./core_cm4.h  ****  */
+ 179:./core_cm4.h  **** __STATIC_INLINE void __ISB(void)
+ 180:./core_cm4.h  **** {
+ 181:./core_cm4.h  ****   __ASM volatile ("isb 0xF":::"memory");
+ 182:./core_cm4.h  **** }
+ 183:./core_cm4.h  **** 
+ 184:./core_cm4.h  **** /**
+ 185:./core_cm4.h  ****   \brief   No Operation
+ 186:./core_cm4.h  ****   \details No Operation does nothing. This instruction can be used for code alignment purposes.
+ 187:./core_cm4.h  ****  */
+ 188:./core_cm4.h  **** __STATIC_INLINE void __NOP(void)
+ 189:./core_cm4.h  **** {
+ 190:./core_cm4.h  ****   __ASM volatile ("nop");
+ 191:./core_cm4.h  **** }
+ 192:./core_cm4.h  **** 
+ 193:./core_cm4.h  **** /**
+ 194:./core_cm4.h  ****   \brief   Wait For Interrupt
+ 195:./core_cm4.h  ****   \details Wait For Interrupt is a hint instruction that suspends execution until one of a number o
+ 196:./core_cm4.h  ****  */
+ 197:./core_cm4.h  **** __STATIC_INLINE void __WFI(void)
+  38              		.loc 2 197 22 view .LVU2
+  39              	.LBB9:
+ 198:./core_cm4.h  **** {
+ 199:./core_cm4.h  ****   __ASM volatile ("wfi");
+  40              		.loc 2 199 3 view .LVU3
+ARM GAS  /tmp/ccFTpT40.s 			page 6
+
+
+  41              		.syntax unified
+  42              	@ 199 "./core_cm4.h" 1
+  43 0000 30BF     		wfi
+  44              	@ 0 "" 2
+  45              		.thumb
+  46              		.syntax unified
+  47              	.LBE9:
+  48              	.LBE8:
+  48:system/hooks.c **** }
+  49              		.loc 1 48 1 is_stmt 0 view .LVU4
+  50 0002 7047     		bx	lr
+  51              		.cfi_endproc
+  52              	.LFE18:
+  54              		.section	.text.vApplicationMallocFailedHook,"ax",%progbits
+  55              		.align	1
+  56              		.global	vApplicationMallocFailedHook
+  57              		.syntax unified
+  58              		.thumb
+  59              		.thumb_func
+  61              	vApplicationMallocFailedHook:
+  62              	.LFB19:
+  49:system/hooks.c **** 
+  50:system/hooks.c **** void vApplicationMallocFailedHook(void)
+  51:system/hooks.c **** {
+  63              		.loc 1 51 1 is_stmt 1 view -0
+  64              		.cfi_startproc
+  65              		@ Volatile: function does not return.
+  66              		@ args = 0, pretend = 0, frame = 0
+  67              		@ frame_needed = 0, uses_anonymous_args = 0
+  68              		@ link register save eliminated.
+  52:system/hooks.c ****     /* Called if a call to pvPortMalloc() fails because there is insufficient free memory available
+  53:system/hooks.c ****     /* FreeRTOS heap. pvPortMalloc() is called internally by FreeRTOS API functions that create tas
+  54:system/hooks.c ****     /* or semaphores */
+  55:system/hooks.c ****     taskDISABLE_INTERRUPTS();
+  69              		.loc 1 55 5 view .LVU6
+  70              	.LBB10:
+  71              	.LBI10:
+  72              		.file 3 "freertos/portable/GCC/ARM_CM4F/portmacro.h"
+   1:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /*
+   2:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * FreeRTOS Kernel V10.2.1
+   3:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * Copyright (C) 2019 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+   4:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  *
+   5:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * Permission is hereby granted, free of charge, to any person obtaining a copy of
+   6:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * this software and associated documentation files (the "Software"), to deal in
+   7:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * the Software without restriction, including without limitation the rights to
+   8:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+   9:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * the Software, and to permit persons to whom the Software is furnished to do so,
+  10:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * subject to the following conditions:
+  11:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  *
+  12:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * The above copyright notice and this permission notice shall be included in all
+  13:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * copies or substantial portions of the Software.
+  14:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  *
+  15:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  16:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+  17:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+  18:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+  19:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ARM GAS  /tmp/ccFTpT40.s 			page 7
+
+
+  20:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  21:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  *
+  22:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * http://www.FreeRTOS.org
+  23:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * http://aws.amazon.com/freertos
+  24:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  *
+  25:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * 1 tab == 4 spaces!
+  26:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  */
+  27:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+  28:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+  29:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #ifndef PORTMACRO_H
+  30:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define PORTMACRO_H
+  31:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+  32:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #ifdef __cplusplus
+  33:freertos/portable/GCC/ARM_CM4F/portmacro.h **** extern "C" {
+  34:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #endif
+  35:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+  36:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /*-----------------------------------------------------------
+  37:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * Port specific definitions.
+  38:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  *
+  39:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * The settings in this file configure FreeRTOS correctly for the
+  40:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * given hardware and compiler.
+  41:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  *
+  42:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  * These settings should not be altered.
+  43:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  *-----------------------------------------------------------
+  44:freertos/portable/GCC/ARM_CM4F/portmacro.h ****  */
+  45:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+  46:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /* Type definitions. */
+  47:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portCHAR		char
+  48:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portFLOAT		float
+  49:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portDOUBLE		double
+  50:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portLONG		long
+  51:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portSHORT		short
+  52:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portSTACK_TYPE	uint32_t
+  53:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portBASE_TYPE	long
+  54:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+  55:freertos/portable/GCC/ARM_CM4F/portmacro.h **** typedef portSTACK_TYPE StackType_t;
+  56:freertos/portable/GCC/ARM_CM4F/portmacro.h **** typedef long BaseType_t;
+  57:freertos/portable/GCC/ARM_CM4F/portmacro.h **** typedef unsigned long UBaseType_t;
+  58:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+  59:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #if( configUSE_16_BIT_TICKS == 1 )
+  60:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	typedef uint16_t TickType_t;
+  61:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	#define portMAX_DELAY ( TickType_t ) 0xffff
+  62:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #else
+  63:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	typedef uint32_t TickType_t;
+  64:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	#define portMAX_DELAY ( TickType_t ) 0xffffffffUL
+  65:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+  66:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	/* 32-bit tick type on a 32-bit architecture, so reads of the tick count do
+  67:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	not need to be guarded with a critical section. */
+  68:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	#define portTICK_TYPE_IS_ATOMIC 1
+  69:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #endif
+  70:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /*-----------------------------------------------------------*/
+  71:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+  72:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /* Architecture specifics. */
+  73:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portSTACK_GROWTH			( -1 )
+  74:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portTICK_PERIOD_MS			( ( TickType_t ) 1000 / configTICK_RATE_HZ )
+  75:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portBYTE_ALIGNMENT			8
+  76:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ARM GAS  /tmp/ccFTpT40.s 			page 8
+
+
+  77:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /* Constants required to check the validity of an interrupt priority. */
+  78:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portFIRST_USER_INTERRUPT_NUMBER		( 16 )
+  79:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portNVIC_IP_REGISTERS_OFFSET_16 	( 0xE000E3F0 )
+  80:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portAIRCR_REG						( * ( ( volatile uint32_t * ) 0xE000ED0C ) )
+  81:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portMAX_8_BIT_VALUE					( ( uint8_t ) 0xff )
+  82:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portTOP_BIT_OF_BYTE					( ( uint8_t ) 0x80 )
+  83:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portMAX_PRIGROUP_BITS				( ( uint8_t ) 7 )
+  84:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portPRIORITY_GROUP_MASK				( 0x07UL << 8UL )
+  85:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portPRIGROUP_SHIFT					( 8UL )
+  86:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+  87:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /* Masks off all bits but the VECTACTIVE bits in the ICSR register. */
+  88:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portVECTACTIVE_MASK					( 0xFFUL )
+  89:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+  90:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /* Constants required to manipulate the VFP. */
+  91:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portFPCCR						( ( volatile uint32_t * ) 0xe000ef34 ) /* Floating point context control reg
+  92:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portASPEN_AND_LSPEN_BITS		( 0x3UL << 30UL )
+  93:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+  94:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /* Constants required to set up the initial stack. */
+  95:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portINITIAL_XPSR			( 0x01000000 )
+  96:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portINITIAL_EXEC_RETURN		( 0xfffffffd )
+  97:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+  98:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /* The systick is a 24-bit counter. */
+  99:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portMAX_24_BIT_NUMBER				( 0xffffffUL )
+ 100:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 101:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /* A fiddle factor to estimate the number of SysTick counts that would have
+ 102:freertos/portable/GCC/ARM_CM4F/portmacro.h **** occurred while the SysTick counter is stopped during tickless idle
+ 103:freertos/portable/GCC/ARM_CM4F/portmacro.h **** calculations. */
+ 104:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portMISSED_COUNTS_FACTOR			( 45UL )
+ 105:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 106:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /* Let the user override the pre-loading of the initial LR with the address of
+ 107:freertos/portable/GCC/ARM_CM4F/portmacro.h **** prvTaskExitError() in case it messes up unwinding of the stack in the
+ 108:freertos/portable/GCC/ARM_CM4F/portmacro.h **** debugger. */
+ 109:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #ifdef configTASK_RETURN_ADDRESS
+ 110:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	#define portTASK_RETURN_ADDRESS	configTASK_RETURN_ADDRESS
+ 111:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #else
+ 112:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	#define portTASK_RETURN_ADDRESS	prvTaskExitError
+ 113:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #endif
+ 114:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 115:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /*-----------------------------------------------------------*/
+ 116:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 117:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /* Scheduler utilities. */
+ 118:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portYIELD()								\
+ 119:freertos/portable/GCC/ARM_CM4F/portmacro.h **** {												\
+ 120:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	/* Set a PendSV to request a context switch. */	\
+ 121:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT;	\
+ 122:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 												\
+ 123:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	/* Barriers are normally not required but do ensure the code is completely	\
+ 124:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	within the specified behaviour for the architecture. */		\
+ 125:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	__asm volatile( "dsb" ::: "memory" );		\
+ 126:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	__asm volatile( "isb" );					\
+ 127:freertos/portable/GCC/ARM_CM4F/portmacro.h **** }
+ 128:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /*-----------------------------------------------------------*/
+ 129:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 130:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portNVIC_INT_CTRL_REG		( * ( ( volatile uint32_t * ) 0xe000ed04 ) )
+ 131:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portNVIC_PENDSVSET_BIT		( 1UL << 28UL )
+ 132:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portEND_SWITCHING_ISR( xSwitchRequired ) if( xSwitchRequired != pdFALSE ) portYIELD()
+ 133:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portYIELD_FROM_ISR( x ) portEND_SWITCHING_ISR( x )
+ARM GAS  /tmp/ccFTpT40.s 			page 9
+
+
+ 134:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /*-----------------------------------------------------------*/
+ 135:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 136:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /* Critical section management. */
+ 137:freertos/portable/GCC/ARM_CM4F/portmacro.h **** extern void vPortEnterCritical( void );
+ 138:freertos/portable/GCC/ARM_CM4F/portmacro.h **** extern void vPortExitCritical( void );
+ 139:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portSET_INTERRUPT_MASK_FROM_ISR()		ulPortRaiseBASEPRI()
+ 140:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portCLEAR_INTERRUPT_MASK_FROM_ISR(x)	vPortSetBASEPRI(x)
+ 141:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portDISABLE_INTERRUPTS()				vPortRaiseBASEPRI()
+ 142:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portENABLE_INTERRUPTS()					vPortSetBASEPRI(0)
+ 143:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portENTER_CRITICAL()					vPortEnterCritical()
+ 144:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portEXIT_CRITICAL()						vPortExitCritical()
+ 145:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 146:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /*-----------------------------------------------------------*/
+ 147:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 148:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /* Task function macros as described on the FreeRTOS.org WEB site.  These are
+ 149:freertos/portable/GCC/ARM_CM4F/portmacro.h **** not necessary for to use this port.  They are defined so the common demo files
+ 150:freertos/portable/GCC/ARM_CM4F/portmacro.h **** (which build with all the ports) will build. */
+ 151:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portTASK_FUNCTION_PROTO( vFunction, pvParameters ) void vFunction( void *pvParameters )
+ 152:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portTASK_FUNCTION( vFunction, pvParameters ) void vFunction( void *pvParameters )
+ 153:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /*-----------------------------------------------------------*/
+ 154:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 155:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /* Tickless idle/low power functionality. */
+ 156:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #ifndef portSUPPRESS_TICKS_AND_SLEEP
+ 157:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime );
+ 158:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	#define portSUPPRESS_TICKS_AND_SLEEP( xExpectedIdleTime ) vPortSuppressTicksAndSleep( xExpectedIdl
+ 159:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #endif
+ 160:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /*-----------------------------------------------------------*/
+ 161:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 162:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /* Architecture specific optimisations. */
+ 163:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #ifndef configUSE_PORT_OPTIMISED_TASK_SELECTION
+ 164:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	#define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
+ 165:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #endif
+ 166:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 167:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #if configUSE_PORT_OPTIMISED_TASK_SELECTION == 1
+ 168:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 169:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	/* Generic helper function. */
+ 170:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	__attribute__( ( always_inline ) ) static inline uint8_t ucPortCountLeadingZeros( uint32_t ulBitma
+ 171:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	{
+ 172:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	uint8_t ucReturn;
+ 173:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 174:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 		__asm volatile ( "clz %0, %1" : "=r" ( ucReturn ) : "r" ( ulBitmap ) : "memory" );
+ 175:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 		return ucReturn;
+ 176:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	}
+ 177:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 178:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	/* Check the configuration. */
+ 179:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	#if( configMAX_PRIORITIES > 32 )
+ 180:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 		#error configUSE_PORT_OPTIMISED_TASK_SELECTION can only be set to 1 when configMAX_PRIORITIES is 
+ 181:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	#endif
+ 182:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 183:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	/* Store/clear the ready priorities in a bit map. */
+ 184:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	#define portRECORD_READY_PRIORITY( uxPriority, uxReadyPriorities ) ( uxReadyPriorities ) |= ( 1UL 
+ 185:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	#define portRESET_READY_PRIORITY( uxPriority, uxReadyPriorities ) ( uxReadyPriorities ) &= ~( 1UL 
+ 186:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 187:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	/*-----------------------------------------------------------*/
+ 188:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 189:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	#define portGET_HIGHEST_PRIORITY( uxTopPriority, uxReadyPriorities ) uxTopPriority = ( 31UL - ( ui
+ 190:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ARM GAS  /tmp/ccFTpT40.s 			page 10
+
+
+ 191:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #endif /* configUSE_PORT_OPTIMISED_TASK_SELECTION */
+ 192:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 193:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /*-----------------------------------------------------------*/
+ 194:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 195:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #ifdef configASSERT
+ 196:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	void vPortValidateInterruptPriority( void );
+ 197:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	#define portASSERT_IF_INTERRUPT_PRIORITY_INVALID() 	vPortValidateInterruptPriority()
+ 198:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #endif
+ 199:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 200:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /* portNOP() is not required by this port. */
+ 201:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portNOP()
+ 202:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 203:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #define portINLINE	__inline
+ 204:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 205:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #ifndef portFORCE_INLINE
+ 206:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	#define portFORCE_INLINE inline __attribute__(( always_inline))
+ 207:freertos/portable/GCC/ARM_CM4F/portmacro.h **** #endif
+ 208:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 209:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /*-----------------------------------------------------------*/
+ 210:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 211:freertos/portable/GCC/ARM_CM4F/portmacro.h **** static portFORCE_INLINE void vPortSetBASEPRI( uint32_t ulBASEPRI )
+ 212:freertos/portable/GCC/ARM_CM4F/portmacro.h **** {
+ 213:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	__asm volatile
+ 214:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	(
+ 215:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 		"	msr basepri, %0	" :: "r" ( ulBASEPRI ) : "memory"
+ 216:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	);
+ 217:freertos/portable/GCC/ARM_CM4F/portmacro.h **** }
+ 218:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 219:freertos/portable/GCC/ARM_CM4F/portmacro.h **** /*-----------------------------------------------------------*/
+ 220:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 221:freertos/portable/GCC/ARM_CM4F/portmacro.h **** static portFORCE_INLINE void vPortRaiseBASEPRI( void )
+  73              		.loc 3 221 30 view .LVU7
+  74              	.LBB11:
+ 222:freertos/portable/GCC/ARM_CM4F/portmacro.h **** {
+ 223:freertos/portable/GCC/ARM_CM4F/portmacro.h **** uint32_t ulNewBASEPRI = configMAX_SYSCALL_INTERRUPT_PRIORITY;
+  75              		.loc 3 223 1 view .LVU8
+  76              	.LVL0:
+ 224:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 225:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 	__asm volatile
+  77              		.loc 3 225 2 view .LVU9
+  78 0000 5023     		movs	r3, #80
+  79              		.syntax unified
+  80              	@ 225 "freertos/portable/GCC/ARM_CM4F/portmacro.h" 1
+  81 0002 83F31188 			msr basepri, r3	
+  82              	@ 0 "" 2
+  83              		.thumb
+  84              		.syntax unified
+  85              	.L3:
+  86              	.LBE11:
+  87              	.LBE10:
+  56:system/hooks.c **** 
+  57:system/hooks.c ****     while(1);
+  88              		.loc 1 57 5 view .LVU10
+  89              		.loc 1 57 10 view .LVU11
+  90 0006 FEE7     		b	.L3
+  91              		.cfi_endproc
+  92              	.LFE19:
+ARM GAS  /tmp/ccFTpT40.s 			page 11
+
+
+  94              		.section	.text.vApplicationStackOverflowHook,"ax",%progbits
+  95              		.align	1
+  96              		.global	vApplicationStackOverflowHook
+  97              		.syntax unified
+  98              		.thumb
+  99              		.thumb_func
+ 101              	vApplicationStackOverflowHook:
+ 102              	.LVL1:
+ 103              	.LFB20:
+  58:system/hooks.c **** }
+  59:system/hooks.c **** 
+  60:system/hooks.c **** void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName)
+  61:system/hooks.c **** {
+ 104              		.loc 1 61 1 view -0
+ 105              		.cfi_startproc
+ 106              		@ Volatile: function does not return.
+ 107              		@ args = 0, pretend = 0, frame = 0
+ 108              		@ frame_needed = 0, uses_anonymous_args = 0
+ 109              		@ link register save eliminated.
+  62:system/hooks.c ****     (void)pxTask;
+ 110              		.loc 1 62 5 view .LVU13
+  63:system/hooks.c ****     (void)pcTaskName;
+ 111              		.loc 1 63 5 view .LVU14
+  64:system/hooks.c **** 
+  65:system/hooks.c ****     /* Run time stack overflow checking is performed if configconfigCHECK_FOR_STACK_OVERFLOW is def
+  66:system/hooks.c ****     /* 2. This hook function is called if a stack overflow is detected */
+  67:system/hooks.c ****     taskDISABLE_INTERRUPTS();
+ 112              		.loc 1 67 5 view .LVU15
+ 113              	.LBB12:
+ 114              	.LBI12:
+ 221:freertos/portable/GCC/ARM_CM4F/portmacro.h **** {
+ 115              		.loc 3 221 30 view .LVU16
+ 116              	.LBB13:
+ 223:freertos/portable/GCC/ARM_CM4F/portmacro.h **** 
+ 117              		.loc 3 223 1 view .LVU17
+ 118              		.loc 3 225 2 view .LVU18
+ 119 0000 5023     		movs	r3, #80
+ 120              		.syntax unified
+ 121              	@ 225 "freertos/portable/GCC/ARM_CM4F/portmacro.h" 1
+ 122 0002 83F31188 			msr basepri, r3	
+ 123              	@ 0 "" 2
+ 124              		.thumb
+ 125              		.syntax unified
+ 126              	.L5:
+ 127              	.LBE13:
+ 128              	.LBE12:
+  68:system/hooks.c **** 
+  69:system/hooks.c ****     while(1);
+ 129              		.loc 1 69 5 view .LVU19
+ 130              		.loc 1 69 10 view .LVU20
+ 131 0006 FEE7     		b	.L5
+ 132              		.cfi_endproc
+ 133              	.LFE20:
+ 135              		.text
+ 136              	.Letext0:
+ 137              		.file 4 "/usr/lib/gcc/arm-none-eabi/13.2.1/include/stdint.h"
+ 138              		.file 5 "freertos/include/task.h"
+ARM GAS  /tmp/ccFTpT40.s 			page 12
+
+
+ARM GAS  /tmp/ccFTpT40.s 			page 13
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 hooks.c
+     /tmp/ccFTpT40.s:21     .text.vApplicationIdleHook:00000000 $t
+     /tmp/ccFTpT40.s:27     .text.vApplicationIdleHook:00000000 vApplicationIdleHook
+     /tmp/ccFTpT40.s:55     .text.vApplicationMallocFailedHook:00000000 $t
+     /tmp/ccFTpT40.s:61     .text.vApplicationMallocFailedHook:00000000 vApplicationMallocFailedHook
+     /tmp/ccFTpT40.s:95     .text.vApplicationStackOverflowHook:00000000 $t
+     /tmp/ccFTpT40.s:101    .text.vApplicationStackOverflowHook:00000000 vApplicationStackOverflowHook
+
+NO UNDEFINED SYMBOLS

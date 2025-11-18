@@ -1,0 +1,3048 @@
+ARM GAS  /tmp/ccmsCeBL.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"sys_log.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "system/sys_log/sys_log.c"
+  20              		.section	.text.sys_log_print_byte,"ax",%progbits
+  21              		.align	1
+  22              		.global	sys_log_print_byte
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	sys_log_print_byte:
+  28              	.LVL0:
+  29              	.LFB20:
+   1:system/sys_log/sys_log.c **** /*
+   2:system/sys_log/sys_log.c ****  * sys_log.c
+   3:system/sys_log/sys_log.c ****  * 
+   4:system/sys_log/sys_log.c ****  * Copyright (C) 2020, SpaceLab.
+   5:system/sys_log/sys_log.c ****  * 
+   6:system/sys_log/sys_log.c ****  * This file is part of EPS 2.0.
+   7:system/sys_log/sys_log.c ****  * 
+   8:system/sys_log/sys_log.c ****  * EPS 2.0 is free software: you can redistribute it and/or modify
+   9:system/sys_log/sys_log.c ****  * it under the terms of the GNU General Public License as published by
+  10:system/sys_log/sys_log.c ****  * the Free Software Foundation, either version 3 of the License, or
+  11:system/sys_log/sys_log.c ****  * (at your option) any later version.
+  12:system/sys_log/sys_log.c ****  * 
+  13:system/sys_log/sys_log.c ****  * EPS 2.0 is distributed in the hope that it will be useful,
+  14:system/sys_log/sys_log.c ****  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  15:system/sys_log/sys_log.c ****  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  16:system/sys_log/sys_log.c ****  * GNU General Public License for more details.
+  17:system/sys_log/sys_log.c ****  * 
+  18:system/sys_log/sys_log.c ****  * You should have received a copy of the GNU General Public License
+  19:system/sys_log/sys_log.c ****  * along with EPS 2.0. If not, see <http://www.gnu.org/licenses/>.
+  20:system/sys_log/sys_log.c ****  * 
+  21:system/sys_log/sys_log.c ****  */
+  22:system/sys_log/sys_log.c **** 
+  23:system/sys_log/sys_log.c **** /**
+  24:system/sys_log/sys_log.c ****  * \brief System log implementation.
+  25:system/sys_log/sys_log.c ****  * 
+  26:system/sys_log/sys_log.c ****  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
+  27:system/sys_log/sys_log.c ****  * 
+  28:system/sys_log/sys_log.c ****  * \version 0.1.2
+  29:system/sys_log/sys_log.c ****  * 
+ARM GAS  /tmp/ccmsCeBL.s 			page 2
+
+
+  30:system/sys_log/sys_log.c ****  * \date 2020/10/22
+  31:system/sys_log/sys_log.c ****  * 
+  32:system/sys_log/sys_log.c ****  * \addtogroup sys_log
+  33:system/sys_log/sys_log.c ****  * \{
+  34:system/sys_log/sys_log.c ****  */
+  35:system/sys_log/sys_log.c **** 
+  36:system/sys_log/sys_log.c **** #include <math.h>
+  37:system/sys_log/sys_log.c **** 
+  38:system/sys_log/sys_log.c **** #include <FreeRTOS.h>
+  39:system/sys_log/sys_log.c **** #include <task.h>
+  40:system/sys_log/sys_log.c **** 
+  41:system/sys_log/sys_log.c **** #include <version.h>
+  42:system/sys_log/sys_log.c **** 
+  43:system/sys_log/sys_log.c **** #include "config/config.h"
+  44:system/sys_log/sys_log.c **** 
+  45:system/sys_log/sys_log.c **** #include "sys_log.h"
+  46:system/sys_log/sys_log.c **** #include "sys_log_config.h"
+  47:system/sys_log/sys_log.c **** 
+  48:system/sys_log/sys_log.c **** static volatile uint8_t sys_log_current_level = SYS_LOG_INFO;
+  49:system/sys_log/sys_log.c **** 
+  50:system/sys_log/sys_log.c **** int sys_log_init()
+  51:system/sys_log/sys_log.c **** {
+  52:system/sys_log/sys_log.c ****     if (sys_log_uart_init())
+  53:system/sys_log/sys_log.c ****     {
+  54:system/sys_log/sys_log.c ****         sys_log_new_line();
+  55:system/sys_log/sys_log.c **** 
+  56:system/sys_log/sys_log.c ****         sys_log_print_license_msg();
+  57:system/sys_log/sys_log.c **** 
+  58:system/sys_log/sys_log.c ****         sys_log_print_splash_screen();
+  59:system/sys_log/sys_log.c **** 
+  60:system/sys_log/sys_log.c ****         sys_log_print_msg("===================================================================");
+  61:system/sys_log/sys_log.c ****         sys_log_new_line();
+  62:system/sys_log/sys_log.c ****         sys_log_print_msg("Version:\t");
+  63:system/sys_log/sys_log.c ****         sys_log_print_firmware_version();
+  64:system/sys_log/sys_log.c ****         sys_log_new_line();
+  65:system/sys_log/sys_log.c **** 
+  66:system/sys_log/sys_log.c ****         sys_log_print_msg("Status:\t\t");
+  67:system/sys_log/sys_log.c ****         sys_log_print_msg(FIRMWARE_STATUS);
+  68:system/sys_log/sys_log.c ****         sys_log_new_line();
+  69:system/sys_log/sys_log.c **** 
+  70:system/sys_log/sys_log.c ****         sys_log_print_msg("Author:\t\t");
+  71:system/sys_log/sys_log.c ****         sys_log_print_msg(FIRMWARE_AUTHOR);
+  72:system/sys_log/sys_log.c ****         sys_log_print_msg(" <");
+  73:system/sys_log/sys_log.c ****         sys_log_print_msg(FIRMWARE_AUTHOR_EMAIL);
+  74:system/sys_log/sys_log.c ****         sys_log_print_msg(">");
+  75:system/sys_log/sys_log.c ****         sys_log_new_line();
+  76:system/sys_log/sys_log.c ****         sys_log_print_msg("===================================================================");
+  77:system/sys_log/sys_log.c ****         sys_log_new_line();
+  78:system/sys_log/sys_log.c ****         sys_log_new_line();
+  79:system/sys_log/sys_log.c ****         sys_log_new_line();
+  80:system/sys_log/sys_log.c **** 
+  81:system/sys_log/sys_log.c ****         sys_log_mutex_create();
+  82:system/sys_log/sys_log.c **** 
+  83:system/sys_log/sys_log.c ****         return 0;
+  84:system/sys_log/sys_log.c ****     }
+  85:system/sys_log/sys_log.c ****     else
+  86:system/sys_log/sys_log.c ****     {
+ARM GAS  /tmp/ccmsCeBL.s 			page 3
+
+
+  87:system/sys_log/sys_log.c ****         return -1;
+  88:system/sys_log/sys_log.c ****     }
+  89:system/sys_log/sys_log.c **** }
+  90:system/sys_log/sys_log.c **** 
+  91:system/sys_log/sys_log.c **** void sys_log_set_color(uint8_t color)
+  92:system/sys_log/sys_log.c **** {
+  93:system/sys_log/sys_log.c ****     switch(color)
+  94:system/sys_log/sys_log.c ****     {
+  95:system/sys_log/sys_log.c ****         case SYS_LOG_COLOR_BLACK:
+  96:system/sys_log/sys_log.c ****             sys_log_print_msg("\033[1;30m");
+  97:system/sys_log/sys_log.c ****             break;
+  98:system/sys_log/sys_log.c ****         case SYS_LOG_COLOR_RED:
+  99:system/sys_log/sys_log.c ****             sys_log_print_msg("\033[1;31m");
+ 100:system/sys_log/sys_log.c ****             break;
+ 101:system/sys_log/sys_log.c ****         case SYS_LOG_COLOR_GREEN:
+ 102:system/sys_log/sys_log.c ****             sys_log_print_msg("\033[1;32m");
+ 103:system/sys_log/sys_log.c ****             break;
+ 104:system/sys_log/sys_log.c ****         case SYS_LOG_COLOR_YELLOW:
+ 105:system/sys_log/sys_log.c ****             sys_log_print_msg("\033[1;33m");
+ 106:system/sys_log/sys_log.c ****             break;
+ 107:system/sys_log/sys_log.c ****         case SYS_LOG_COLOR_BLUE:
+ 108:system/sys_log/sys_log.c ****             sys_log_print_msg("\033[1;34m");
+ 109:system/sys_log/sys_log.c ****             break;
+ 110:system/sys_log/sys_log.c ****         case SYS_LOG_COLOR_MAGENTA:
+ 111:system/sys_log/sys_log.c ****             sys_log_print_msg("\033[1;35m");
+ 112:system/sys_log/sys_log.c ****             break;
+ 113:system/sys_log/sys_log.c ****         case SYS_LOG_COLOR_CYAN:
+ 114:system/sys_log/sys_log.c ****             sys_log_print_msg("\033[1;36m");
+ 115:system/sys_log/sys_log.c ****             break;
+ 116:system/sys_log/sys_log.c ****         case SYS_LOG_COLOR_WHITE:
+ 117:system/sys_log/sys_log.c ****             sys_log_print_msg("\033[1;37m");
+ 118:system/sys_log/sys_log.c ****             break;
+ 119:system/sys_log/sys_log.c ****         default:
+ 120:system/sys_log/sys_log.c ****             sys_log_reset_color();
+ 121:system/sys_log/sys_log.c ****     }
+ 122:system/sys_log/sys_log.c **** }
+ 123:system/sys_log/sys_log.c **** 
+ 124:system/sys_log/sys_log.c **** void sys_log_reset_color()
+ 125:system/sys_log/sys_log.c **** {
+ 126:system/sys_log/sys_log.c ****     sys_log_print_msg("\033[0m");
+ 127:system/sys_log/sys_log.c **** }
+ 128:system/sys_log/sys_log.c **** 
+ 129:system/sys_log/sys_log.c **** void sys_log_print_event(uint8_t type, const char *event)
+ 130:system/sys_log/sys_log.c **** {
+ 131:system/sys_log/sys_log.c ****     sys_log_current_level = type;
+ 132:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 133:system/sys_log/sys_log.c ****     {
+ 134:system/sys_log/sys_log.c ****         sys_log_mutex_take();
+ 135:system/sys_log/sys_log.c **** 
+ 136:system/sys_log/sys_log.c ****         sys_log_print_system_time();
+ 137:system/sys_log/sys_log.c ****         sys_log_print_msg(" ");
+ 138:system/sys_log/sys_log.c **** 
+ 139:system/sys_log/sys_log.c ****         switch(type)
+ 140:system/sys_log/sys_log.c ****         {
+ 141:system/sys_log/sys_log.c ****             case SYS_LOG_INFO:
+ 142:system/sys_log/sys_log.c ****                 sys_log_set_color(SYS_LOG_INFO_COLOR);
+ 143:system/sys_log/sys_log.c ****                 break;
+ARM GAS  /tmp/ccmsCeBL.s 			page 4
+
+
+ 144:system/sys_log/sys_log.c ****             case SYS_LOG_WARNING:
+ 145:system/sys_log/sys_log.c ****                 sys_log_set_color(SYS_LOG_WARNING_COLOR);
+ 146:system/sys_log/sys_log.c ****                 break;
+ 147:system/sys_log/sys_log.c ****             case SYS_LOG_ERROR:
+ 148:system/sys_log/sys_log.c ****                 sys_log_set_color(SYS_LOG_ERROR_COLOR);
+ 149:system/sys_log/sys_log.c ****                 break;
+ 150:system/sys_log/sys_log.c ****             default:
+ 151:system/sys_log/sys_log.c ****                 break;
+ 152:system/sys_log/sys_log.c ****         }
+ 153:system/sys_log/sys_log.c **** 
+ 154:system/sys_log/sys_log.c ****         sys_log_print_msg(event);
+ 155:system/sys_log/sys_log.c ****     }
+ 156:system/sys_log/sys_log.c **** }
+ 157:system/sys_log/sys_log.c **** 
+ 158:system/sys_log/sys_log.c **** void sys_log_print_event_from_module(uint8_t type, const char *module, const char *event)
+ 159:system/sys_log/sys_log.c **** {
+ 160:system/sys_log/sys_log.c ****     sys_log_current_level = type;
+ 161:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 162:system/sys_log/sys_log.c ****     {
+ 163:system/sys_log/sys_log.c ****         sys_log_mutex_take();
+ 164:system/sys_log/sys_log.c **** 
+ 165:system/sys_log/sys_log.c ****         sys_log_print_system_time();
+ 166:system/sys_log/sys_log.c **** 
+ 167:system/sys_log/sys_log.c ****         sys_log_set_color(SYS_LOG_MODULE_NAME_COLOR);
+ 168:system/sys_log/sys_log.c ****         sys_log_print_msg(" ");
+ 169:system/sys_log/sys_log.c ****         sys_log_print_msg(module);
+ 170:system/sys_log/sys_log.c ****         sys_log_reset_color();
+ 171:system/sys_log/sys_log.c ****         sys_log_print_msg(": ");
+ 172:system/sys_log/sys_log.c **** 
+ 173:system/sys_log/sys_log.c ****         switch(type)
+ 174:system/sys_log/sys_log.c ****         {
+ 175:system/sys_log/sys_log.c ****             case SYS_LOG_INFO:
+ 176:system/sys_log/sys_log.c ****                 sys_log_set_color(SYS_LOG_INFO_COLOR);
+ 177:system/sys_log/sys_log.c ****                 break;
+ 178:system/sys_log/sys_log.c ****             case SYS_LOG_WARNING:
+ 179:system/sys_log/sys_log.c ****                 sys_log_set_color(SYS_LOG_WARNING_COLOR);
+ 180:system/sys_log/sys_log.c ****                 break;
+ 181:system/sys_log/sys_log.c ****             case SYS_LOG_ERROR:
+ 182:system/sys_log/sys_log.c ****                 sys_log_set_color(SYS_LOG_ERROR_COLOR);
+ 183:system/sys_log/sys_log.c ****                 break;
+ 184:system/sys_log/sys_log.c ****             default:
+ 185:system/sys_log/sys_log.c ****                 break;
+ 186:system/sys_log/sys_log.c ****         }
+ 187:system/sys_log/sys_log.c **** 
+ 188:system/sys_log/sys_log.c ****         sys_log_print_msg(event);
+ 189:system/sys_log/sys_log.c ****     }
+ 190:system/sys_log/sys_log.c **** }
+ 191:system/sys_log/sys_log.c **** 
+ 192:system/sys_log/sys_log.c **** void sys_log_print_msg(const char *msg)
+ 193:system/sys_log/sys_log.c **** {
+ 194:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 195:system/sys_log/sys_log.c ****     {
+ 196:system/sys_log/sys_log.c ****         uint16_t i = 0;
+ 197:system/sys_log/sys_log.c ****         while(msg[i] != '\0')
+ 198:system/sys_log/sys_log.c ****         {
+ 199:system/sys_log/sys_log.c ****             sys_log_print_byte(msg[i]);
+ 200:system/sys_log/sys_log.c ****             i++;
+ARM GAS  /tmp/ccmsCeBL.s 			page 5
+
+
+ 201:system/sys_log/sys_log.c ****         }
+ 202:system/sys_log/sys_log.c ****     }
+ 203:system/sys_log/sys_log.c **** }
+ 204:system/sys_log/sys_log.c **** 
+ 205:system/sys_log/sys_log.c **** void sys_log_new_line()
+ 206:system/sys_log/sys_log.c **** {
+ 207:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 208:system/sys_log/sys_log.c ****     {
+ 209:system/sys_log/sys_log.c ****         sys_log_reset_color();
+ 210:system/sys_log/sys_log.c ****         sys_log_print_msg("\n\r");
+ 211:system/sys_log/sys_log.c ****         sys_log_mutex_give();
+ 212:system/sys_log/sys_log.c ****     }
+ 213:system/sys_log/sys_log.c **** }
+ 214:system/sys_log/sys_log.c **** 
+ 215:system/sys_log/sys_log.c **** void sys_log_print_digit(uint8_t digit)
+ 216:system/sys_log/sys_log.c **** {
+ 217:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 218:system/sys_log/sys_log.c ****     {
+ 219:system/sys_log/sys_log.c ****         if (digit < 0x0A)
+ 220:system/sys_log/sys_log.c ****         {
+ 221:system/sys_log/sys_log.c ****             sys_log_print_byte(digit + 0x30);    /* 0x30 = ascii 0 */
+ 222:system/sys_log/sys_log.c ****         }
+ 223:system/sys_log/sys_log.c ****         else if (digit <= 0x0F)
+ 224:system/sys_log/sys_log.c ****         {
+ 225:system/sys_log/sys_log.c ****             sys_log_print_byte(digit + 0x37);    /* 0x37 = ascii 7 */
+ 226:system/sys_log/sys_log.c ****         }
+ 227:system/sys_log/sys_log.c ****         else
+ 228:system/sys_log/sys_log.c ****         {
+ 229:system/sys_log/sys_log.c ****             sys_log_print_byte('N');
+ 230:system/sys_log/sys_log.c ****         }
+ 231:system/sys_log/sys_log.c ****     }
+ 232:system/sys_log/sys_log.c **** }
+ 233:system/sys_log/sys_log.c **** 
+ 234:system/sys_log/sys_log.c **** void sys_log_print_str(char *str)
+ 235:system/sys_log/sys_log.c **** {
+ 236:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 237:system/sys_log/sys_log.c ****     {
+ 238:system/sys_log/sys_log.c ****         uint16_t i = 0;
+ 239:system/sys_log/sys_log.c ****         while(str[i] != '\0')
+ 240:system/sys_log/sys_log.c ****         {
+ 241:system/sys_log/sys_log.c ****             sys_log_print_byte(str[i]);
+ 242:system/sys_log/sys_log.c ****             i++;
+ 243:system/sys_log/sys_log.c ****         }
+ 244:system/sys_log/sys_log.c ****     }
+ 245:system/sys_log/sys_log.c **** }
+ 246:system/sys_log/sys_log.c **** 
+ 247:system/sys_log/sys_log.c **** void sys_log_print_uint(uint32_t uint)
+ 248:system/sys_log/sys_log.c **** {
+ 249:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 250:system/sys_log/sys_log.c ****     {
+ 251:system/sys_log/sys_log.c ****         if (uint == 0)
+ 252:system/sys_log/sys_log.c ****         {
+ 253:system/sys_log/sys_log.c ****             sys_log_print_digit(0);
+ 254:system/sys_log/sys_log.c ****         }
+ 255:system/sys_log/sys_log.c ****         else
+ 256:system/sys_log/sys_log.c ****         {
+ 257:system/sys_log/sys_log.c ****             uint8_t uint_str[10];               /* 32-bits = decimal with 10 digits */
+ARM GAS  /tmp/ccmsCeBL.s 			page 6
+
+
+ 258:system/sys_log/sys_log.c **** 
+ 259:system/sys_log/sys_log.c ****             uint8_t digits = log10(uint) + 1;
+ 260:system/sys_log/sys_log.c **** 
+ 261:system/sys_log/sys_log.c ****             uint8_t i = 0;
+ 262:system/sys_log/sys_log.c ****             for(i=0; i<digits; ++i, uint /= 10)
+ 263:system/sys_log/sys_log.c ****             {
+ 264:system/sys_log/sys_log.c ****                 uint_str[i] = uint % 10;
+ 265:system/sys_log/sys_log.c ****             }
+ 266:system/sys_log/sys_log.c **** 
+ 267:system/sys_log/sys_log.c ****             uint8_t j = 0;
+ 268:system/sys_log/sys_log.c ****             for(j=i; j>0; j--)
+ 269:system/sys_log/sys_log.c ****             {
+ 270:system/sys_log/sys_log.c ****                 sys_log_print_digit(uint_str[j-1]);
+ 271:system/sys_log/sys_log.c ****             }
+ 272:system/sys_log/sys_log.c ****         }
+ 273:system/sys_log/sys_log.c ****     }
+ 274:system/sys_log/sys_log.c **** }
+ 275:system/sys_log/sys_log.c **** 
+ 276:system/sys_log/sys_log.c **** void sys_log_print_int(int32_t sint)
+ 277:system/sys_log/sys_log.c **** {
+ 278:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 279:system/sys_log/sys_log.c ****     {
+ 280:system/sys_log/sys_log.c ****         if (sint < 0)
+ 281:system/sys_log/sys_log.c ****         {
+ 282:system/sys_log/sys_log.c ****             sint = abs(sint);
+ 283:system/sys_log/sys_log.c ****             sys_log_print_msg("-");
+ 284:system/sys_log/sys_log.c ****         }
+ 285:system/sys_log/sys_log.c **** 
+ 286:system/sys_log/sys_log.c ****         sys_log_print_uint((uint32_t)sint);
+ 287:system/sys_log/sys_log.c ****     }
+ 288:system/sys_log/sys_log.c **** }
+ 289:system/sys_log/sys_log.c **** 
+ 290:system/sys_log/sys_log.c **** void sys_log_print_hex(uint32_t hex)
+ 291:system/sys_log/sys_log.c **** {
+ 292:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 293:system/sys_log/sys_log.c ****     {
+ 294:system/sys_log/sys_log.c ****         sys_log_print_msg("0x");
+ 295:system/sys_log/sys_log.c ****         
+ 296:system/sys_log/sys_log.c ****         if (hex > 0x00FFFFFF)
+ 297:system/sys_log/sys_log.c ****         {
+ 298:system/sys_log/sys_log.c ****             sys_log_print_digit((uint8_t)(hex >> 28) & 0x0F);
+ 299:system/sys_log/sys_log.c ****             sys_log_print_digit((uint8_t)(hex >> 24) & 0x0F);
+ 300:system/sys_log/sys_log.c ****         }
+ 301:system/sys_log/sys_log.c **** 
+ 302:system/sys_log/sys_log.c ****         if (hex > 0x0000FFFF)
+ 303:system/sys_log/sys_log.c ****         {
+ 304:system/sys_log/sys_log.c ****             sys_log_print_digit((uint8_t)(hex >> 20) & 0x0F);
+ 305:system/sys_log/sys_log.c ****             sys_log_print_digit((uint8_t)(hex >> 16) & 0x0F);
+ 306:system/sys_log/sys_log.c ****         }
+ 307:system/sys_log/sys_log.c **** 
+ 308:system/sys_log/sys_log.c ****         if (hex > 0x000000FF)
+ 309:system/sys_log/sys_log.c ****         {
+ 310:system/sys_log/sys_log.c ****             sys_log_print_digit((uint8_t)(hex >> 12) & 0x0F);
+ 311:system/sys_log/sys_log.c ****             sys_log_print_digit((uint8_t)(hex >> 8) & 0x0F);
+ 312:system/sys_log/sys_log.c ****         }
+ 313:system/sys_log/sys_log.c **** 
+ 314:system/sys_log/sys_log.c ****         sys_log_print_digit((uint8_t)(hex >> 4) & 0x0F);
+ARM GAS  /tmp/ccmsCeBL.s 			page 7
+
+
+ 315:system/sys_log/sys_log.c ****         sys_log_print_digit((uint8_t)(hex & 0x0F));
+ 316:system/sys_log/sys_log.c ****     }
+ 317:system/sys_log/sys_log.c **** }
+ 318:system/sys_log/sys_log.c **** 
+ 319:system/sys_log/sys_log.c **** void sys_log_dump_hex(uint8_t *data, uint16_t len)
+ 320:system/sys_log/sys_log.c **** {
+ 321:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 322:system/sys_log/sys_log.c ****     {
+ 323:system/sys_log/sys_log.c ****         uint16_t i = 0;
+ 324:system/sys_log/sys_log.c ****         for(i=0; i<len; i++)
+ 325:system/sys_log/sys_log.c ****         {
+ 326:system/sys_log/sys_log.c ****             sys_log_print_hex(data[i]);
+ 327:system/sys_log/sys_log.c **** 
+ 328:system/sys_log/sys_log.c ****             if (i < len-1)
+ 329:system/sys_log/sys_log.c ****             {
+ 330:system/sys_log/sys_log.c ****                 sys_log_print_msg(", ");
+ 331:system/sys_log/sys_log.c ****             }
+ 332:system/sys_log/sys_log.c ****         }
+ 333:system/sys_log/sys_log.c ****     }
+ 334:system/sys_log/sys_log.c **** }
+ 335:system/sys_log/sys_log.c **** 
+ 336:system/sys_log/sys_log.c **** void sys_log_print_float(float flt, uint8_t digits)
+ 337:system/sys_log/sys_log.c **** {
+ 338:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 339:system/sys_log/sys_log.c ****     {
+ 340:system/sys_log/sys_log.c ****         if (flt < 0)
+ 341:system/sys_log/sys_log.c ****         {
+ 342:system/sys_log/sys_log.c ****             sys_log_print_msg("-");
+ 343:system/sys_log/sys_log.c **** 
+ 344:system/sys_log/sys_log.c ****             flt = abs(flt);
+ 345:system/sys_log/sys_log.c ****         }
+ 346:system/sys_log/sys_log.c **** 
+ 347:system/sys_log/sys_log.c ****         /* Extract integer part */
+ 348:system/sys_log/sys_log.c ****         uint32_t ipart = (uint32_t)flt;
+ 349:system/sys_log/sys_log.c **** 
+ 350:system/sys_log/sys_log.c ****         /* Extract floating part */
+ 351:system/sys_log/sys_log.c ****         float fpart = flt - (float)ipart;
+ 352:system/sys_log/sys_log.c **** 
+ 353:system/sys_log/sys_log.c ****         /* Print integer part */
+ 354:system/sys_log/sys_log.c ****         sys_log_print_uint(ipart);
+ 355:system/sys_log/sys_log.c **** 
+ 356:system/sys_log/sys_log.c ****         /* Print decimal point */
+ 357:system/sys_log/sys_log.c ****         sys_log_print_msg(".");
+ 358:system/sys_log/sys_log.c **** 
+ 359:system/sys_log/sys_log.c ****         /* Print floating part */
+ 360:system/sys_log/sys_log.c ****         sys_log_print_uint((uint32_t)(fpart*pow(10, digits)));
+ 361:system/sys_log/sys_log.c ****     }
+ 362:system/sys_log/sys_log.c **** }
+ 363:system/sys_log/sys_log.c **** 
+ 364:system/sys_log/sys_log.c **** void sys_log_print_byte(uint8_t byte)
+ 365:system/sys_log/sys_log.c **** {
+  30              		.loc 1 365 1 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		.loc 1 365 1 is_stmt 0 view .LVU1
+  35 0000 08B5     		push	{r3, lr}
+ARM GAS  /tmp/ccmsCeBL.s 			page 8
+
+
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 8
+  38              		.cfi_offset 3, -8
+  39              		.cfi_offset 14, -4
+ 366:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+  40              		.loc 1 366 5 is_stmt 1 view .LVU2
+  41              		.loc 1 366 31 is_stmt 0 view .LVU3
+  42 0002 034B     		ldr	r3, .L5
+  43 0004 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  44              		.loc 1 366 8 view .LVU4
+  45 0006 03B9     		cbnz	r3, .L4
+  46              	.LVL1:
+  47              	.L1:
+ 367:system/sys_log/sys_log.c ****     {
+ 368:system/sys_log/sys_log.c ****         sys_log_uart_write_byte(byte);
+ 369:system/sys_log/sys_log.c ****     }
+ 370:system/sys_log/sys_log.c **** }
+  48              		.loc 1 370 1 view .LVU5
+  49 0008 08BD     		pop	{r3, pc}
+  50              	.LVL2:
+  51              	.L4:
+ 368:system/sys_log/sys_log.c ****     }
+  52              		.loc 1 368 9 is_stmt 1 view .LVU6
+  53 000a FFF7FEFF 		bl	sys_log_uart_write_byte
+  54              	.LVL3:
+  55              		.loc 1 370 1 is_stmt 0 view .LVU7
+  56 000e FBE7     		b	.L1
+  57              	.L6:
+  58              		.align	2
+  59              	.L5:
+  60 0010 00000000 		.word	sys_log_current_level
+  61              		.cfi_endproc
+  62              	.LFE20:
+  64              		.section	.text.sys_log_print_msg,"ax",%progbits
+  65              		.align	1
+  66              		.global	sys_log_print_msg
+  67              		.syntax unified
+  68              		.thumb
+  69              		.thumb_func
+  71              	sys_log_print_msg:
+  72              	.LVL4:
+  73              	.LFB11:
+ 193:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+  74              		.loc 1 193 1 is_stmt 1 view -0
+  75              		.cfi_startproc
+  76              		@ args = 0, pretend = 0, frame = 0
+  77              		@ frame_needed = 0, uses_anonymous_args = 0
+ 193:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+  78              		.loc 1 193 1 is_stmt 0 view .LVU9
+  79 0000 38B5     		push	{r3, r4, r5, lr}
+  80              	.LCFI1:
+  81              		.cfi_def_cfa_offset 16
+  82              		.cfi_offset 3, -16
+  83              		.cfi_offset 4, -12
+  84              		.cfi_offset 5, -8
+  85              		.cfi_offset 14, -4
+ 194:system/sys_log/sys_log.c ****     {
+ARM GAS  /tmp/ccmsCeBL.s 			page 9
+
+
+  86              		.loc 1 194 5 is_stmt 1 view .LVU10
+ 194:system/sys_log/sys_log.c ****     {
+  87              		.loc 1 194 31 is_stmt 0 view .LVU11
+  88 0002 074B     		ldr	r3, .L13
+  89 0004 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 194:system/sys_log/sys_log.c ****     {
+  90              		.loc 1 194 8 view .LVU12
+  91 0006 43B9     		cbnz	r3, .L11
+  92              	.LVL5:
+  93              	.L7:
+ 203:system/sys_log/sys_log.c **** 
+  94              		.loc 1 203 1 view .LVU13
+  95 0008 38BD     		pop	{r3, r4, r5, pc}
+  96              	.LVL6:
+  97              	.L10:
+  98              	.LBB2:
+ 199:system/sys_log/sys_log.c ****             i++;
+  99              		.loc 1 199 13 is_stmt 1 view .LVU14
+ 100 000a FFF7FEFF 		bl	sys_log_print_byte
+ 101              	.LVL7:
+ 200:system/sys_log/sys_log.c ****         }
+ 102              		.loc 1 200 13 view .LVU15
+ 200:system/sys_log/sys_log.c ****         }
+ 103              		.loc 1 200 14 is_stmt 0 view .LVU16
+ 104 000e 0134     		adds	r4, r4, #1
+ 105              	.LVL8:
+ 200:system/sys_log/sys_log.c ****         }
+ 106              		.loc 1 200 14 view .LVU17
+ 107 0010 A4B2     		uxth	r4, r4
+ 108              	.LVL9:
+ 109              	.L8:
+ 197:system/sys_log/sys_log.c ****         {
+ 110              		.loc 1 197 22 is_stmt 1 view .LVU18
+ 197:system/sys_log/sys_log.c ****         {
+ 111              		.loc 1 197 18 is_stmt 0 view .LVU19
+ 112 0012 285D     		ldrb	r0, [r5, r4]	@ zero_extendqisi2
+ 197:system/sys_log/sys_log.c ****         {
+ 113              		.loc 1 197 22 view .LVU20
+ 114 0014 0028     		cmp	r0, #0
+ 115 0016 F8D1     		bne	.L10
+ 116 0018 F6E7     		b	.L7
+ 117              	.LVL10:
+ 118              	.L11:
+ 197:system/sys_log/sys_log.c ****         {
+ 119              		.loc 1 197 22 view .LVU21
+ 120 001a 0546     		mov	r5, r0
+ 196:system/sys_log/sys_log.c ****         while(msg[i] != '\0')
+ 121              		.loc 1 196 18 view .LVU22
+ 122 001c 0024     		movs	r4, #0
+ 123 001e F8E7     		b	.L8
+ 124              	.L14:
+ 125              		.align	2
+ 126              	.L13:
+ 127 0020 00000000 		.word	sys_log_current_level
+ 128              	.LBE2:
+ 129              		.cfi_endproc
+ 130              	.LFE11:
+ARM GAS  /tmp/ccmsCeBL.s 			page 10
+
+
+ 132              		.section	.rodata.sys_log_reset_color.str1.4,"aMS",%progbits,1
+ 133              		.align	2
+ 134              	.LC0:
+ 135 0000 1B5B306D 		.ascii	"\033[0m\000"
+ 135      00
+ 136              		.section	.text.sys_log_reset_color,"ax",%progbits
+ 137              		.align	1
+ 138              		.global	sys_log_reset_color
+ 139              		.syntax unified
+ 140              		.thumb
+ 141              		.thumb_func
+ 143              	sys_log_reset_color:
+ 144              	.LFB8:
+ 125:system/sys_log/sys_log.c ****     sys_log_print_msg("\033[0m");
+ 145              		.loc 1 125 1 is_stmt 1 view -0
+ 146              		.cfi_startproc
+ 147              		@ args = 0, pretend = 0, frame = 0
+ 148              		@ frame_needed = 0, uses_anonymous_args = 0
+ 149 0000 08B5     		push	{r3, lr}
+ 150              	.LCFI2:
+ 151              		.cfi_def_cfa_offset 8
+ 152              		.cfi_offset 3, -8
+ 153              		.cfi_offset 14, -4
+ 126:system/sys_log/sys_log.c **** }
+ 154              		.loc 1 126 5 view .LVU24
+ 155 0002 0248     		ldr	r0, .L17
+ 156 0004 FFF7FEFF 		bl	sys_log_print_msg
+ 157              	.LVL11:
+ 127:system/sys_log/sys_log.c **** 
+ 158              		.loc 1 127 1 is_stmt 0 view .LVU25
+ 159 0008 08BD     		pop	{r3, pc}
+ 160              	.L18:
+ 161 000a 00BF     		.align	2
+ 162              	.L17:
+ 163 000c 00000000 		.word	.LC0
+ 164              		.cfi_endproc
+ 165              	.LFE8:
+ 167              		.section	.rodata.sys_log_set_color.str1.4,"aMS",%progbits,1
+ 168              		.align	2
+ 169              	.LC1:
+ 170 0000 1B5B313B 		.ascii	"\033[1;30m\000"
+ 170      33306D00 
+ 171              		.align	2
+ 172              	.LC2:
+ 173 0008 1B5B313B 		.ascii	"\033[1;31m\000"
+ 173      33316D00 
+ 174              		.align	2
+ 175              	.LC3:
+ 176 0010 1B5B313B 		.ascii	"\033[1;32m\000"
+ 176      33326D00 
+ 177              		.align	2
+ 178              	.LC4:
+ 179 0018 1B5B313B 		.ascii	"\033[1;33m\000"
+ 179      33336D00 
+ 180              		.align	2
+ 181              	.LC5:
+ 182 0020 1B5B313B 		.ascii	"\033[1;34m\000"
+ARM GAS  /tmp/ccmsCeBL.s 			page 11
+
+
+ 182      33346D00 
+ 183              		.align	2
+ 184              	.LC6:
+ 185 0028 1B5B313B 		.ascii	"\033[1;35m\000"
+ 185      33356D00 
+ 186              		.align	2
+ 187              	.LC7:
+ 188 0030 1B5B313B 		.ascii	"\033[1;36m\000"
+ 188      33366D00 
+ 189              		.align	2
+ 190              	.LC8:
+ 191 0038 1B5B313B 		.ascii	"\033[1;37m\000"
+ 191      33376D00 
+ 192              		.section	.text.sys_log_set_color,"ax",%progbits
+ 193              		.align	1
+ 194              		.global	sys_log_set_color
+ 195              		.syntax unified
+ 196              		.thumb
+ 197              		.thumb_func
+ 199              	sys_log_set_color:
+ 200              	.LVL12:
+ 201              	.LFB7:
+  92:system/sys_log/sys_log.c ****     switch(color)
+ 202              		.loc 1 92 1 is_stmt 1 view -0
+ 203              		.cfi_startproc
+ 204              		@ args = 0, pretend = 0, frame = 0
+ 205              		@ frame_needed = 0, uses_anonymous_args = 0
+  92:system/sys_log/sys_log.c ****     switch(color)
+ 206              		.loc 1 92 1 is_stmt 0 view .LVU27
+ 207 0000 08B5     		push	{r3, lr}
+ 208              	.LCFI3:
+ 209              		.cfi_def_cfa_offset 8
+ 210              		.cfi_offset 3, -8
+ 211              		.cfi_offset 14, -4
+  93:system/sys_log/sys_log.c ****     {
+ 212              		.loc 1 93 5 is_stmt 1 view .LVU28
+ 213 0002 0728     		cmp	r0, #7
+ 214 0004 25D8     		bhi	.L20
+ 215 0006 DFE800F0 		tbb	[pc, r0]
+ 216              	.L22:
+ 217 000a 04       		.byte	(.L29-.L22)/2
+ 218 000b 08       		.byte	(.L28-.L22)/2
+ 219 000c 0C       		.byte	(.L27-.L22)/2
+ 220 000d 10       		.byte	(.L26-.L22)/2
+ 221 000e 14       		.byte	(.L25-.L22)/2
+ 222 000f 18       		.byte	(.L24-.L22)/2
+ 223 0010 1C       		.byte	(.L23-.L22)/2
+ 224 0011 20       		.byte	(.L21-.L22)/2
+ 225              		.p2align 1
+ 226              	.L29:
+  96:system/sys_log/sys_log.c ****             break;
+ 227              		.loc 1 96 13 view .LVU29
+ 228 0012 1148     		ldr	r0, .L32
+ 229              	.LVL13:
+  96:system/sys_log/sys_log.c ****             break;
+ 230              		.loc 1 96 13 is_stmt 0 view .LVU30
+ 231 0014 FFF7FEFF 		bl	sys_log_print_msg
+ARM GAS  /tmp/ccmsCeBL.s 			page 12
+
+
+ 232              	.LVL14:
+  97:system/sys_log/sys_log.c ****         case SYS_LOG_COLOR_RED:
+ 233              		.loc 1 97 13 is_stmt 1 view .LVU31
+ 234              	.L19:
+ 122:system/sys_log/sys_log.c **** 
+ 235              		.loc 1 122 1 is_stmt 0 view .LVU32
+ 236 0018 08BD     		pop	{r3, pc}
+ 237              	.LVL15:
+ 238              	.L28:
+  99:system/sys_log/sys_log.c ****             break;
+ 239              		.loc 1 99 13 is_stmt 1 view .LVU33
+ 240 001a 1048     		ldr	r0, .L32+4
+ 241              	.LVL16:
+  99:system/sys_log/sys_log.c ****             break;
+ 242              		.loc 1 99 13 is_stmt 0 view .LVU34
+ 243 001c FFF7FEFF 		bl	sys_log_print_msg
+ 244              	.LVL17:
+ 100:system/sys_log/sys_log.c ****         case SYS_LOG_COLOR_GREEN:
+ 245              		.loc 1 100 13 is_stmt 1 view .LVU35
+ 246 0020 FAE7     		b	.L19
+ 247              	.LVL18:
+ 248              	.L27:
+ 102:system/sys_log/sys_log.c ****             break;
+ 249              		.loc 1 102 13 view .LVU36
+ 250 0022 0F48     		ldr	r0, .L32+8
+ 251              	.LVL19:
+ 102:system/sys_log/sys_log.c ****             break;
+ 252              		.loc 1 102 13 is_stmt 0 view .LVU37
+ 253 0024 FFF7FEFF 		bl	sys_log_print_msg
+ 254              	.LVL20:
+ 103:system/sys_log/sys_log.c ****         case SYS_LOG_COLOR_YELLOW:
+ 255              		.loc 1 103 13 is_stmt 1 view .LVU38
+ 256 0028 F6E7     		b	.L19
+ 257              	.LVL21:
+ 258              	.L26:
+ 105:system/sys_log/sys_log.c ****             break;
+ 259              		.loc 1 105 13 view .LVU39
+ 260 002a 0E48     		ldr	r0, .L32+12
+ 261              	.LVL22:
+ 105:system/sys_log/sys_log.c ****             break;
+ 262              		.loc 1 105 13 is_stmt 0 view .LVU40
+ 263 002c FFF7FEFF 		bl	sys_log_print_msg
+ 264              	.LVL23:
+ 106:system/sys_log/sys_log.c ****         case SYS_LOG_COLOR_BLUE:
+ 265              		.loc 1 106 13 is_stmt 1 view .LVU41
+ 266 0030 F2E7     		b	.L19
+ 267              	.LVL24:
+ 268              	.L25:
+ 108:system/sys_log/sys_log.c ****             break;
+ 269              		.loc 1 108 13 view .LVU42
+ 270 0032 0D48     		ldr	r0, .L32+16
+ 271              	.LVL25:
+ 108:system/sys_log/sys_log.c ****             break;
+ 272              		.loc 1 108 13 is_stmt 0 view .LVU43
+ 273 0034 FFF7FEFF 		bl	sys_log_print_msg
+ 274              	.LVL26:
+ 109:system/sys_log/sys_log.c ****         case SYS_LOG_COLOR_MAGENTA:
+ARM GAS  /tmp/ccmsCeBL.s 			page 13
+
+
+ 275              		.loc 1 109 13 is_stmt 1 view .LVU44
+ 276 0038 EEE7     		b	.L19
+ 277              	.LVL27:
+ 278              	.L24:
+ 111:system/sys_log/sys_log.c ****             break;
+ 279              		.loc 1 111 13 view .LVU45
+ 280 003a 0C48     		ldr	r0, .L32+20
+ 281              	.LVL28:
+ 111:system/sys_log/sys_log.c ****             break;
+ 282              		.loc 1 111 13 is_stmt 0 view .LVU46
+ 283 003c FFF7FEFF 		bl	sys_log_print_msg
+ 284              	.LVL29:
+ 112:system/sys_log/sys_log.c ****         case SYS_LOG_COLOR_CYAN:
+ 285              		.loc 1 112 13 is_stmt 1 view .LVU47
+ 286 0040 EAE7     		b	.L19
+ 287              	.LVL30:
+ 288              	.L23:
+ 114:system/sys_log/sys_log.c ****             break;
+ 289              		.loc 1 114 13 view .LVU48
+ 290 0042 0B48     		ldr	r0, .L32+24
+ 291              	.LVL31:
+ 114:system/sys_log/sys_log.c ****             break;
+ 292              		.loc 1 114 13 is_stmt 0 view .LVU49
+ 293 0044 FFF7FEFF 		bl	sys_log_print_msg
+ 294              	.LVL32:
+ 115:system/sys_log/sys_log.c ****         case SYS_LOG_COLOR_WHITE:
+ 295              		.loc 1 115 13 is_stmt 1 view .LVU50
+ 296 0048 E6E7     		b	.L19
+ 297              	.LVL33:
+ 298              	.L21:
+ 117:system/sys_log/sys_log.c ****             break;
+ 299              		.loc 1 117 13 view .LVU51
+ 300 004a 0A48     		ldr	r0, .L32+28
+ 301              	.LVL34:
+ 117:system/sys_log/sys_log.c ****             break;
+ 302              		.loc 1 117 13 is_stmt 0 view .LVU52
+ 303 004c FFF7FEFF 		bl	sys_log_print_msg
+ 304              	.LVL35:
+ 118:system/sys_log/sys_log.c ****         default:
+ 305              		.loc 1 118 13 is_stmt 1 view .LVU53
+ 306 0050 E2E7     		b	.L19
+ 307              	.LVL36:
+ 308              	.L20:
+ 120:system/sys_log/sys_log.c ****     }
+ 309              		.loc 1 120 13 view .LVU54
+ 310 0052 FFF7FEFF 		bl	sys_log_reset_color
+ 311              	.LVL37:
+ 122:system/sys_log/sys_log.c **** 
+ 312              		.loc 1 122 1 is_stmt 0 view .LVU55
+ 313 0056 DFE7     		b	.L19
+ 314              	.L33:
+ 315              		.align	2
+ 316              	.L32:
+ 317 0058 00000000 		.word	.LC1
+ 318 005c 08000000 		.word	.LC2
+ 319 0060 10000000 		.word	.LC3
+ 320 0064 18000000 		.word	.LC4
+ARM GAS  /tmp/ccmsCeBL.s 			page 14
+
+
+ 321 0068 20000000 		.word	.LC5
+ 322 006c 28000000 		.word	.LC6
+ 323 0070 30000000 		.word	.LC7
+ 324 0074 38000000 		.word	.LC8
+ 325              		.cfi_endproc
+ 326              	.LFE7:
+ 328              		.section	.rodata.sys_log_new_line.str1.4,"aMS",%progbits,1
+ 329              		.align	2
+ 330              	.LC9:
+ 331 0000 0A0D00   		.ascii	"\012\015\000"
+ 332              		.section	.text.sys_log_new_line,"ax",%progbits
+ 333              		.align	1
+ 334              		.global	sys_log_new_line
+ 335              		.syntax unified
+ 336              		.thumb
+ 337              		.thumb_func
+ 339              	sys_log_new_line:
+ 340              	.LFB12:
+ 206:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 341              		.loc 1 206 1 is_stmt 1 view -0
+ 342              		.cfi_startproc
+ 343              		@ args = 0, pretend = 0, frame = 0
+ 344              		@ frame_needed = 0, uses_anonymous_args = 0
+ 345 0000 08B5     		push	{r3, lr}
+ 346              	.LCFI4:
+ 347              		.cfi_def_cfa_offset 8
+ 348              		.cfi_offset 3, -8
+ 349              		.cfi_offset 14, -4
+ 207:system/sys_log/sys_log.c ****     {
+ 350              		.loc 1 207 5 view .LVU57
+ 207:system/sys_log/sys_log.c ****     {
+ 351              		.loc 1 207 31 is_stmt 0 view .LVU58
+ 352 0002 064B     		ldr	r3, .L38
+ 353 0004 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 207:system/sys_log/sys_log.c ****     {
+ 354              		.loc 1 207 8 view .LVU59
+ 355 0006 03B9     		cbnz	r3, .L37
+ 356              	.L34:
+ 213:system/sys_log/sys_log.c **** 
+ 357              		.loc 1 213 1 view .LVU60
+ 358 0008 08BD     		pop	{r3, pc}
+ 359              	.L37:
+ 209:system/sys_log/sys_log.c ****         sys_log_print_msg("\n\r");
+ 360              		.loc 1 209 9 is_stmt 1 view .LVU61
+ 361 000a FFF7FEFF 		bl	sys_log_reset_color
+ 362              	.LVL38:
+ 210:system/sys_log/sys_log.c ****         sys_log_mutex_give();
+ 363              		.loc 1 210 9 view .LVU62
+ 364 000e 0448     		ldr	r0, .L38+4
+ 365 0010 FFF7FEFF 		bl	sys_log_print_msg
+ 366              	.LVL39:
+ 211:system/sys_log/sys_log.c ****     }
+ 367              		.loc 1 211 9 view .LVU63
+ 368 0014 FFF7FEFF 		bl	sys_log_mutex_give
+ 369              	.LVL40:
+ 213:system/sys_log/sys_log.c **** 
+ 370              		.loc 1 213 1 is_stmt 0 view .LVU64
+ARM GAS  /tmp/ccmsCeBL.s 			page 15
+
+
+ 371 0018 F6E7     		b	.L34
+ 372              	.L39:
+ 373 001a 00BF     		.align	2
+ 374              	.L38:
+ 375 001c 00000000 		.word	sys_log_current_level
+ 376 0020 00000000 		.word	.LC9
+ 377              		.cfi_endproc
+ 378              	.LFE12:
+ 380              		.section	.text.sys_log_print_digit,"ax",%progbits
+ 381              		.align	1
+ 382              		.global	sys_log_print_digit
+ 383              		.syntax unified
+ 384              		.thumb
+ 385              		.thumb_func
+ 387              	sys_log_print_digit:
+ 388              	.LVL41:
+ 389              	.LFB13:
+ 216:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 390              		.loc 1 216 1 is_stmt 1 view -0
+ 391              		.cfi_startproc
+ 392              		@ args = 0, pretend = 0, frame = 0
+ 393              		@ frame_needed = 0, uses_anonymous_args = 0
+ 216:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 394              		.loc 1 216 1 is_stmt 0 view .LVU66
+ 395 0000 08B5     		push	{r3, lr}
+ 396              	.LCFI5:
+ 397              		.cfi_def_cfa_offset 8
+ 398              		.cfi_offset 3, -8
+ 399              		.cfi_offset 14, -4
+ 217:system/sys_log/sys_log.c ****     {
+ 400              		.loc 1 217 5 is_stmt 1 view .LVU67
+ 217:system/sys_log/sys_log.c ****     {
+ 401              		.loc 1 217 31 is_stmt 0 view .LVU68
+ 402 0002 0A4B     		ldr	r3, .L46
+ 403 0004 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 217:system/sys_log/sys_log.c ****     {
+ 404              		.loc 1 217 8 view .LVU69
+ 405 0006 3BB1     		cbz	r3, .L40
+ 219:system/sys_log/sys_log.c ****         {
+ 406              		.loc 1 219 9 is_stmt 1 view .LVU70
+ 219:system/sys_log/sys_log.c ****         {
+ 407              		.loc 1 219 12 is_stmt 0 view .LVU71
+ 408 0008 0928     		cmp	r0, #9
+ 409 000a 06D9     		bls	.L45
+ 223:system/sys_log/sys_log.c ****         {
+ 410              		.loc 1 223 14 is_stmt 1 view .LVU72
+ 223:system/sys_log/sys_log.c ****         {
+ 411              		.loc 1 223 17 is_stmt 0 view .LVU73
+ 412 000c 0F28     		cmp	r0, #15
+ 413 000e 09D8     		bhi	.L43
+ 225:system/sys_log/sys_log.c ****         }
+ 414              		.loc 1 225 13 is_stmt 1 view .LVU74
+ 415 0010 3730     		adds	r0, r0, #55
+ 416              	.LVL42:
+ 225:system/sys_log/sys_log.c ****         }
+ 417              		.loc 1 225 13 is_stmt 0 view .LVU75
+ 418 0012 C0B2     		uxtb	r0, r0
+ARM GAS  /tmp/ccmsCeBL.s 			page 16
+
+
+ 419              	.LVL43:
+ 225:system/sys_log/sys_log.c ****         }
+ 420              		.loc 1 225 13 view .LVU76
+ 421 0014 FFF7FEFF 		bl	sys_log_print_byte
+ 422              	.LVL44:
+ 423              	.L40:
+ 232:system/sys_log/sys_log.c **** 
+ 424              		.loc 1 232 1 view .LVU77
+ 425 0018 08BD     		pop	{r3, pc}
+ 426              	.LVL45:
+ 427              	.L45:
+ 221:system/sys_log/sys_log.c ****         }
+ 428              		.loc 1 221 13 is_stmt 1 view .LVU78
+ 429 001a 3030     		adds	r0, r0, #48
+ 430              	.LVL46:
+ 221:system/sys_log/sys_log.c ****         }
+ 431              		.loc 1 221 13 is_stmt 0 view .LVU79
+ 432 001c C0B2     		uxtb	r0, r0
+ 433 001e FFF7FEFF 		bl	sys_log_print_byte
+ 434              	.LVL47:
+ 435 0022 F9E7     		b	.L40
+ 436              	.LVL48:
+ 437              	.L43:
+ 229:system/sys_log/sys_log.c ****         }
+ 438              		.loc 1 229 13 is_stmt 1 view .LVU80
+ 439 0024 4E20     		movs	r0, #78
+ 440              	.LVL49:
+ 229:system/sys_log/sys_log.c ****         }
+ 441              		.loc 1 229 13 is_stmt 0 view .LVU81
+ 442 0026 FFF7FEFF 		bl	sys_log_print_byte
+ 443              	.LVL50:
+ 232:system/sys_log/sys_log.c **** 
+ 444              		.loc 1 232 1 view .LVU82
+ 445 002a F5E7     		b	.L40
+ 446              	.L47:
+ 447              		.align	2
+ 448              	.L46:
+ 449 002c 00000000 		.word	sys_log_current_level
+ 450              		.cfi_endproc
+ 451              	.LFE13:
+ 453              		.global	__aeabi_ui2d
+ 454              		.global	__aeabi_dadd
+ 455              		.global	__aeabi_d2uiz
+ 456              		.section	.text.sys_log_print_uint,"ax",%progbits
+ 457              		.align	1
+ 458              		.global	sys_log_print_uint
+ 459              		.syntax unified
+ 460              		.thumb
+ 461              		.thumb_func
+ 463              	sys_log_print_uint:
+ 464              	.LVL51:
+ 465              	.LFB15:
+ 248:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 466              		.loc 1 248 1 is_stmt 1 view -0
+ 467              		.cfi_startproc
+ 468              		@ args = 0, pretend = 0, frame = 16
+ 469              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  /tmp/ccmsCeBL.s 			page 17
+
+
+ 249:system/sys_log/sys_log.c ****     {
+ 470              		.loc 1 249 5 view .LVU84
+ 249:system/sys_log/sys_log.c ****     {
+ 471              		.loc 1 249 31 is_stmt 0 view .LVU85
+ 472 0000 1E4B     		ldr	r3, .L59
+ 473 0002 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 249:system/sys_log/sys_log.c ****     {
+ 474              		.loc 1 249 8 view .LVU86
+ 475 0004 002B     		cmp	r3, #0
+ 476 0006 38D0     		beq	.L56
+ 248:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 477              		.loc 1 248 1 view .LVU87
+ 478 0008 10B5     		push	{r4, lr}
+ 479              	.LCFI6:
+ 480              		.cfi_def_cfa_offset 8
+ 481              		.cfi_offset 4, -8
+ 482              		.cfi_offset 14, -4
+ 483 000a 84B0     		sub	sp, sp, #16
+ 484              	.LCFI7:
+ 485              		.cfi_def_cfa_offset 24
+ 486 000c 0446     		mov	r4, r0
+ 251:system/sys_log/sys_log.c ****         {
+ 487              		.loc 1 251 9 is_stmt 1 view .LVU88
+ 251:system/sys_log/sys_log.c ****         {
+ 488              		.loc 1 251 12 is_stmt 0 view .LVU89
+ 489 000e 20B9     		cbnz	r0, .L50
+ 253:system/sys_log/sys_log.c ****         }
+ 490              		.loc 1 253 13 is_stmt 1 view .LVU90
+ 491 0010 0020     		movs	r0, #0
+ 492              	.LVL52:
+ 253:system/sys_log/sys_log.c ****         }
+ 493              		.loc 1 253 13 is_stmt 0 view .LVU91
+ 494 0012 FFF7FEFF 		bl	sys_log_print_digit
+ 495              	.LVL53:
+ 496              	.L48:
+ 274:system/sys_log/sys_log.c **** 
+ 497              		.loc 1 274 1 view .LVU92
+ 498 0016 04B0     		add	sp, sp, #16
+ 499              	.LCFI8:
+ 500              		.cfi_remember_state
+ 501              		.cfi_def_cfa_offset 8
+ 502              		@ sp needed
+ 503 0018 10BD     		pop	{r4, pc}
+ 504              	.LVL54:
+ 505              	.L50:
+ 506              	.LCFI9:
+ 507              		.cfi_restore_state
+ 508              	.LBB3:
+ 257:system/sys_log/sys_log.c **** 
+ 509              		.loc 1 257 13 is_stmt 1 view .LVU93
+ 259:system/sys_log/sys_log.c **** 
+ 510              		.loc 1 259 13 view .LVU94
+ 259:system/sys_log/sys_log.c **** 
+ 511              		.loc 1 259 30 is_stmt 0 view .LVU95
+ 512 001a FFF7FEFF 		bl	__aeabi_ui2d
+ 513              	.LVL55:
+ 259:system/sys_log/sys_log.c **** 
+ARM GAS  /tmp/ccmsCeBL.s 			page 18
+
+
+ 514              		.loc 1 259 30 view .LVU96
+ 515 001e 41EC100B 		vmov	d0, r0, r1
+ 516 0022 FFF7FEFF 		bl	log10
+ 517              	.LVL56:
+ 518 0026 51EC100B 		vmov	r0, r1, d0
+ 259:system/sys_log/sys_log.c **** 
+ 519              		.loc 1 259 42 discriminator 1 view .LVU97
+ 520 002a 0022     		movs	r2, #0
+ 521 002c 144B     		ldr	r3, .L59+4
+ 522 002e FFF7FEFF 		bl	__aeabi_dadd
+ 523              	.LVL57:
+ 259:system/sys_log/sys_log.c **** 
+ 524              		.loc 1 259 21 discriminator 1 view .LVU98
+ 525 0032 FFF7FEFF 		bl	__aeabi_d2uiz
+ 526              	.LVL58:
+ 527 0036 C0B2     		uxtb	r0, r0
+ 528              	.LVL59:
+ 261:system/sys_log/sys_log.c ****             for(i=0; i<digits; ++i, uint /= 10)
+ 529              		.loc 1 261 13 is_stmt 1 view .LVU99
+ 262:system/sys_log/sys_log.c ****             {
+ 530              		.loc 1 262 13 view .LVU100
+ 262:system/sys_log/sys_log.c ****             {
+ 531              		.loc 1 262 18 is_stmt 0 view .LVU101
+ 532 0038 0023     		movs	r3, #0
+ 262:system/sys_log/sys_log.c ****             {
+ 533              		.loc 1 262 13 view .LVU102
+ 534 003a 10E0     		b	.L51
+ 535              	.LVL60:
+ 536              	.L52:
+ 264:system/sys_log/sys_log.c ****             }
+ 537              		.loc 1 264 17 is_stmt 1 view .LVU103
+ 264:system/sys_log/sys_log.c ****             }
+ 538              		.loc 1 264 36 is_stmt 0 view .LVU104
+ 539 003c 114A     		ldr	r2, .L59+8
+ 540 003e A2FB0412 		umull	r1, r2, r2, r4
+ 541 0042 D208     		lsrs	r2, r2, #3
+ 542 0044 1146     		mov	r1, r2
+ 543 0046 02EB8202 		add	r2, r2, r2, lsl #2
+ 544 004a A4EB4202 		sub	r2, r4, r2, lsl #1
+ 264:system/sys_log/sys_log.c ****             }
+ 545              		.loc 1 264 29 view .LVU105
+ 546 004e 03F11004 		add	r4, r3, #16
+ 547              	.LVL61:
+ 264:system/sys_log/sys_log.c ****             }
+ 548              		.loc 1 264 29 view .LVU106
+ 549 0052 6C44     		add	r4, sp, r4
+ 550 0054 04F80C2C 		strb	r2, [r4, #-12]
+ 262:system/sys_log/sys_log.c ****             {
+ 551              		.loc 1 262 35 is_stmt 1 discriminator 3 view .LVU107
+ 262:system/sys_log/sys_log.c ****             {
+ 552              		.loc 1 262 32 is_stmt 0 discriminator 3 view .LVU108
+ 553 0058 0133     		adds	r3, r3, #1
+ 554              	.LVL62:
+ 262:system/sys_log/sys_log.c ****             {
+ 555              		.loc 1 262 32 discriminator 3 view .LVU109
+ 556 005a DBB2     		uxtb	r3, r3
+ 557              	.LVL63:
+ARM GAS  /tmp/ccmsCeBL.s 			page 19
+
+
+ 262:system/sys_log/sys_log.c ****             {
+ 558              		.loc 1 262 42 discriminator 3 view .LVU110
+ 559 005c 0C46     		mov	r4, r1
+ 560              	.LVL64:
+ 561              	.L51:
+ 262:system/sys_log/sys_log.c ****             {
+ 562              		.loc 1 262 23 is_stmt 1 discriminator 1 view .LVU111
+ 563 005e 8342     		cmp	r3, r0
+ 564 0060 ECD3     		bcc	.L52
+ 565 0062 07E0     		b	.L53
+ 566              	.LVL65:
+ 567              	.L54:
+ 270:system/sys_log/sys_log.c ****             }
+ 568              		.loc 1 270 17 view .LVU112
+ 270:system/sys_log/sys_log.c ****             }
+ 569              		.loc 1 270 47 is_stmt 0 view .LVU113
+ 570 0064 5C1E     		subs	r4, r3, #1
+ 270:system/sys_log/sys_log.c ****             }
+ 571              		.loc 1 270 17 view .LVU114
+ 572 0066 0F33     		adds	r3, r3, #15
+ 573              	.LVL66:
+ 270:system/sys_log/sys_log.c ****             }
+ 574              		.loc 1 270 17 view .LVU115
+ 575 0068 6B44     		add	r3, sp, r3
+ 576 006a 13F80C0C 		ldrb	r0, [r3, #-12]	@ zero_extendqisi2
+ 577 006e FFF7FEFF 		bl	sys_log_print_digit
+ 578              	.LVL67:
+ 268:system/sys_log/sys_log.c ****             {
+ 579              		.loc 1 268 28 is_stmt 1 discriminator 3 view .LVU116
+ 580 0072 E3B2     		uxtb	r3, r4
+ 581              	.LVL68:
+ 582              	.L53:
+ 268:system/sys_log/sys_log.c ****             {
+ 583              		.loc 1 268 23 discriminator 1 view .LVU117
+ 584 0074 002B     		cmp	r3, #0
+ 585 0076 F5D1     		bne	.L54
+ 586 0078 CDE7     		b	.L48
+ 587              	.LVL69:
+ 588              	.L56:
+ 589              	.LCFI10:
+ 590              		.cfi_def_cfa_offset 0
+ 591              		.cfi_restore 4
+ 592              		.cfi_restore 14
+ 268:system/sys_log/sys_log.c ****             {
+ 593              		.loc 1 268 23 is_stmt 0 discriminator 1 view .LVU118
+ 594 007a 7047     		bx	lr
+ 595              	.L60:
+ 596              		.align	2
+ 597              	.L59:
+ 598 007c 00000000 		.word	sys_log_current_level
+ 599 0080 0000F03F 		.word	1072693248
+ 600 0084 CDCCCCCC 		.word	-858993459
+ 601              	.LBE3:
+ 602              		.cfi_endproc
+ 603              	.LFE15:
+ 605              		.section	.rodata.sys_log_print_int.str1.4,"aMS",%progbits,1
+ 606              		.align	2
+ARM GAS  /tmp/ccmsCeBL.s 			page 20
+
+
+ 607              	.LC10:
+ 608 0000 2D00     		.ascii	"-\000"
+ 609              		.section	.text.sys_log_print_int,"ax",%progbits
+ 610              		.align	1
+ 611              		.global	sys_log_print_int
+ 612              		.syntax unified
+ 613              		.thumb
+ 614              		.thumb_func
+ 616              	sys_log_print_int:
+ 617              	.LVL70:
+ 618              	.LFB16:
+ 277:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 619              		.loc 1 277 1 is_stmt 1 view -0
+ 620              		.cfi_startproc
+ 621              		@ args = 0, pretend = 0, frame = 0
+ 622              		@ frame_needed = 0, uses_anonymous_args = 0
+ 278:system/sys_log/sys_log.c ****     {
+ 623              		.loc 1 278 5 view .LVU120
+ 278:system/sys_log/sys_log.c ****     {
+ 624              		.loc 1 278 31 is_stmt 0 view .LVU121
+ 625 0000 094B     		ldr	r3, .L69
+ 626 0002 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 278:system/sys_log/sys_log.c ****     {
+ 627              		.loc 1 278 8 view .LVU122
+ 628 0004 73B1     		cbz	r3, .L65
+ 277:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 629              		.loc 1 277 1 view .LVU123
+ 630 0006 10B5     		push	{r4, lr}
+ 631              	.LCFI11:
+ 632              		.cfi_def_cfa_offset 8
+ 633              		.cfi_offset 4, -8
+ 634              		.cfi_offset 14, -4
+ 635 0008 0446     		mov	r4, r0
+ 280:system/sys_log/sys_log.c ****         {
+ 636              		.loc 1 280 9 is_stmt 1 view .LVU124
+ 280:system/sys_log/sys_log.c ****         {
+ 637              		.loc 1 280 12 is_stmt 0 view .LVU125
+ 638 000a 0028     		cmp	r0, #0
+ 639 000c 03DB     		blt	.L68
+ 640              	.LVL71:
+ 641              	.L63:
+ 286:system/sys_log/sys_log.c ****     }
+ 642              		.loc 1 286 9 is_stmt 1 view .LVU126
+ 643 000e 2046     		mov	r0, r4
+ 644 0010 FFF7FEFF 		bl	sys_log_print_uint
+ 645              	.LVL72:
+ 288:system/sys_log/sys_log.c **** 
+ 646              		.loc 1 288 1 is_stmt 0 view .LVU127
+ 647 0014 10BD     		pop	{r4, pc}
+ 648              	.LVL73:
+ 649              	.L68:
+ 650              	.LBB4:
+ 282:system/sys_log/sys_log.c ****             sys_log_print_msg("-");
+ 651              		.loc 1 282 13 is_stmt 1 view .LVU128
+ 282:system/sys_log/sys_log.c ****             sys_log_print_msg("-");
+ 652              		.loc 1 282 18 is_stmt 0 view .LVU129
+ 653 0016 0028     		cmp	r0, #0
+ARM GAS  /tmp/ccmsCeBL.s 			page 21
+
+
+ 654 0018 B8BF     		it	lt
+ 655 001a 4442     		rsblt	r4, r0, #0
+ 656              	.LVL74:
+ 283:system/sys_log/sys_log.c ****         }
+ 657              		.loc 1 283 13 is_stmt 1 view .LVU130
+ 658 001c 0348     		ldr	r0, .L69+4
+ 659 001e FFF7FEFF 		bl	sys_log_print_msg
+ 660              	.LVL75:
+ 661 0022 F4E7     		b	.L63
+ 662              	.LVL76:
+ 663              	.L65:
+ 664              	.LCFI12:
+ 665              		.cfi_def_cfa_offset 0
+ 666              		.cfi_restore 4
+ 667              		.cfi_restore 14
+ 283:system/sys_log/sys_log.c ****         }
+ 668              		.loc 1 283 13 is_stmt 0 view .LVU131
+ 669 0024 7047     		bx	lr
+ 670              	.L70:
+ 671 0026 00BF     		.align	2
+ 672              	.L69:
+ 673 0028 00000000 		.word	sys_log_current_level
+ 674 002c 00000000 		.word	.LC10
+ 675              	.LBE4:
+ 676              		.cfi_endproc
+ 677              	.LFE16:
+ 679              		.global	__aeabi_f2d
+ 680              		.section	.rodata.sys_log_print_float.str1.4,"aMS",%progbits,1
+ 681              		.align	2
+ 682              	.LC11:
+ 683 0000 2E00     		.ascii	".\000"
+ 684              		.global	__aeabi_dmul
+ 685              		.section	.text.sys_log_print_float,"ax",%progbits
+ 686              		.align	1
+ 687              		.global	sys_log_print_float
+ 688              		.syntax unified
+ 689              		.thumb
+ 690              		.thumb_func
+ 692              	sys_log_print_float:
+ 693              	.LVL77:
+ 694              	.LFB19:
+ 337:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 695              		.loc 1 337 1 is_stmt 1 view -0
+ 696              		.cfi_startproc
+ 697              		@ args = 0, pretend = 0, frame = 0
+ 698              		@ frame_needed = 0, uses_anonymous_args = 0
+ 337:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 699              		.loc 1 337 1 is_stmt 0 view .LVU133
+ 700 0000 38B5     		push	{r3, r4, r5, lr}
+ 701              	.LCFI13:
+ 702              		.cfi_def_cfa_offset 16
+ 703              		.cfi_offset 3, -16
+ 704              		.cfi_offset 4, -12
+ 705              		.cfi_offset 5, -8
+ 706              		.cfi_offset 14, -4
+ 707 0002 2DED028B 		vpush.64	{d8}
+ 708              	.LCFI14:
+ARM GAS  /tmp/ccmsCeBL.s 			page 22
+
+
+ 709              		.cfi_def_cfa_offset 24
+ 710              		.cfi_offset 80, -24
+ 711              		.cfi_offset 81, -20
+ 338:system/sys_log/sys_log.c ****     {
+ 712              		.loc 1 338 5 is_stmt 1 view .LVU134
+ 338:system/sys_log/sys_log.c ****     {
+ 713              		.loc 1 338 31 is_stmt 0 view .LVU135
+ 714 0006 244B     		ldr	r3, .L78+8
+ 715 0008 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 338:system/sys_log/sys_log.c ****     {
+ 716              		.loc 1 338 8 view .LVU136
+ 717 000a 5BB3     		cbz	r3, .L71
+ 718 000c B0EE408A 		vmov.f32	s16, s0
+ 719 0010 0446     		mov	r4, r0
+ 720              	.LBB5:
+ 340:system/sys_log/sys_log.c ****         {
+ 721              		.loc 1 340 9 is_stmt 1 view .LVU137
+ 340:system/sys_log/sys_log.c ****         {
+ 722              		.loc 1 340 12 is_stmt 0 view .LVU138
+ 723 0012 B5EEC00A 		vcmpe.f32	s0, #0
+ 724 0016 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 725 001a 26D4     		bmi	.L77
+ 726              	.LVL78:
+ 727              	.L73:
+ 348:system/sys_log/sys_log.c **** 
+ 728              		.loc 1 348 9 is_stmt 1 view .LVU139
+ 348:system/sys_log/sys_log.c **** 
+ 729              		.loc 1 348 18 is_stmt 0 view .LVU140
+ 730 001c FCEEC87A 		vcvt.u32.f32	s15, s16
+ 731              	.LVL79:
+ 351:system/sys_log/sys_log.c **** 
+ 732              		.loc 1 351 9 is_stmt 1 view .LVU141
+ 351:system/sys_log/sys_log.c **** 
+ 733              		.loc 1 351 29 is_stmt 0 view .LVU142
+ 734 0020 B8EE677A 		vcvt.f32.u32	s14, s15
+ 351:system/sys_log/sys_log.c **** 
+ 735              		.loc 1 351 15 view .LVU143
+ 736 0024 38EE478A 		vsub.f32	s16, s16, s14
+ 737              	.LVL80:
+ 354:system/sys_log/sys_log.c **** 
+ 738              		.loc 1 354 9 is_stmt 1 view .LVU144
+ 739 0028 17EE900A 		vmov	r0, s15	@ int
+ 740 002c FFF7FEFF 		bl	sys_log_print_uint
+ 741              	.LVL81:
+ 357:system/sys_log/sys_log.c **** 
+ 742              		.loc 1 357 9 view .LVU145
+ 743 0030 1A48     		ldr	r0, .L78+12
+ 744 0032 FFF7FEFF 		bl	sys_log_print_msg
+ 745              	.LVL82:
+ 360:system/sys_log/sys_log.c ****     }
+ 746              		.loc 1 360 9 view .LVU146
+ 360:system/sys_log/sys_log.c ****     }
+ 747              		.loc 1 360 45 is_stmt 0 view .LVU147
+ 748 0036 2046     		mov	r0, r4
+ 749 0038 FFF7FEFF 		bl	__aeabi_ui2d
+ 750              	.LVL83:
+ 751 003c 41EC110B 		vmov	d1, r0, r1
+ARM GAS  /tmp/ccmsCeBL.s 			page 23
+
+
+ 752 0040 9FED130B 		vldr.64	d0, .L78
+ 753 0044 FFF7FEFF 		bl	pow
+ 754              	.LVL84:
+ 755 0048 55EC104B 		vmov	r4, r5, d0
+ 756              	.LVL85:
+ 360:system/sys_log/sys_log.c ****     }
+ 757              		.loc 1 360 44 view .LVU148
+ 758 004c 18EE100A 		vmov	r0, s16
+ 759 0050 FFF7FEFF 		bl	__aeabi_f2d
+ 760              	.LVL86:
+ 360:system/sys_log/sys_log.c ****     }
+ 761              		.loc 1 360 44 discriminator 1 view .LVU149
+ 762 0054 2246     		mov	r2, r4
+ 763 0056 2B46     		mov	r3, r5
+ 764 0058 FFF7FEFF 		bl	__aeabi_dmul
+ 765              	.LVL87:
+ 360:system/sys_log/sys_log.c ****     }
+ 766              		.loc 1 360 9 discriminator 1 view .LVU150
+ 767 005c FFF7FEFF 		bl	__aeabi_d2uiz
+ 768              	.LVL88:
+ 769 0060 FFF7FEFF 		bl	sys_log_print_uint
+ 770              	.LVL89:
+ 771              	.L71:
+ 360:system/sys_log/sys_log.c ****     }
+ 772              		.loc 1 360 9 discriminator 1 view .LVU151
+ 773              	.LBE5:
+ 362:system/sys_log/sys_log.c **** 
+ 774              		.loc 1 362 1 view .LVU152
+ 775 0064 BDEC028B 		vldm	sp!, {d8}
+ 776              	.LCFI15:
+ 777              		.cfi_remember_state
+ 778              		.cfi_restore 80
+ 779              		.cfi_restore 81
+ 780              		.cfi_def_cfa_offset 16
+ 781 0068 38BD     		pop	{r3, r4, r5, pc}
+ 782              	.LVL90:
+ 783              	.L77:
+ 784              	.LCFI16:
+ 785              		.cfi_restore_state
+ 786              	.LBB7:
+ 787              	.LBB6:
+ 342:system/sys_log/sys_log.c **** 
+ 788              		.loc 1 342 13 is_stmt 1 view .LVU153
+ 789 006a 0D48     		ldr	r0, .L78+16
+ 790              	.LVL91:
+ 342:system/sys_log/sys_log.c **** 
+ 791              		.loc 1 342 13 is_stmt 0 view .LVU154
+ 792 006c FFF7FEFF 		bl	sys_log_print_msg
+ 793              	.LVL92:
+ 344:system/sys_log/sys_log.c ****         }
+ 794              		.loc 1 344 13 is_stmt 1 view .LVU155
+ 344:system/sys_log/sys_log.c ****         }
+ 795              		.loc 1 344 19 is_stmt 0 view .LVU156
+ 796 0070 18EE100A 		vmov	r0, s16
+ 797 0074 FFF7FEFF 		bl	__aeabi_f2d
+ 798              	.LVL93:
+ 799 0078 41EC100B 		vmov	d0, r0, r1
+ARM GAS  /tmp/ccmsCeBL.s 			page 24
+
+
+ 800 007c FFF7FEFF 		bl	abs
+ 801              	.LVL94:
+ 802 0080 08EE100A 		vmov	s16, r0	@ int
+ 803              	.LVL95:
+ 344:system/sys_log/sys_log.c ****         }
+ 804              		.loc 1 344 17 discriminator 1 view .LVU157
+ 805 0084 B8EEC88A 		vcvt.f32.s32	s16, s16
+ 806              	.LVL96:
+ 344:system/sys_log/sys_log.c ****         }
+ 807              		.loc 1 344 17 discriminator 1 view .LVU158
+ 808 0088 C8E7     		b	.L73
+ 809              	.L79:
+ 810 008a 00BFAFF3 		.align	3
+ 810      0080
+ 811              	.L78:
+ 812 0090 00000000 		.word	0
+ 813 0094 00002440 		.word	1076101120
+ 814 0098 00000000 		.word	sys_log_current_level
+ 815 009c 00000000 		.word	.LC11
+ 816 00a0 00000000 		.word	.LC10
+ 817              	.LBE6:
+ 818              	.LBE7:
+ 819              		.cfi_endproc
+ 820              	.LFE19:
+ 822              		.section	.rodata.sys_log_print_hex.str1.4,"aMS",%progbits,1
+ 823              		.align	2
+ 824              	.LC12:
+ 825 0000 307800   		.ascii	"0x\000"
+ 826              		.section	.text.sys_log_print_hex,"ax",%progbits
+ 827              		.align	1
+ 828              		.global	sys_log_print_hex
+ 829              		.syntax unified
+ 830              		.thumb
+ 831              		.thumb_func
+ 833              	sys_log_print_hex:
+ 834              	.LVL97:
+ 835              	.LFB17:
+ 291:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 836              		.loc 1 291 1 is_stmt 1 view -0
+ 837              		.cfi_startproc
+ 838              		@ args = 0, pretend = 0, frame = 0
+ 839              		@ frame_needed = 0, uses_anonymous_args = 0
+ 292:system/sys_log/sys_log.c ****     {
+ 840              		.loc 1 292 5 view .LVU160
+ 292:system/sys_log/sys_log.c ****     {
+ 841              		.loc 1 292 31 is_stmt 0 view .LVU161
+ 842 0000 194B     		ldr	r3, .L93
+ 843 0002 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 292:system/sys_log/sys_log.c ****     {
+ 844              		.loc 1 292 8 view .LVU162
+ 845 0004 03B9     		cbnz	r3, .L89
+ 846 0006 7047     		bx	lr
+ 847              	.L89:
+ 291:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 848              		.loc 1 291 1 view .LVU163
+ 849 0008 10B5     		push	{r4, lr}
+ 850              	.LCFI17:
+ARM GAS  /tmp/ccmsCeBL.s 			page 25
+
+
+ 851              		.cfi_def_cfa_offset 8
+ 852              		.cfi_offset 4, -8
+ 853              		.cfi_offset 14, -4
+ 854 000a 0446     		mov	r4, r0
+ 294:system/sys_log/sys_log.c ****         
+ 855              		.loc 1 294 9 is_stmt 1 view .LVU164
+ 856 000c 1748     		ldr	r0, .L93+4
+ 857              	.LVL98:
+ 294:system/sys_log/sys_log.c ****         
+ 858              		.loc 1 294 9 is_stmt 0 view .LVU165
+ 859 000e FFF7FEFF 		bl	sys_log_print_msg
+ 860              	.LVL99:
+ 296:system/sys_log/sys_log.c ****         {
+ 861              		.loc 1 296 9 is_stmt 1 view .LVU166
+ 296:system/sys_log/sys_log.c ****         {
+ 862              		.loc 1 296 12 is_stmt 0 view .LVU167
+ 863 0012 B4F1807F 		cmp	r4, #16777216
+ 864 0016 0DD2     		bcs	.L90
+ 865              	.L82:
+ 302:system/sys_log/sys_log.c ****         {
+ 866              		.loc 1 302 9 is_stmt 1 view .LVU168
+ 302:system/sys_log/sys_log.c ****         {
+ 867              		.loc 1 302 12 is_stmt 0 view .LVU169
+ 868 0018 B4F5803F 		cmp	r4, #65536
+ 869 001c 12D2     		bcs	.L91
+ 870              	.L83:
+ 308:system/sys_log/sys_log.c ****         {
+ 871              		.loc 1 308 9 is_stmt 1 view .LVU170
+ 308:system/sys_log/sys_log.c ****         {
+ 872              		.loc 1 308 12 is_stmt 0 view .LVU171
+ 873 001e FF2C     		cmp	r4, #255
+ 874 0020 19D8     		bhi	.L92
+ 875              	.L84:
+ 314:system/sys_log/sys_log.c ****         sys_log_print_digit((uint8_t)(hex & 0x0F));
+ 876              		.loc 1 314 9 is_stmt 1 view .LVU172
+ 877 0022 C4F30310 		ubfx	r0, r4, #4, #4
+ 878 0026 FFF7FEFF 		bl	sys_log_print_digit
+ 879              	.LVL100:
+ 315:system/sys_log/sys_log.c ****     }
+ 880              		.loc 1 315 9 view .LVU173
+ 881 002a 04F00F00 		and	r0, r4, #15
+ 882 002e FFF7FEFF 		bl	sys_log_print_digit
+ 883              	.LVL101:
+ 317:system/sys_log/sys_log.c **** 
+ 884              		.loc 1 317 1 is_stmt 0 view .LVU174
+ 885 0032 10BD     		pop	{r4, pc}
+ 886              	.LVL102:
+ 887              	.L90:
+ 298:system/sys_log/sys_log.c ****             sys_log_print_digit((uint8_t)(hex >> 24) & 0x0F);
+ 888              		.loc 1 298 13 is_stmt 1 view .LVU175
+ 889 0034 200F     		lsrs	r0, r4, #28
+ 890 0036 FFF7FEFF 		bl	sys_log_print_digit
+ 891              	.LVL103:
+ 299:system/sys_log/sys_log.c ****         }
+ 892              		.loc 1 299 13 view .LVU176
+ 893 003a C4F30360 		ubfx	r0, r4, #24, #4
+ 894 003e FFF7FEFF 		bl	sys_log_print_digit
+ARM GAS  /tmp/ccmsCeBL.s 			page 26
+
+
+ 895              	.LVL104:
+ 896 0042 E9E7     		b	.L82
+ 897              	.L91:
+ 304:system/sys_log/sys_log.c ****             sys_log_print_digit((uint8_t)(hex >> 16) & 0x0F);
+ 898              		.loc 1 304 13 view .LVU177
+ 899 0044 C4F30350 		ubfx	r0, r4, #20, #4
+ 900 0048 FFF7FEFF 		bl	sys_log_print_digit
+ 901              	.LVL105:
+ 305:system/sys_log/sys_log.c ****         }
+ 902              		.loc 1 305 13 view .LVU178
+ 903 004c C4F30340 		ubfx	r0, r4, #16, #4
+ 904 0050 FFF7FEFF 		bl	sys_log_print_digit
+ 905              	.LVL106:
+ 906 0054 E3E7     		b	.L83
+ 907              	.L92:
+ 310:system/sys_log/sys_log.c ****             sys_log_print_digit((uint8_t)(hex >> 8) & 0x0F);
+ 908              		.loc 1 310 13 view .LVU179
+ 909 0056 C4F30330 		ubfx	r0, r4, #12, #4
+ 910 005a FFF7FEFF 		bl	sys_log_print_digit
+ 911              	.LVL107:
+ 311:system/sys_log/sys_log.c ****         }
+ 912              		.loc 1 311 13 view .LVU180
+ 913 005e C4F30320 		ubfx	r0, r4, #8, #4
+ 914 0062 FFF7FEFF 		bl	sys_log_print_digit
+ 915              	.LVL108:
+ 916 0066 DCE7     		b	.L84
+ 917              	.L94:
+ 918              		.align	2
+ 919              	.L93:
+ 920 0068 00000000 		.word	sys_log_current_level
+ 921 006c 00000000 		.word	.LC12
+ 922              		.cfi_endproc
+ 923              	.LFE17:
+ 925              		.section	.rodata.sys_log_dump_hex.str1.4,"aMS",%progbits,1
+ 926              		.align	2
+ 927              	.LC13:
+ 928 0000 2C2000   		.ascii	", \000"
+ 929              		.section	.text.sys_log_dump_hex,"ax",%progbits
+ 930              		.align	1
+ 931              		.global	sys_log_dump_hex
+ 932              		.syntax unified
+ 933              		.thumb
+ 934              		.thumb_func
+ 936              	sys_log_dump_hex:
+ 937              	.LVL109:
+ 938              	.LFB18:
+ 320:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 939              		.loc 1 320 1 view -0
+ 940              		.cfi_startproc
+ 941              		@ args = 0, pretend = 0, frame = 0
+ 942              		@ frame_needed = 0, uses_anonymous_args = 0
+ 321:system/sys_log/sys_log.c ****     {
+ 943              		.loc 1 321 5 view .LVU182
+ 321:system/sys_log/sys_log.c ****     {
+ 944              		.loc 1 321 31 is_stmt 0 view .LVU183
+ 945 0000 0B4B     		ldr	r3, .L105
+ 946 0002 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ARM GAS  /tmp/ccmsCeBL.s 			page 27
+
+
+ 321:system/sys_log/sys_log.c ****     {
+ 947              		.loc 1 321 8 view .LVU184
+ 948 0004 73B9     		cbnz	r3, .L100
+ 949              	.LBB8:
+ 950 0006 7047     		bx	lr
+ 951              	.LVL110:
+ 952              	.L98:
+ 953              	.LCFI18:
+ 954              		.cfi_def_cfa_offset 16
+ 955              		.cfi_offset 4, -16
+ 956              		.cfi_offset 5, -12
+ 957              		.cfi_offset 6, -8
+ 958              		.cfi_offset 14, -4
+ 324:system/sys_log/sys_log.c ****         {
+ 959              		.loc 1 324 26 is_stmt 1 discriminator 2 view .LVU185
+ 960 0008 0134     		adds	r4, r4, #1
+ 961              	.LVL111:
+ 324:system/sys_log/sys_log.c ****         {
+ 962              		.loc 1 324 26 is_stmt 0 discriminator 2 view .LVU186
+ 963 000a A4B2     		uxth	r4, r4
+ 964              	.LVL112:
+ 965              	.L96:
+ 324:system/sys_log/sys_log.c ****         {
+ 966              		.loc 1 324 19 is_stmt 1 discriminator 1 view .LVU187
+ 967 000c AC42     		cmp	r4, r5
+ 968 000e 0ED2     		bcs	.L104
+ 326:system/sys_log/sys_log.c **** 
+ 969              		.loc 1 326 13 view .LVU188
+ 970 0010 305D     		ldrb	r0, [r6, r4]	@ zero_extendqisi2
+ 971 0012 FFF7FEFF 		bl	sys_log_print_hex
+ 972              	.LVL113:
+ 328:system/sys_log/sys_log.c ****             {
+ 973              		.loc 1 328 13 view .LVU189
+ 328:system/sys_log/sys_log.c ****             {
+ 974              		.loc 1 328 24 is_stmt 0 view .LVU190
+ 975 0016 6B1E     		subs	r3, r5, #1
+ 328:system/sys_log/sys_log.c ****             {
+ 976              		.loc 1 328 16 view .LVU191
+ 977 0018 9C42     		cmp	r4, r3
+ 978 001a F5DA     		bge	.L98
+ 330:system/sys_log/sys_log.c ****             }
+ 979              		.loc 1 330 17 is_stmt 1 view .LVU192
+ 980 001c 0548     		ldr	r0, .L105+4
+ 981 001e FFF7FEFF 		bl	sys_log_print_msg
+ 982              	.LVL114:
+ 983 0022 F1E7     		b	.L98
+ 984              	.LVL115:
+ 985              	.L100:
+ 986              	.LCFI19:
+ 987              		.cfi_def_cfa_offset 0
+ 988              		.cfi_restore 4
+ 989              		.cfi_restore 5
+ 990              		.cfi_restore 6
+ 991              		.cfi_restore 14
+ 330:system/sys_log/sys_log.c ****             }
+ 992              		.loc 1 330 17 is_stmt 0 view .LVU193
+ 993              	.LBE8:
+ARM GAS  /tmp/ccmsCeBL.s 			page 28
+
+
+ 320:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 994              		.loc 1 320 1 view .LVU194
+ 995 0024 70B5     		push	{r4, r5, r6, lr}
+ 996              	.LCFI20:
+ 997              		.cfi_def_cfa_offset 16
+ 998              		.cfi_offset 4, -16
+ 999              		.cfi_offset 5, -12
+ 1000              		.cfi_offset 6, -8
+ 1001              		.cfi_offset 14, -4
+ 1002 0026 0646     		mov	r6, r0
+ 1003 0028 0D46     		mov	r5, r1
+ 1004              	.LBB9:
+ 324:system/sys_log/sys_log.c ****         {
+ 1005              		.loc 1 324 14 view .LVU195
+ 1006 002a 0024     		movs	r4, #0
+ 1007 002c EEE7     		b	.L96
+ 1008              	.LVL116:
+ 1009              	.L104:
+ 324:system/sys_log/sys_log.c ****         {
+ 1010              		.loc 1 324 14 view .LVU196
+ 1011              	.LBE9:
+ 334:system/sys_log/sys_log.c **** 
+ 1012              		.loc 1 334 1 view .LVU197
+ 1013 002e 70BD     		pop	{r4, r5, r6, pc}
+ 1014              	.LVL117:
+ 1015              	.L106:
+ 334:system/sys_log/sys_log.c **** 
+ 1016              		.loc 1 334 1 view .LVU198
+ 1017              		.align	2
+ 1018              	.L105:
+ 1019 0030 00000000 		.word	sys_log_current_level
+ 1020 0034 00000000 		.word	.LC13
+ 1021              		.cfi_endproc
+ 1022              	.LFE18:
+ 1024              		.section	.text.sys_log_print_str,"ax",%progbits
+ 1025              		.align	1
+ 1026              		.global	sys_log_print_str
+ 1027              		.syntax unified
+ 1028              		.thumb
+ 1029              		.thumb_func
+ 1031              	sys_log_print_str:
+ 1032              	.LVL118:
+ 1033              	.LFB14:
+ 235:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 1034              		.loc 1 235 1 is_stmt 1 view -0
+ 1035              		.cfi_startproc
+ 1036              		@ args = 0, pretend = 0, frame = 0
+ 1037              		@ frame_needed = 0, uses_anonymous_args = 0
+ 235:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 1038              		.loc 1 235 1 is_stmt 0 view .LVU200
+ 1039 0000 38B5     		push	{r3, r4, r5, lr}
+ 1040              	.LCFI21:
+ 1041              		.cfi_def_cfa_offset 16
+ 1042              		.cfi_offset 3, -16
+ 1043              		.cfi_offset 4, -12
+ 1044              		.cfi_offset 5, -8
+ 1045              		.cfi_offset 14, -4
+ARM GAS  /tmp/ccmsCeBL.s 			page 29
+
+
+ 236:system/sys_log/sys_log.c ****     {
+ 1046              		.loc 1 236 5 is_stmt 1 view .LVU201
+ 236:system/sys_log/sys_log.c ****     {
+ 1047              		.loc 1 236 31 is_stmt 0 view .LVU202
+ 1048 0002 074B     		ldr	r3, .L113
+ 1049 0004 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 236:system/sys_log/sys_log.c ****     {
+ 1050              		.loc 1 236 8 view .LVU203
+ 1051 0006 43B9     		cbnz	r3, .L111
+ 1052              	.LVL119:
+ 1053              	.L107:
+ 245:system/sys_log/sys_log.c **** 
+ 1054              		.loc 1 245 1 view .LVU204
+ 1055 0008 38BD     		pop	{r3, r4, r5, pc}
+ 1056              	.LVL120:
+ 1057              	.L110:
+ 1058              	.LBB10:
+ 241:system/sys_log/sys_log.c ****             i++;
+ 1059              		.loc 1 241 13 is_stmt 1 view .LVU205
+ 1060 000a FFF7FEFF 		bl	sys_log_print_byte
+ 1061              	.LVL121:
+ 242:system/sys_log/sys_log.c ****         }
+ 1062              		.loc 1 242 13 view .LVU206
+ 242:system/sys_log/sys_log.c ****         }
+ 1063              		.loc 1 242 14 is_stmt 0 view .LVU207
+ 1064 000e 0134     		adds	r4, r4, #1
+ 1065              	.LVL122:
+ 242:system/sys_log/sys_log.c ****         }
+ 1066              		.loc 1 242 14 view .LVU208
+ 1067 0010 A4B2     		uxth	r4, r4
+ 1068              	.LVL123:
+ 1069              	.L108:
+ 239:system/sys_log/sys_log.c ****         {
+ 1070              		.loc 1 239 22 is_stmt 1 view .LVU209
+ 239:system/sys_log/sys_log.c ****         {
+ 1071              		.loc 1 239 18 is_stmt 0 view .LVU210
+ 1072 0012 285D     		ldrb	r0, [r5, r4]	@ zero_extendqisi2
+ 239:system/sys_log/sys_log.c ****         {
+ 1073              		.loc 1 239 22 view .LVU211
+ 1074 0014 0028     		cmp	r0, #0
+ 1075 0016 F8D1     		bne	.L110
+ 1076 0018 F6E7     		b	.L107
+ 1077              	.LVL124:
+ 1078              	.L111:
+ 239:system/sys_log/sys_log.c ****         {
+ 1079              		.loc 1 239 22 view .LVU212
+ 1080 001a 0546     		mov	r5, r0
+ 238:system/sys_log/sys_log.c ****         while(str[i] != '\0')
+ 1081              		.loc 1 238 18 view .LVU213
+ 1082 001c 0024     		movs	r4, #0
+ 1083 001e F8E7     		b	.L108
+ 1084              	.L114:
+ 1085              		.align	2
+ 1086              	.L113:
+ 1087 0020 00000000 		.word	sys_log_current_level
+ 1088              	.LBE10:
+ 1089              		.cfi_endproc
+ARM GAS  /tmp/ccmsCeBL.s 			page 30
+
+
+ 1090              	.LFE14:
+ 1092              		.section	.rodata.sys_log_print_system_time.str1.4,"aMS",%progbits,1
+ 1093              		.align	2
+ 1094              	.LC14:
+ 1095 0000 5B2000   		.ascii	"[ \000"
+ 1096 0003 00       		.align	2
+ 1097              	.LC15:
+ 1098 0004 205D00   		.ascii	" ]\000"
+ 1099              		.section	.text.sys_log_print_system_time,"ax",%progbits
+ 1100              		.align	1
+ 1101              		.global	sys_log_print_system_time
+ 1102              		.syntax unified
+ 1103              		.thumb
+ 1104              		.thumb_func
+ 1106              	sys_log_print_system_time:
+ 1107              	.LFB21:
+ 371:system/sys_log/sys_log.c **** 
+ 372:system/sys_log/sys_log.c **** void sys_log_print_system_time()
+ 373:system/sys_log/sys_log.c **** {
+ 1108              		.loc 1 373 1 is_stmt 1 view -0
+ 1109              		.cfi_startproc
+ 1110              		@ args = 0, pretend = 0, frame = 0
+ 1111              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1112 0000 08B5     		push	{r3, lr}
+ 1113              	.LCFI22:
+ 1114              		.cfi_def_cfa_offset 8
+ 1115              		.cfi_offset 3, -8
+ 1116              		.cfi_offset 14, -4
+ 374:system/sys_log/sys_log.c ****     sys_log_set_color(SYS_LOG_SYSTEM_TIME_COLOR);
+ 1117              		.loc 1 374 5 view .LVU215
+ 1118 0002 0220     		movs	r0, #2
+ 1119 0004 FFF7FEFF 		bl	sys_log_set_color
+ 1120              	.LVL125:
+ 375:system/sys_log/sys_log.c **** 
+ 376:system/sys_log/sys_log.c ****     sys_log_print_msg("[ ");
+ 1121              		.loc 1 376 5 view .LVU216
+ 1122 0008 0648     		ldr	r0, .L117
+ 1123 000a FFF7FEFF 		bl	sys_log_print_msg
+ 1124              	.LVL126:
+ 377:system/sys_log/sys_log.c ****     sys_log_print_uint(xTaskGetTickCount());    /* System time in milliseconds */
+ 1125              		.loc 1 377 5 view .LVU217
+ 1126 000e FFF7FEFF 		bl	xTaskGetTickCount
+ 1127              	.LVL127:
+ 1128              		.loc 1 377 5 is_stmt 0 discriminator 1 view .LVU218
+ 1129 0012 FFF7FEFF 		bl	sys_log_print_uint
+ 1130              	.LVL128:
+ 378:system/sys_log/sys_log.c ****     sys_log_print_msg(" ]");
+ 1131              		.loc 1 378 5 is_stmt 1 view .LVU219
+ 1132 0016 0448     		ldr	r0, .L117+4
+ 1133 0018 FFF7FEFF 		bl	sys_log_print_msg
+ 1134              	.LVL129:
+ 379:system/sys_log/sys_log.c **** 
+ 380:system/sys_log/sys_log.c ****     sys_log_reset_color();
+ 1135              		.loc 1 380 5 view .LVU220
+ 1136 001c FFF7FEFF 		bl	sys_log_reset_color
+ 1137              	.LVL130:
+ 381:system/sys_log/sys_log.c **** }
+ARM GAS  /tmp/ccmsCeBL.s 			page 31
+
+
+ 1138              		.loc 1 381 1 is_stmt 0 view .LVU221
+ 1139 0020 08BD     		pop	{r3, pc}
+ 1140              	.L118:
+ 1141 0022 00BF     		.align	2
+ 1142              	.L117:
+ 1143 0024 00000000 		.word	.LC14
+ 1144 0028 04000000 		.word	.LC15
+ 1145              		.cfi_endproc
+ 1146              	.LFE21:
+ 1148              		.section	.rodata.sys_log_print_event.str1.4,"aMS",%progbits,1
+ 1149              		.align	2
+ 1150              	.LC16:
+ 1151 0000 2000     		.ascii	" \000"
+ 1152              		.section	.text.sys_log_print_event,"ax",%progbits
+ 1153              		.align	1
+ 1154              		.global	sys_log_print_event
+ 1155              		.syntax unified
+ 1156              		.thumb
+ 1157              		.thumb_func
+ 1159              	sys_log_print_event:
+ 1160              	.LVL131:
+ 1161              	.LFB9:
+ 130:system/sys_log/sys_log.c ****     sys_log_current_level = type;
+ 1162              		.loc 1 130 1 is_stmt 1 view -0
+ 1163              		.cfi_startproc
+ 1164              		@ args = 0, pretend = 0, frame = 0
+ 1165              		@ frame_needed = 0, uses_anonymous_args = 0
+ 130:system/sys_log/sys_log.c ****     sys_log_current_level = type;
+ 1166              		.loc 1 130 1 is_stmt 0 view .LVU223
+ 1167 0000 38B5     		push	{r3, r4, r5, lr}
+ 1168              	.LCFI23:
+ 1169              		.cfi_def_cfa_offset 16
+ 1170              		.cfi_offset 3, -16
+ 1171              		.cfi_offset 4, -12
+ 1172              		.cfi_offset 5, -8
+ 1173              		.cfi_offset 14, -4
+ 131:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 1174              		.loc 1 131 5 is_stmt 1 view .LVU224
+ 131:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 1175              		.loc 1 131 27 is_stmt 0 view .LVU225
+ 1176 0002 114B     		ldr	r3, .L126
+ 1177 0004 1870     		strb	r0, [r3]
+ 132:system/sys_log/sys_log.c ****     {
+ 1178              		.loc 1 132 5 is_stmt 1 view .LVU226
+ 132:system/sys_log/sys_log.c ****     {
+ 1179              		.loc 1 132 31 is_stmt 0 view .LVU227
+ 1180 0006 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 132:system/sys_log/sys_log.c ****     {
+ 1181              		.loc 1 132 8 view .LVU228
+ 1182 0008 03B9     		cbnz	r3, .L125
+ 1183              	.LVL132:
+ 1184              	.L119:
+ 156:system/sys_log/sys_log.c **** 
+ 1185              		.loc 1 156 1 view .LVU229
+ 1186 000a 38BD     		pop	{r3, r4, r5, pc}
+ 1187              	.LVL133:
+ 1188              	.L125:
+ARM GAS  /tmp/ccmsCeBL.s 			page 32
+
+
+ 156:system/sys_log/sys_log.c **** 
+ 1189              		.loc 1 156 1 view .LVU230
+ 1190 000c 0446     		mov	r4, r0
+ 1191 000e 0D46     		mov	r5, r1
+ 134:system/sys_log/sys_log.c **** 
+ 1192              		.loc 1 134 9 is_stmt 1 view .LVU231
+ 1193 0010 FFF7FEFF 		bl	sys_log_mutex_take
+ 1194              	.LVL134:
+ 136:system/sys_log/sys_log.c ****         sys_log_print_msg(" ");
+ 1195              		.loc 1 136 9 view .LVU232
+ 1196 0014 FFF7FEFF 		bl	sys_log_print_system_time
+ 1197              	.LVL135:
+ 137:system/sys_log/sys_log.c **** 
+ 1198              		.loc 1 137 9 view .LVU233
+ 1199 0018 0C48     		ldr	r0, .L126+4
+ 1200 001a FFF7FEFF 		bl	sys_log_print_msg
+ 1201              	.LVL136:
+ 139:system/sys_log/sys_log.c ****         {
+ 1202              		.loc 1 139 9 view .LVU234
+ 1203 001e 022C     		cmp	r4, #2
+ 1204 0020 0AD0     		beq	.L121
+ 139:system/sys_log/sys_log.c ****         {
+ 1205              		.loc 1 139 9 is_stmt 0 view .LVU235
+ 1206 0022 032C     		cmp	r4, #3
+ 1207 0024 0CD0     		beq	.L122
+ 1208 0026 012C     		cmp	r4, #1
+ 1209 0028 02D1     		bne	.L123
+ 142:system/sys_log/sys_log.c ****                 break;
+ 1210              		.loc 1 142 17 is_stmt 1 view .LVU236
+ 1211 002a 0420     		movs	r0, #4
+ 1212 002c FFF7FEFF 		bl	sys_log_set_color
+ 1213              	.LVL137:
+ 143:system/sys_log/sys_log.c ****             case SYS_LOG_WARNING:
+ 1214              		.loc 1 143 17 view .LVU237
+ 1215              	.L123:
+ 154:system/sys_log/sys_log.c ****     }
+ 1216              		.loc 1 154 9 view .LVU238
+ 1217 0030 2846     		mov	r0, r5
+ 1218 0032 FFF7FEFF 		bl	sys_log_print_msg
+ 1219              	.LVL138:
+ 156:system/sys_log/sys_log.c **** 
+ 1220              		.loc 1 156 1 is_stmt 0 view .LVU239
+ 1221 0036 E8E7     		b	.L119
+ 1222              	.L121:
+ 145:system/sys_log/sys_log.c ****                 break;
+ 1223              		.loc 1 145 17 is_stmt 1 view .LVU240
+ 1224 0038 0320     		movs	r0, #3
+ 1225 003a FFF7FEFF 		bl	sys_log_set_color
+ 1226              	.LVL139:
+ 146:system/sys_log/sys_log.c ****             case SYS_LOG_ERROR:
+ 1227              		.loc 1 146 17 view .LVU241
+ 1228 003e F7E7     		b	.L123
+ 1229              	.L122:
+ 148:system/sys_log/sys_log.c ****                 break;
+ 1230              		.loc 1 148 17 view .LVU242
+ 1231 0040 0120     		movs	r0, #1
+ 1232 0042 FFF7FEFF 		bl	sys_log_set_color
+ARM GAS  /tmp/ccmsCeBL.s 			page 33
+
+
+ 1233              	.LVL140:
+ 149:system/sys_log/sys_log.c ****             default:
+ 1234              		.loc 1 149 17 view .LVU243
+ 1235 0046 F3E7     		b	.L123
+ 1236              	.L127:
+ 1237              		.align	2
+ 1238              	.L126:
+ 1239 0048 00000000 		.word	sys_log_current_level
+ 1240 004c 00000000 		.word	.LC16
+ 1241              		.cfi_endproc
+ 1242              	.LFE9:
+ 1244              		.section	.rodata.sys_log_print_event_from_module.str1.4,"aMS",%progbits,1
+ 1245              		.align	2
+ 1246              	.LC17:
+ 1247 0000 3A2000   		.ascii	": \000"
+ 1248              		.section	.text.sys_log_print_event_from_module,"ax",%progbits
+ 1249              		.align	1
+ 1250              		.global	sys_log_print_event_from_module
+ 1251              		.syntax unified
+ 1252              		.thumb
+ 1253              		.thumb_func
+ 1255              	sys_log_print_event_from_module:
+ 1256              	.LVL141:
+ 1257              	.LFB10:
+ 159:system/sys_log/sys_log.c ****     sys_log_current_level = type;
+ 1258              		.loc 1 159 1 view -0
+ 1259              		.cfi_startproc
+ 1260              		@ args = 0, pretend = 0, frame = 0
+ 1261              		@ frame_needed = 0, uses_anonymous_args = 0
+ 160:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 1262              		.loc 1 160 5 view .LVU245
+ 160:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
+ 1263              		.loc 1 160 27 is_stmt 0 view .LVU246
+ 1264 0000 174B     		ldr	r3, .L138
+ 1265 0002 1870     		strb	r0, [r3]
+ 161:system/sys_log/sys_log.c ****     {
+ 1266              		.loc 1 161 5 is_stmt 1 view .LVU247
+ 161:system/sys_log/sys_log.c ****     {
+ 1267              		.loc 1 161 31 is_stmt 0 view .LVU248
+ 1268 0004 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 161:system/sys_log/sys_log.c ****     {
+ 1269              		.loc 1 161 8 view .LVU249
+ 1270 0006 03B9     		cbnz	r3, .L137
+ 1271 0008 7047     		bx	lr
+ 1272              	.L137:
+ 159:system/sys_log/sys_log.c ****     sys_log_current_level = type;
+ 1273              		.loc 1 159 1 view .LVU250
+ 1274 000a 70B5     		push	{r4, r5, r6, lr}
+ 1275              	.LCFI24:
+ 1276              		.cfi_def_cfa_offset 16
+ 1277              		.cfi_offset 4, -16
+ 1278              		.cfi_offset 5, -12
+ 1279              		.cfi_offset 6, -8
+ 1280              		.cfi_offset 14, -4
+ 1281 000c 0446     		mov	r4, r0
+ 1282 000e 0E46     		mov	r6, r1
+ 1283 0010 1546     		mov	r5, r2
+ARM GAS  /tmp/ccmsCeBL.s 			page 34
+
+
+ 163:system/sys_log/sys_log.c **** 
+ 1284              		.loc 1 163 9 is_stmt 1 view .LVU251
+ 1285 0012 FFF7FEFF 		bl	sys_log_mutex_take
+ 1286              	.LVL142:
+ 165:system/sys_log/sys_log.c **** 
+ 1287              		.loc 1 165 9 view .LVU252
+ 1288 0016 FFF7FEFF 		bl	sys_log_print_system_time
+ 1289              	.LVL143:
+ 167:system/sys_log/sys_log.c ****         sys_log_print_msg(" ");
+ 1290              		.loc 1 167 9 view .LVU253
+ 1291 001a 0520     		movs	r0, #5
+ 1292 001c FFF7FEFF 		bl	sys_log_set_color
+ 1293              	.LVL144:
+ 168:system/sys_log/sys_log.c ****         sys_log_print_msg(module);
+ 1294              		.loc 1 168 9 view .LVU254
+ 1295 0020 1048     		ldr	r0, .L138+4
+ 1296 0022 FFF7FEFF 		bl	sys_log_print_msg
+ 1297              	.LVL145:
+ 169:system/sys_log/sys_log.c ****         sys_log_reset_color();
+ 1298              		.loc 1 169 9 view .LVU255
+ 1299 0026 3046     		mov	r0, r6
+ 1300 0028 FFF7FEFF 		bl	sys_log_print_msg
+ 1301              	.LVL146:
+ 170:system/sys_log/sys_log.c ****         sys_log_print_msg(": ");
+ 1302              		.loc 1 170 9 view .LVU256
+ 1303 002c FFF7FEFF 		bl	sys_log_reset_color
+ 1304              	.LVL147:
+ 171:system/sys_log/sys_log.c **** 
+ 1305              		.loc 1 171 9 view .LVU257
+ 1306 0030 0D48     		ldr	r0, .L138+8
+ 1307 0032 FFF7FEFF 		bl	sys_log_print_msg
+ 1308              	.LVL148:
+ 173:system/sys_log/sys_log.c ****         {
+ 1309              		.loc 1 173 9 view .LVU258
+ 1310 0036 022C     		cmp	r4, #2
+ 1311 0038 0AD0     		beq	.L130
+ 173:system/sys_log/sys_log.c ****         {
+ 1312              		.loc 1 173 9 is_stmt 0 view .LVU259
+ 1313 003a 032C     		cmp	r4, #3
+ 1314 003c 0CD0     		beq	.L131
+ 1315 003e 012C     		cmp	r4, #1
+ 1316 0040 02D1     		bne	.L132
+ 176:system/sys_log/sys_log.c ****                 break;
+ 1317              		.loc 1 176 17 is_stmt 1 view .LVU260
+ 1318 0042 0420     		movs	r0, #4
+ 1319 0044 FFF7FEFF 		bl	sys_log_set_color
+ 1320              	.LVL149:
+ 177:system/sys_log/sys_log.c ****             case SYS_LOG_WARNING:
+ 1321              		.loc 1 177 17 view .LVU261
+ 1322              	.L132:
+ 188:system/sys_log/sys_log.c ****     }
+ 1323              		.loc 1 188 9 view .LVU262
+ 1324 0048 2846     		mov	r0, r5
+ 1325 004a FFF7FEFF 		bl	sys_log_print_msg
+ 1326              	.LVL150:
+ 190:system/sys_log/sys_log.c **** 
+ 1327              		.loc 1 190 1 is_stmt 0 view .LVU263
+ARM GAS  /tmp/ccmsCeBL.s 			page 35
+
+
+ 1328 004e 70BD     		pop	{r4, r5, r6, pc}
+ 1329              	.LVL151:
+ 1330              	.L130:
+ 179:system/sys_log/sys_log.c ****                 break;
+ 1331              		.loc 1 179 17 is_stmt 1 view .LVU264
+ 1332 0050 0320     		movs	r0, #3
+ 1333 0052 FFF7FEFF 		bl	sys_log_set_color
+ 1334              	.LVL152:
+ 180:system/sys_log/sys_log.c ****             case SYS_LOG_ERROR:
+ 1335              		.loc 1 180 17 view .LVU265
+ 1336 0056 F7E7     		b	.L132
+ 1337              	.L131:
+ 182:system/sys_log/sys_log.c ****                 break;
+ 1338              		.loc 1 182 17 view .LVU266
+ 1339 0058 0120     		movs	r0, #1
+ 1340 005a FFF7FEFF 		bl	sys_log_set_color
+ 1341              	.LVL153:
+ 183:system/sys_log/sys_log.c ****             default:
+ 1342              		.loc 1 183 17 view .LVU267
+ 1343 005e F3E7     		b	.L132
+ 1344              	.L139:
+ 1345              		.align	2
+ 1346              	.L138:
+ 1347 0060 00000000 		.word	sys_log_current_level
+ 1348 0064 00000000 		.word	.LC16
+ 1349 0068 00000000 		.word	.LC17
+ 1350              		.cfi_endproc
+ 1351              	.LFE10:
+ 1353              		.section	.rodata.sys_log_print_license_msg.str1.4,"aMS",%progbits,1
+ 1354              		.align	2
+ 1355              	.LC18:
+ 1356 0000 45505320 		.ascii	"EPS 2.0 Copyright (C) 2020, SpaceLab;\000"
+ 1356      322E3020 
+ 1356      436F7079 
+ 1356      72696768 
+ 1356      74202843 
+ 1357 0026 0000     		.align	2
+ 1358              	.LC19:
+ 1359 0028 54686973 		.ascii	"This program comes with ABSOLUTELY NO WARRANTY.\000"
+ 1359      2070726F 
+ 1359      6772616D 
+ 1359      20636F6D 
+ 1359      65732077 
+ 1360              		.align	2
+ 1361              	.LC20:
+ 1362 0058 54686973 		.ascii	"This is free software, and you are welcome to redis"
+ 1362      20697320 
+ 1362      66726565 
+ 1362      20736F66 
+ 1362      74776172 
+ 1363 008b 74726962 		.ascii	"tribute it\000"
+ 1363      75746520 
+ 1363      697400
+ 1364 0096 0000     		.align	2
+ 1365              	.LC21:
+ 1366 0098 756E6465 		.ascii	"under certain conditions.\000"
+ 1366      72206365 
+ARM GAS  /tmp/ccmsCeBL.s 			page 36
+
+
+ 1366      72746169 
+ 1366      6E20636F 
+ 1366      6E646974 
+ 1367 00b2 0000     		.align	2
+ 1368              	.LC22:
+ 1369 00b4 536F7572 		.ascii	"Source code: https://github.com/spacelab-ufsc/eps2\000"
+ 1369      63652063 
+ 1369      6F64653A 
+ 1369      20687474 
+ 1369      70733A2F 
+ 1370 00e7 00       		.align	2
+ 1371              	.LC23:
+ 1372 00e8 446F6375 		.ascii	"Documentation: https://github.com/spacelab-ufsc/eps"
+ 1372      6D656E74 
+ 1372      6174696F 
+ 1372      6E3A2068 
+ 1372      74747073 
+ 1373 011b 322F7472 		.ascii	"2/tree/master/doc\000"
+ 1373      65652F6D 
+ 1373      61737465 
+ 1373      722F646F 
+ 1373      6300
+ 1374              		.section	.text.sys_log_print_license_msg,"ax",%progbits
+ 1375              		.align	1
+ 1376              		.global	sys_log_print_license_msg
+ 1377              		.syntax unified
+ 1378              		.thumb
+ 1379              		.thumb_func
+ 1381              	sys_log_print_license_msg:
+ 1382              	.LFB22:
+ 382:system/sys_log/sys_log.c **** 
+ 383:system/sys_log/sys_log.c **** void sys_log_print_license_msg()
+ 384:system/sys_log/sys_log.c **** {
+ 1383              		.loc 1 384 1 view -0
+ 1384              		.cfi_startproc
+ 1385              		@ args = 0, pretend = 0, frame = 0
+ 1386              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1387 0000 08B5     		push	{r3, lr}
+ 1388              	.LCFI25:
+ 1389              		.cfi_def_cfa_offset 8
+ 1390              		.cfi_offset 3, -8
+ 1391              		.cfi_offset 14, -4
+ 385:system/sys_log/sys_log.c ****     sys_log_print_msg("EPS 2.0 Copyright (C) 2020, SpaceLab;");
+ 1392              		.loc 1 385 5 view .LVU269
+ 1393 0002 1048     		ldr	r0, .L142
+ 1394 0004 FFF7FEFF 		bl	sys_log_print_msg
+ 1395              	.LVL154:
+ 386:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1396              		.loc 1 386 5 view .LVU270
+ 1397 0008 FFF7FEFF 		bl	sys_log_new_line
+ 1398              	.LVL155:
+ 387:system/sys_log/sys_log.c ****     sys_log_print_msg("This program comes with ABSOLUTELY NO WARRANTY.");
+ 1399              		.loc 1 387 5 view .LVU271
+ 1400 000c 0E48     		ldr	r0, .L142+4
+ 1401 000e FFF7FEFF 		bl	sys_log_print_msg
+ 1402              	.LVL156:
+ 388:system/sys_log/sys_log.c ****     sys_log_new_line();
+ARM GAS  /tmp/ccmsCeBL.s 			page 37
+
+
+ 1403              		.loc 1 388 5 view .LVU272
+ 1404 0012 FFF7FEFF 		bl	sys_log_new_line
+ 1405              	.LVL157:
+ 389:system/sys_log/sys_log.c ****     sys_log_print_msg("This is free software, and you are welcome to redistribute it");
+ 1406              		.loc 1 389 5 view .LVU273
+ 1407 0016 0D48     		ldr	r0, .L142+8
+ 1408 0018 FFF7FEFF 		bl	sys_log_print_msg
+ 1409              	.LVL158:
+ 390:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1410              		.loc 1 390 5 view .LVU274
+ 1411 001c FFF7FEFF 		bl	sys_log_new_line
+ 1412              	.LVL159:
+ 391:system/sys_log/sys_log.c ****     sys_log_print_msg("under certain conditions.");
+ 1413              		.loc 1 391 5 view .LVU275
+ 1414 0020 0B48     		ldr	r0, .L142+12
+ 1415 0022 FFF7FEFF 		bl	sys_log_print_msg
+ 1416              	.LVL160:
+ 392:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1417              		.loc 1 392 5 view .LVU276
+ 1418 0026 FFF7FEFF 		bl	sys_log_new_line
+ 1419              	.LVL161:
+ 393:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1420              		.loc 1 393 5 view .LVU277
+ 1421 002a FFF7FEFF 		bl	sys_log_new_line
+ 1422              	.LVL162:
+ 394:system/sys_log/sys_log.c ****     sys_log_print_msg("Source code: https://github.com/spacelab-ufsc/eps2");
+ 1423              		.loc 1 394 5 view .LVU278
+ 1424 002e 0948     		ldr	r0, .L142+16
+ 1425 0030 FFF7FEFF 		bl	sys_log_print_msg
+ 1426              	.LVL163:
+ 395:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1427              		.loc 1 395 5 view .LVU279
+ 1428 0034 FFF7FEFF 		bl	sys_log_new_line
+ 1429              	.LVL164:
+ 396:system/sys_log/sys_log.c ****     sys_log_print_msg("Documentation: https://github.com/spacelab-ufsc/eps2/tree/master/doc");
+ 1430              		.loc 1 396 5 view .LVU280
+ 1431 0038 0748     		ldr	r0, .L142+20
+ 1432 003a FFF7FEFF 		bl	sys_log_print_msg
+ 1433              	.LVL165:
+ 397:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1434              		.loc 1 397 5 view .LVU281
+ 1435 003e FFF7FEFF 		bl	sys_log_new_line
+ 1436              	.LVL166:
+ 398:system/sys_log/sys_log.c **** }
+ 1437              		.loc 1 398 1 is_stmt 0 view .LVU282
+ 1438 0042 08BD     		pop	{r3, pc}
+ 1439              	.L143:
+ 1440              		.align	2
+ 1441              	.L142:
+ 1442 0044 00000000 		.word	.LC18
+ 1443 0048 28000000 		.word	.LC19
+ 1444 004c 58000000 		.word	.LC20
+ 1445 0050 98000000 		.word	.LC21
+ 1446 0054 B4000000 		.word	.LC22
+ 1447 0058 E8000000 		.word	.LC23
+ 1448              		.cfi_endproc
+ 1449              	.LFE22:
+ARM GAS  /tmp/ccmsCeBL.s 			page 38
+
+
+ 1451              		.section	.rodata.sys_log_print_splash_screen.str1.4,"aMS",%progbits,1
+ 1452              		.align	2
+ 1453              	.LC24:
+ 1454 0000 20202020 		.ascii	"                                                   "
+ 1454      20202020 
+ 1454      20202020 
+ 1454      20202020 
+ 1454      20202020 
+ 1455 0033 20202020 		.ascii	"                \000"
+ 1455      20202020 
+ 1455      20202020 
+ 1455      20202020 
+ 1455      00
+ 1456              		.align	2
+ 1457              	.LC25:
+ 1458 0044 2E2E2E2E 		.ascii	"..................................................."
+ 1458      2E2E2E2E 
+ 1458      2E2E2E2E 
+ 1458      2E2E2E2E 
+ 1458      2E2E2E2E 
+ 1459 0077 2E2E2E2E 		.ascii	"................\000"
+ 1459      2E2E2E2E 
+ 1459      2E2E2E2E 
+ 1459      2E2E2E2E 
+ 1459      00
+ 1460              		.align	2
+ 1461              	.LC26:
+ 1462 0088 2E2E2E2E 		.ascii	"..........                                         "
+ 1462      2E2E2E2E 
+ 1462      2E2E2020 
+ 1462      20202020 
+ 1462      20202020 
+ 1463 00bb 20202020 		.ascii	"      ..........\000"
+ 1463      20202E2E 
+ 1463      2E2E2E2E 
+ 1463      2E2E2E2E 
+ 1463      00
+ 1464              		.align	2
+ 1465              	.LC27:
+ 1466 00cc 2E2E2E2E 		.ascii	"..........  ____                       _          _"
+ 1466      2E2E2E2E 
+ 1466      2E2E2020 
+ 1466      5F5F5F5F 
+ 1466      20202020 
+ 1467 00ff 20202020 		.ascii	"      ..........\000"
+ 1467      20202E2E 
+ 1467      2E2E2E2E 
+ 1467      2E2E2E2E 
+ 1467      00
+ 1468              		.align	2
+ 1469              	.LC28:
+ 1470 0110 2E2E2E2E 		.ascii	".......... / ___| _ __   __ _  ___ ___| |    __ _| "
+ 1470      2E2E2E2E 
+ 1470      2E2E202F 
+ 1470      205F5F5F 
+ 1470      7C205F20 
+ 1471 0143 7C5F5F20 		.ascii	"|__   ..........\000"
+ARM GAS  /tmp/ccmsCeBL.s 			page 39
+
+
+ 1471      20202E2E 
+ 1471      2E2E2E2E 
+ 1471      2E2E2E2E 
+ 1471      00
+ 1472              		.align	2
+ 1473              	.LC29:
+ 1474 0154 2E2E2E2E 		.ascii	".......... \\___ \\| '_ \\ / _` |/ __/ _ \\ |   / _"
+ 1474      2E2E2E2E 
+ 1474      2E2E205C 
+ 1474      5F5F5F20 
+ 1474      5C7C2027 
+ 1475 0183 60207C20 		.ascii	"` | '_ \\  ..........\000"
+ 1475      275F205C 
+ 1475      20202E2E 
+ 1475      2E2E2E2E 
+ 1475      2E2E2E2E 
+ 1476              		.align	2
+ 1477              	.LC30:
+ 1478 0198 2E2E2E2E 		.ascii	"..........  ___) | |_) | (_| | (_|  __/ |__| (_| | "
+ 1478      2E2E2E2E 
+ 1478      2E2E2020 
+ 1478      5F5F5F29 
+ 1478      207C207C 
+ 1479 01cb 7C5F2920 		.ascii	"|_) | ..........\000"
+ 1479      7C202E2E 
+ 1479      2E2E2E2E 
+ 1479      2E2E2E2E 
+ 1479      00
+ 1480              		.align	2
+ 1481              	.LC31:
+ 1482 01dc 2E2E2E2E 		.ascii	".......... |____/| .__/ \\__,_|\\___\\___|_____\\__"
+ 1482      2E2E2E2E 
+ 1482      2E2E207C 
+ 1482      5F5F5F5F 
+ 1482      2F7C202E 
+ 1483 020b 2C5F7C5F 		.ascii	",_|_.__/  ..........\000"
+ 1483      2E5F5F2F 
+ 1483      20202E2E 
+ 1483      2E2E2E2E 
+ 1483      2E2E2E2E 
+ 1484              		.align	2
+ 1485              	.LC32:
+ 1486 0220 2E2E2E2E 		.ascii	"..........       |_|                               "
+ 1486      2E2E2E2E 
+ 1486      2E2E2020 
+ 1486      20202020 
+ 1486      207C5F7C 
+ 1487 0253 20202020 		.ascii	"      ..........\000"
+ 1487      20202E2E 
+ 1487      2E2E2E2E 
+ 1487      2E2E2E2E 
+ 1487      00
+ 1488              		.align	2
+ 1489              	.LC33:
+ 1490 0264 2E2E2E2E 		.ascii	"..........        _____ ____  ____    ____    ___  "
+ 1490      2E2E2E2E 
+ 1490      2E2E2020 
+ARM GAS  /tmp/ccmsCeBL.s 			page 40
+
+
+ 1490      20202020 
+ 1490      20205F5F 
+ 1491 0297 20202020 		.ascii	"      ..........\000"
+ 1491      20202E2E 
+ 1491      2E2E2E2E 
+ 1491      2E2E2E2E 
+ 1491      00
+ 1492              		.align	2
+ 1493              	.LC34:
+ 1494 02a8 2E2E2E2E 		.ascii	"..........       | ____|  _ \\/ ___|  |___ \\  / _ "
+ 1494      2E2E2E2E 
+ 1494      2E2E2020 
+ 1494      20202020 
+ 1494      207C205F 
+ 1495 02d9 5C202020 		.ascii	"\\       ..........\000"
+ 1495      20202020 
+ 1495      2E2E2E2E 
+ 1495      2E2E2E2E 
+ 1495      2E2E00
+ 1496              		.align	2
+ 1497              	.LC35:
+ 1498 02ec 2E2E2E2E 		.ascii	"..........       |  _| | |_) \\___ \\    __) || | |"
+ 1498      2E2E2E2E 
+ 1498      2E2E2020 
+ 1498      20202020 
+ 1498      207C2020 
+ 1499 031d 207C2020 		.ascii	" |      ..........\000"
+ 1499      20202020 
+ 1499      2E2E2E2E 
+ 1499      2E2E2E2E 
+ 1499      2E2E00
+ 1500              		.align	2
+ 1501              	.LC36:
+ 1502 0330 2E2E2E2E 		.ascii	"..........       | |___|  __/ ___) |  / __/ | |_| |"
+ 1502      2E2E2E2E 
+ 1502      2E2E2020 
+ 1502      20202020 
+ 1502      207C207C 
+ 1503 0363 20202020 		.ascii	"      ..........\000"
+ 1503      20202E2E 
+ 1503      2E2E2E2E 
+ 1503      2E2E2E2E 
+ 1503      00
+ 1504              		.align	2
+ 1505              	.LC37:
+ 1506 0374 2E2E2E2E 		.ascii	"..........       |_____|_|   |____/  |_____(_)___/ "
+ 1506      2E2E2E2E 
+ 1506      2E2E2020 
+ 1506      20202020 
+ 1506      207C5F5F 
+ 1507 03a7 20202020 		.ascii	"      ..........\000"
+ 1507      20202E2E 
+ 1507      2E2E2E2E 
+ 1507      2E2E2E2E 
+ 1507      00
+ 1508              		.section	.text.sys_log_print_splash_screen,"ax",%progbits
+ 1509              		.align	1
+ARM GAS  /tmp/ccmsCeBL.s 			page 41
+
+
+ 1510              		.global	sys_log_print_splash_screen
+ 1511              		.syntax unified
+ 1512              		.thumb
+ 1513              		.thumb_func
+ 1515              	sys_log_print_splash_screen:
+ 1516              	.LFB23:
+ 399:system/sys_log/sys_log.c **** 
+ 400:system/sys_log/sys_log.c **** void sys_log_print_splash_screen()
+ 401:system/sys_log/sys_log.c **** {
+ 1517              		.loc 1 401 1 is_stmt 1 view -0
+ 1518              		.cfi_startproc
+ 1519              		@ args = 0, pretend = 0, frame = 0
+ 1520              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1521 0000 70B5     		push	{r4, r5, r6, lr}
+ 1522              	.LCFI26:
+ 1523              		.cfi_def_cfa_offset 16
+ 1524              		.cfi_offset 4, -16
+ 1525              		.cfi_offset 5, -12
+ 1526              		.cfi_offset 6, -8
+ 1527              		.cfi_offset 14, -4
+ 402:system/sys_log/sys_log.c ****     sys_log_print_msg("                                                                   ");
+ 1528              		.loc 1 402 5 view .LVU284
+ 1529 0002 3B4C     		ldr	r4, .L146
+ 1530 0004 2046     		mov	r0, r4
+ 1531 0006 FFF7FEFF 		bl	sys_log_print_msg
+ 1532              	.LVL167:
+ 403:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1533              		.loc 1 403 5 view .LVU285
+ 1534 000a FFF7FEFF 		bl	sys_log_new_line
+ 1535              	.LVL168:
+ 404:system/sys_log/sys_log.c ****     sys_log_print_msg("                                                                   ");
+ 1536              		.loc 1 404 5 view .LVU286
+ 1537 000e 2046     		mov	r0, r4
+ 1538 0010 FFF7FEFF 		bl	sys_log_print_msg
+ 1539              	.LVL169:
+ 405:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1540              		.loc 1 405 5 view .LVU287
+ 1541 0014 FFF7FEFF 		bl	sys_log_new_line
+ 1542              	.LVL170:
+ 406:system/sys_log/sys_log.c ****     sys_log_print_msg("...................................................................");
+ 1543              		.loc 1 406 5 view .LVU288
+ 1544 0018 364D     		ldr	r5, .L146+4
+ 1545 001a 2846     		mov	r0, r5
+ 1546 001c FFF7FEFF 		bl	sys_log_print_msg
+ 1547              	.LVL171:
+ 407:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1548              		.loc 1 407 5 view .LVU289
+ 1549 0020 FFF7FEFF 		bl	sys_log_new_line
+ 1550              	.LVL172:
+ 408:system/sys_log/sys_log.c ****     sys_log_print_msg("...................................................................");
+ 1551              		.loc 1 408 5 view .LVU290
+ 1552 0024 2846     		mov	r0, r5
+ 1553 0026 FFF7FEFF 		bl	sys_log_print_msg
+ 1554              	.LVL173:
+ 409:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1555              		.loc 1 409 5 view .LVU291
+ 1556 002a FFF7FEFF 		bl	sys_log_new_line
+ARM GAS  /tmp/ccmsCeBL.s 			page 42
+
+
+ 1557              	.LVL174:
+ 410:system/sys_log/sys_log.c ****     sys_log_print_msg("..........                                               ..........");
+ 1558              		.loc 1 410 5 view .LVU292
+ 1559 002e 324E     		ldr	r6, .L146+8
+ 1560 0030 3046     		mov	r0, r6
+ 1561 0032 FFF7FEFF 		bl	sys_log_print_msg
+ 1562              	.LVL175:
+ 411:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1563              		.loc 1 411 5 view .LVU293
+ 1564 0036 FFF7FEFF 		bl	sys_log_new_line
+ 1565              	.LVL176:
+ 412:system/sys_log/sys_log.c ****     sys_log_print_msg("..........  ____                       _          _      ..........");
+ 1566              		.loc 1 412 5 view .LVU294
+ 1567 003a 3048     		ldr	r0, .L146+12
+ 1568 003c FFF7FEFF 		bl	sys_log_print_msg
+ 1569              	.LVL177:
+ 413:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1570              		.loc 1 413 5 view .LVU295
+ 1571 0040 FFF7FEFF 		bl	sys_log_new_line
+ 1572              	.LVL178:
+ 414:system/sys_log/sys_log.c ****     sys_log_print_msg(".......... / ___| _ __   __ _  ___ ___| |    __ _| |__   ..........");
+ 1573              		.loc 1 414 5 view .LVU296
+ 1574 0044 2E48     		ldr	r0, .L146+16
+ 1575 0046 FFF7FEFF 		bl	sys_log_print_msg
+ 1576              	.LVL179:
+ 415:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1577              		.loc 1 415 5 view .LVU297
+ 1578 004a FFF7FEFF 		bl	sys_log_new_line
+ 1579              	.LVL180:
+ 416:system/sys_log/sys_log.c ****     sys_log_print_msg(".......... \\___ \\| '_ \\ / _` |/ __/ _ \\ |   / _` | '_ \\  ..........");
+ 1580              		.loc 1 416 5 view .LVU298
+ 1581 004e 2D48     		ldr	r0, .L146+20
+ 1582 0050 FFF7FEFF 		bl	sys_log_print_msg
+ 1583              	.LVL181:
+ 417:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1584              		.loc 1 417 5 view .LVU299
+ 1585 0054 FFF7FEFF 		bl	sys_log_new_line
+ 1586              	.LVL182:
+ 418:system/sys_log/sys_log.c ****     sys_log_print_msg("..........  ___) | |_) | (_| | (_|  __/ |__| (_| | |_) | ..........");
+ 1587              		.loc 1 418 5 view .LVU300
+ 1588 0058 2B48     		ldr	r0, .L146+24
+ 1589 005a FFF7FEFF 		bl	sys_log_print_msg
+ 1590              	.LVL183:
+ 419:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1591              		.loc 1 419 5 view .LVU301
+ 1592 005e FFF7FEFF 		bl	sys_log_new_line
+ 1593              	.LVL184:
+ 420:system/sys_log/sys_log.c ****     sys_log_print_msg(".......... |____/| .__/ \\__,_|\\___\\___|_____\\__,_|_.__/  ..........");
+ 1594              		.loc 1 420 5 view .LVU302
+ 1595 0062 2A48     		ldr	r0, .L146+28
+ 1596 0064 FFF7FEFF 		bl	sys_log_print_msg
+ 1597              	.LVL185:
+ 421:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1598              		.loc 1 421 5 view .LVU303
+ 1599 0068 FFF7FEFF 		bl	sys_log_new_line
+ 1600              	.LVL186:
+ 422:system/sys_log/sys_log.c ****     sys_log_print_msg("..........       |_|                                     ..........");
+ARM GAS  /tmp/ccmsCeBL.s 			page 43
+
+
+ 1601              		.loc 1 422 5 view .LVU304
+ 1602 006c 2848     		ldr	r0, .L146+32
+ 1603 006e FFF7FEFF 		bl	sys_log_print_msg
+ 1604              	.LVL187:
+ 423:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1605              		.loc 1 423 5 view .LVU305
+ 1606 0072 FFF7FEFF 		bl	sys_log_new_line
+ 1607              	.LVL188:
+ 424:system/sys_log/sys_log.c ****     sys_log_print_msg("..........                                               ..........");
+ 1608              		.loc 1 424 5 view .LVU306
+ 1609 0076 3046     		mov	r0, r6
+ 1610 0078 FFF7FEFF 		bl	sys_log_print_msg
+ 1611              	.LVL189:
+ 425:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1612              		.loc 1 425 5 view .LVU307
+ 1613 007c FFF7FEFF 		bl	sys_log_new_line
+ 1614              	.LVL190:
+ 426:system/sys_log/sys_log.c ****     sys_log_print_msg("..........        _____ ____  ____    ____    ___        ..........");
+ 1615              		.loc 1 426 5 view .LVU308
+ 1616 0080 2448     		ldr	r0, .L146+36
+ 1617 0082 FFF7FEFF 		bl	sys_log_print_msg
+ 1618              	.LVL191:
+ 427:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1619              		.loc 1 427 5 view .LVU309
+ 1620 0086 FFF7FEFF 		bl	sys_log_new_line
+ 1621              	.LVL192:
+ 428:system/sys_log/sys_log.c ****     sys_log_print_msg("..........       | ____|  _ \\/ ___|  |___ \\  / _ \\       ..........");
+ 1622              		.loc 1 428 5 view .LVU310
+ 1623 008a 2348     		ldr	r0, .L146+40
+ 1624 008c FFF7FEFF 		bl	sys_log_print_msg
+ 1625              	.LVL193:
+ 429:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1626              		.loc 1 429 5 view .LVU311
+ 1627 0090 FFF7FEFF 		bl	sys_log_new_line
+ 1628              	.LVL194:
+ 430:system/sys_log/sys_log.c ****     sys_log_print_msg("..........       |  _| | |_) \\___ \\    __) || | | |      ..........");
+ 1629              		.loc 1 430 5 view .LVU312
+ 1630 0094 2148     		ldr	r0, .L146+44
+ 1631 0096 FFF7FEFF 		bl	sys_log_print_msg
+ 1632              	.LVL195:
+ 431:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1633              		.loc 1 431 5 view .LVU313
+ 1634 009a FFF7FEFF 		bl	sys_log_new_line
+ 1635              	.LVL196:
+ 432:system/sys_log/sys_log.c ****     sys_log_print_msg("..........       | |___|  __/ ___) |  / __/ | |_| |      ..........");
+ 1636              		.loc 1 432 5 view .LVU314
+ 1637 009e 2048     		ldr	r0, .L146+48
+ 1638 00a0 FFF7FEFF 		bl	sys_log_print_msg
+ 1639              	.LVL197:
+ 433:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1640              		.loc 1 433 5 view .LVU315
+ 1641 00a4 FFF7FEFF 		bl	sys_log_new_line
+ 1642              	.LVL198:
+ 434:system/sys_log/sys_log.c ****     sys_log_print_msg("..........       |_____|_|   |____/  |_____(_)___/       ..........");
+ 1643              		.loc 1 434 5 view .LVU316
+ 1644 00a8 1E48     		ldr	r0, .L146+52
+ 1645 00aa FFF7FEFF 		bl	sys_log_print_msg
+ARM GAS  /tmp/ccmsCeBL.s 			page 44
+
+
+ 1646              	.LVL199:
+ 435:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1647              		.loc 1 435 5 view .LVU317
+ 1648 00ae FFF7FEFF 		bl	sys_log_new_line
+ 1649              	.LVL200:
+ 436:system/sys_log/sys_log.c ****     sys_log_print_msg("..........                                               ..........");
+ 1650              		.loc 1 436 5 view .LVU318
+ 1651 00b2 3046     		mov	r0, r6
+ 1652 00b4 FFF7FEFF 		bl	sys_log_print_msg
+ 1653              	.LVL201:
+ 437:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1654              		.loc 1 437 5 view .LVU319
+ 1655 00b8 FFF7FEFF 		bl	sys_log_new_line
+ 1656              	.LVL202:
+ 438:system/sys_log/sys_log.c ****     sys_log_print_msg("..........                                               ..........");
+ 1657              		.loc 1 438 5 view .LVU320
+ 1658 00bc 3046     		mov	r0, r6
+ 1659 00be FFF7FEFF 		bl	sys_log_print_msg
+ 1660              	.LVL203:
+ 439:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1661              		.loc 1 439 5 view .LVU321
+ 1662 00c2 FFF7FEFF 		bl	sys_log_new_line
+ 1663              	.LVL204:
+ 440:system/sys_log/sys_log.c ****     sys_log_print_msg("...................................................................");
+ 1664              		.loc 1 440 5 view .LVU322
+ 1665 00c6 2846     		mov	r0, r5
+ 1666 00c8 FFF7FEFF 		bl	sys_log_print_msg
+ 1667              	.LVL205:
+ 441:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1668              		.loc 1 441 5 view .LVU323
+ 1669 00cc FFF7FEFF 		bl	sys_log_new_line
+ 1670              	.LVL206:
+ 442:system/sys_log/sys_log.c ****     sys_log_print_msg("...................................................................");
+ 1671              		.loc 1 442 5 view .LVU324
+ 1672 00d0 2846     		mov	r0, r5
+ 1673 00d2 FFF7FEFF 		bl	sys_log_print_msg
+ 1674              	.LVL207:
+ 443:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1675              		.loc 1 443 5 view .LVU325
+ 1676 00d6 FFF7FEFF 		bl	sys_log_new_line
+ 1677              	.LVL208:
+ 444:system/sys_log/sys_log.c ****     sys_log_print_msg("                                                                   ");
+ 1678              		.loc 1 444 5 view .LVU326
+ 1679 00da 2046     		mov	r0, r4
+ 1680 00dc FFF7FEFF 		bl	sys_log_print_msg
+ 1681              	.LVL209:
+ 445:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1682              		.loc 1 445 5 view .LVU327
+ 1683 00e0 FFF7FEFF 		bl	sys_log_new_line
+ 1684              	.LVL210:
+ 446:system/sys_log/sys_log.c ****     sys_log_print_msg("                                                                   ");
+ 1685              		.loc 1 446 5 view .LVU328
+ 1686 00e4 2046     		mov	r0, r4
+ 1687 00e6 FFF7FEFF 		bl	sys_log_print_msg
+ 1688              	.LVL211:
+ 447:system/sys_log/sys_log.c ****     sys_log_new_line();
+ 1689              		.loc 1 447 5 view .LVU329
+ARM GAS  /tmp/ccmsCeBL.s 			page 45
+
+
+ 1690 00ea FFF7FEFF 		bl	sys_log_new_line
+ 1691              	.LVL212:
+ 448:system/sys_log/sys_log.c **** }
+ 1692              		.loc 1 448 1 is_stmt 0 view .LVU330
+ 1693 00ee 70BD     		pop	{r4, r5, r6, pc}
+ 1694              	.L147:
+ 1695              		.align	2
+ 1696              	.L146:
+ 1697 00f0 00000000 		.word	.LC24
+ 1698 00f4 44000000 		.word	.LC25
+ 1699 00f8 88000000 		.word	.LC26
+ 1700 00fc CC000000 		.word	.LC27
+ 1701 0100 10010000 		.word	.LC28
+ 1702 0104 54010000 		.word	.LC29
+ 1703 0108 98010000 		.word	.LC30
+ 1704 010c DC010000 		.word	.LC31
+ 1705 0110 20020000 		.word	.LC32
+ 1706 0114 64020000 		.word	.LC33
+ 1707 0118 A8020000 		.word	.LC34
+ 1708 011c EC020000 		.word	.LC35
+ 1709 0120 30030000 		.word	.LC36
+ 1710 0124 74030000 		.word	.LC37
+ 1711              		.cfi_endproc
+ 1712              	.LFE23:
+ 1714              		.section	.rodata.sys_log_print_firmware_version.str1.4,"aMS",%progbits,1
+ 1715              		.align	2
+ 1716              	.LC38:
+ 1717 0000 302E342E 		.ascii	"0.4.0\000"
+ 1717      3000
+ 1718              		.section	.text.sys_log_print_firmware_version,"ax",%progbits
+ 1719              		.align	1
+ 1720              		.global	sys_log_print_firmware_version
+ 1721              		.syntax unified
+ 1722              		.thumb
+ 1723              		.thumb_func
+ 1725              	sys_log_print_firmware_version:
+ 1726              	.LFB24:
+ 449:system/sys_log/sys_log.c **** 
+ 450:system/sys_log/sys_log.c **** void sys_log_print_firmware_version()
+ 451:system/sys_log/sys_log.c **** {
+ 1727              		.loc 1 451 1 is_stmt 1 view -0
+ 1728              		.cfi_startproc
+ 1729              		@ args = 0, pretend = 0, frame = 0
+ 1730              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1731 0000 08B5     		push	{r3, lr}
+ 1732              	.LCFI27:
+ 1733              		.cfi_def_cfa_offset 8
+ 1734              		.cfi_offset 3, -8
+ 1735              		.cfi_offset 14, -4
+ 452:system/sys_log/sys_log.c ****     sys_log_print_msg("[ ");
+ 1736              		.loc 1 452 5 view .LVU332
+ 1737 0002 0548     		ldr	r0, .L150
+ 1738 0004 FFF7FEFF 		bl	sys_log_print_msg
+ 1739              	.LVL213:
+ 453:system/sys_log/sys_log.c ****     sys_log_print_msg(FIRMWARE_VERSION);
+ 1740              		.loc 1 453 5 view .LVU333
+ 1741 0008 0448     		ldr	r0, .L150+4
+ARM GAS  /tmp/ccmsCeBL.s 			page 46
+
+
+ 1742 000a FFF7FEFF 		bl	sys_log_print_msg
+ 1743              	.LVL214:
+ 454:system/sys_log/sys_log.c ****     sys_log_print_msg(" ]");
+ 1744              		.loc 1 454 5 view .LVU334
+ 1745 000e 0448     		ldr	r0, .L150+8
+ 1746 0010 FFF7FEFF 		bl	sys_log_print_msg
+ 1747              	.LVL215:
+ 455:system/sys_log/sys_log.c **** }
+ 1748              		.loc 1 455 1 is_stmt 0 view .LVU335
+ 1749 0014 08BD     		pop	{r3, pc}
+ 1750              	.L151:
+ 1751 0016 00BF     		.align	2
+ 1752              	.L150:
+ 1753 0018 00000000 		.word	.LC14
+ 1754 001c 00000000 		.word	.LC38
+ 1755 0020 04000000 		.word	.LC15
+ 1756              		.cfi_endproc
+ 1757              	.LFE24:
+ 1759              		.section	.rodata.sys_log_init.str1.4,"aMS",%progbits,1
+ 1760              		.align	2
+ 1761              	.LC39:
+ 1762 0000 3D3D3D3D 		.ascii	"==================================================="
+ 1762      3D3D3D3D 
+ 1762      3D3D3D3D 
+ 1762      3D3D3D3D 
+ 1762      3D3D3D3D 
+ 1763 0033 3D3D3D3D 		.ascii	"================\000"
+ 1763      3D3D3D3D 
+ 1763      3D3D3D3D 
+ 1763      3D3D3D3D 
+ 1763      00
+ 1764              		.align	2
+ 1765              	.LC40:
+ 1766 0044 56657273 		.ascii	"Version:\011\000"
+ 1766      696F6E3A 
+ 1766      0900
+ 1767 004e 0000     		.align	2
+ 1768              	.LC41:
+ 1769 0050 53746174 		.ascii	"Status:\011\011\000"
+ 1769      75733A09 
+ 1769      0900
+ 1770 005a 0000     		.align	2
+ 1771              	.LC42:
+ 1772 005c 44657665 		.ascii	"Development\000"
+ 1772      6C6F706D 
+ 1772      656E7400 
+ 1773              		.align	2
+ 1774              	.LC43:
+ 1775 0068 41757468 		.ascii	"Author:\011\011\000"
+ 1775      6F723A09 
+ 1775      0900
+ 1776 0072 0000     		.align	2
+ 1777              	.LC44:
+ 1778 0074 53706163 		.ascii	"SpaceLab\000"
+ 1778      654C6162 
+ 1778      00
+ 1779 007d 000000   		.align	2
+ARM GAS  /tmp/ccmsCeBL.s 			page 47
+
+
+ 1780              	.LC45:
+ 1781 0080 203C00   		.ascii	" <\000"
+ 1782 0083 00       		.align	2
+ 1783              	.LC46:
+ 1784 0084 73706163 		.ascii	"spacelab.ufsc@gmail.com\000"
+ 1784      656C6162 
+ 1784      2E756673 
+ 1784      6340676D 
+ 1784      61696C2E 
+ 1785              		.align	2
+ 1786              	.LC47:
+ 1787 009c 3E00     		.ascii	">\000"
+ 1788              		.section	.text.sys_log_init,"ax",%progbits
+ 1789              		.align	1
+ 1790              		.global	sys_log_init
+ 1791              		.syntax unified
+ 1792              		.thumb
+ 1793              		.thumb_func
+ 1795              	sys_log_init:
+ 1796              	.LFB6:
+  51:system/sys_log/sys_log.c ****     if (sys_log_uart_init())
+ 1797              		.loc 1 51 1 is_stmt 1 view -0
+ 1798              		.cfi_startproc
+ 1799              		@ args = 0, pretend = 0, frame = 0
+ 1800              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1801 0000 10B5     		push	{r4, lr}
+ 1802              	.LCFI28:
+ 1803              		.cfi_def_cfa_offset 8
+ 1804              		.cfi_offset 4, -8
+ 1805              		.cfi_offset 14, -4
+  52:system/sys_log/sys_log.c ****     {
+ 1806              		.loc 1 52 5 view .LVU337
+  52:system/sys_log/sys_log.c ****     {
+ 1807              		.loc 1 52 9 is_stmt 0 view .LVU338
+ 1808 0002 FFF7FEFF 		bl	sys_log_uart_init
+ 1809              	.LVL216:
+  52:system/sys_log/sys_log.c ****     {
+ 1810              		.loc 1 52 8 discriminator 1 view .LVU339
+ 1811 0006 0028     		cmp	r0, #0
+ 1812 0008 38D0     		beq	.L154
+  54:system/sys_log/sys_log.c **** 
+ 1813              		.loc 1 54 9 is_stmt 1 view .LVU340
+ 1814 000a FFF7FEFF 		bl	sys_log_new_line
+ 1815              	.LVL217:
+  56:system/sys_log/sys_log.c **** 
+ 1816              		.loc 1 56 9 view .LVU341
+ 1817 000e FFF7FEFF 		bl	sys_log_print_license_msg
+ 1818              	.LVL218:
+  58:system/sys_log/sys_log.c **** 
+ 1819              		.loc 1 58 9 view .LVU342
+ 1820 0012 FFF7FEFF 		bl	sys_log_print_splash_screen
+ 1821              	.LVL219:
+  60:system/sys_log/sys_log.c ****         sys_log_new_line();
+ 1822              		.loc 1 60 9 view .LVU343
+ 1823 0016 1B4C     		ldr	r4, .L156
+ 1824 0018 2046     		mov	r0, r4
+ 1825 001a FFF7FEFF 		bl	sys_log_print_msg
+ARM GAS  /tmp/ccmsCeBL.s 			page 48
+
+
+ 1826              	.LVL220:
+  61:system/sys_log/sys_log.c ****         sys_log_print_msg("Version:\t");
+ 1827              		.loc 1 61 9 view .LVU344
+ 1828 001e FFF7FEFF 		bl	sys_log_new_line
+ 1829              	.LVL221:
+  62:system/sys_log/sys_log.c ****         sys_log_print_firmware_version();
+ 1830              		.loc 1 62 9 view .LVU345
+ 1831 0022 1948     		ldr	r0, .L156+4
+ 1832 0024 FFF7FEFF 		bl	sys_log_print_msg
+ 1833              	.LVL222:
+  63:system/sys_log/sys_log.c ****         sys_log_new_line();
+ 1834              		.loc 1 63 9 view .LVU346
+ 1835 0028 FFF7FEFF 		bl	sys_log_print_firmware_version
+ 1836              	.LVL223:
+  64:system/sys_log/sys_log.c **** 
+ 1837              		.loc 1 64 9 view .LVU347
+ 1838 002c FFF7FEFF 		bl	sys_log_new_line
+ 1839              	.LVL224:
+  66:system/sys_log/sys_log.c ****         sys_log_print_msg(FIRMWARE_STATUS);
+ 1840              		.loc 1 66 9 view .LVU348
+ 1841 0030 1648     		ldr	r0, .L156+8
+ 1842 0032 FFF7FEFF 		bl	sys_log_print_msg
+ 1843              	.LVL225:
+  67:system/sys_log/sys_log.c ****         sys_log_new_line();
+ 1844              		.loc 1 67 9 view .LVU349
+ 1845 0036 1648     		ldr	r0, .L156+12
+ 1846 0038 FFF7FEFF 		bl	sys_log_print_msg
+ 1847              	.LVL226:
+  68:system/sys_log/sys_log.c **** 
+ 1848              		.loc 1 68 9 view .LVU350
+ 1849 003c FFF7FEFF 		bl	sys_log_new_line
+ 1850              	.LVL227:
+  70:system/sys_log/sys_log.c ****         sys_log_print_msg(FIRMWARE_AUTHOR);
+ 1851              		.loc 1 70 9 view .LVU351
+ 1852 0040 1448     		ldr	r0, .L156+16
+ 1853 0042 FFF7FEFF 		bl	sys_log_print_msg
+ 1854              	.LVL228:
+  71:system/sys_log/sys_log.c ****         sys_log_print_msg(" <");
+ 1855              		.loc 1 71 9 view .LVU352
+ 1856 0046 1448     		ldr	r0, .L156+20
+ 1857 0048 FFF7FEFF 		bl	sys_log_print_msg
+ 1858              	.LVL229:
+  72:system/sys_log/sys_log.c ****         sys_log_print_msg(FIRMWARE_AUTHOR_EMAIL);
+ 1859              		.loc 1 72 9 view .LVU353
+ 1860 004c 1348     		ldr	r0, .L156+24
+ 1861 004e FFF7FEFF 		bl	sys_log_print_msg
+ 1862              	.LVL230:
+  73:system/sys_log/sys_log.c ****         sys_log_print_msg(">");
+ 1863              		.loc 1 73 9 view .LVU354
+ 1864 0052 1348     		ldr	r0, .L156+28
+ 1865 0054 FFF7FEFF 		bl	sys_log_print_msg
+ 1866              	.LVL231:
+  74:system/sys_log/sys_log.c ****         sys_log_new_line();
+ 1867              		.loc 1 74 9 view .LVU355
+ 1868 0058 1248     		ldr	r0, .L156+32
+ 1869 005a FFF7FEFF 		bl	sys_log_print_msg
+ 1870              	.LVL232:
+ARM GAS  /tmp/ccmsCeBL.s 			page 49
+
+
+  75:system/sys_log/sys_log.c ****         sys_log_print_msg("===================================================================");
+ 1871              		.loc 1 75 9 view .LVU356
+ 1872 005e FFF7FEFF 		bl	sys_log_new_line
+ 1873              	.LVL233:
+  76:system/sys_log/sys_log.c ****         sys_log_new_line();
+ 1874              		.loc 1 76 9 view .LVU357
+ 1875 0062 2046     		mov	r0, r4
+ 1876 0064 FFF7FEFF 		bl	sys_log_print_msg
+ 1877              	.LVL234:
+  77:system/sys_log/sys_log.c ****         sys_log_new_line();
+ 1878              		.loc 1 77 9 view .LVU358
+ 1879 0068 FFF7FEFF 		bl	sys_log_new_line
+ 1880              	.LVL235:
+  78:system/sys_log/sys_log.c ****         sys_log_new_line();
+ 1881              		.loc 1 78 9 view .LVU359
+ 1882 006c FFF7FEFF 		bl	sys_log_new_line
+ 1883              	.LVL236:
+  79:system/sys_log/sys_log.c **** 
+ 1884              		.loc 1 79 9 view .LVU360
+ 1885 0070 FFF7FEFF 		bl	sys_log_new_line
+ 1886              	.LVL237:
+  81:system/sys_log/sys_log.c **** 
+ 1887              		.loc 1 81 9 view .LVU361
+ 1888 0074 FFF7FEFF 		bl	sys_log_mutex_create
+ 1889              	.LVL238:
+  83:system/sys_log/sys_log.c ****     }
+ 1890              		.loc 1 83 9 view .LVU362
+  83:system/sys_log/sys_log.c ****     }
+ 1891              		.loc 1 83 16 is_stmt 0 view .LVU363
+ 1892 0078 0020     		movs	r0, #0
+ 1893              	.L152:
+  89:system/sys_log/sys_log.c **** 
+ 1894              		.loc 1 89 1 view .LVU364
+ 1895 007a 10BD     		pop	{r4, pc}
+ 1896              	.L154:
+  87:system/sys_log/sys_log.c ****     }
+ 1897              		.loc 1 87 16 view .LVU365
+ 1898 007c 4FF0FF30 		mov	r0, #-1
+ 1899 0080 FBE7     		b	.L152
+ 1900              	.L157:
+ 1901 0082 00BF     		.align	2
+ 1902              	.L156:
+ 1903 0084 00000000 		.word	.LC39
+ 1904 0088 44000000 		.word	.LC40
+ 1905 008c 50000000 		.word	.LC41
+ 1906 0090 5C000000 		.word	.LC42
+ 1907 0094 68000000 		.word	.LC43
+ 1908 0098 74000000 		.word	.LC44
+ 1909 009c 80000000 		.word	.LC45
+ 1910 00a0 84000000 		.word	.LC46
+ 1911 00a4 9C000000 		.word	.LC47
+ 1912              		.cfi_endproc
+ 1913              	.LFE6:
+ 1915              		.section	.data.sys_log_current_level,"aw"
+ 1918              	sys_log_current_level:
+ 1919 0000 01       		.byte	1
+ 1920              		.text
+ARM GAS  /tmp/ccmsCeBL.s 			page 50
+
+
+ 1921              	.Letext0:
+ 1922              		.file 2 "/usr/lib/gcc/arm-none-eabi/13.2.1/include/stdint.h"
+ 1923              		.file 3 "freertos/portable/GCC/ARM_CM4F/portmacro.h"
+ 1924              		.file 4 "./system/sys_log/sys_log.h"
+ 1925              		.file 5 "freertos/include/task.h"
+ 1926              		.file 6 "<built-in>"
+ 1927              		.file 7 "/usr/include/newlib/math.h"
+ARM GAS  /tmp/ccmsCeBL.s 			page 51
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 sys_log.c
+     /tmp/ccmsCeBL.s:21     .text.sys_log_print_byte:00000000 $t
+     /tmp/ccmsCeBL.s:27     .text.sys_log_print_byte:00000000 sys_log_print_byte
+     /tmp/ccmsCeBL.s:60     .text.sys_log_print_byte:00000010 $d
+     /tmp/ccmsCeBL.s:1918   .data.sys_log_current_level:00000000 sys_log_current_level
+     /tmp/ccmsCeBL.s:65     .text.sys_log_print_msg:00000000 $t
+     /tmp/ccmsCeBL.s:71     .text.sys_log_print_msg:00000000 sys_log_print_msg
+     /tmp/ccmsCeBL.s:127    .text.sys_log_print_msg:00000020 $d
+     /tmp/ccmsCeBL.s:133    .rodata.sys_log_reset_color.str1.4:00000000 $d
+     /tmp/ccmsCeBL.s:137    .text.sys_log_reset_color:00000000 $t
+     /tmp/ccmsCeBL.s:143    .text.sys_log_reset_color:00000000 sys_log_reset_color
+     /tmp/ccmsCeBL.s:163    .text.sys_log_reset_color:0000000c $d
+     /tmp/ccmsCeBL.s:168    .rodata.sys_log_set_color.str1.4:00000000 $d
+     /tmp/ccmsCeBL.s:193    .text.sys_log_set_color:00000000 $t
+     /tmp/ccmsCeBL.s:199    .text.sys_log_set_color:00000000 sys_log_set_color
+     /tmp/ccmsCeBL.s:217    .text.sys_log_set_color:0000000a $d
+     /tmp/ccmsCeBL.s:225    .text.sys_log_set_color:00000012 $t
+     /tmp/ccmsCeBL.s:317    .text.sys_log_set_color:00000058 $d
+     /tmp/ccmsCeBL.s:329    .rodata.sys_log_new_line.str1.4:00000000 $d
+     /tmp/ccmsCeBL.s:333    .text.sys_log_new_line:00000000 $t
+     /tmp/ccmsCeBL.s:339    .text.sys_log_new_line:00000000 sys_log_new_line
+     /tmp/ccmsCeBL.s:375    .text.sys_log_new_line:0000001c $d
+     /tmp/ccmsCeBL.s:381    .text.sys_log_print_digit:00000000 $t
+     /tmp/ccmsCeBL.s:387    .text.sys_log_print_digit:00000000 sys_log_print_digit
+     /tmp/ccmsCeBL.s:449    .text.sys_log_print_digit:0000002c $d
+     /tmp/ccmsCeBL.s:457    .text.sys_log_print_uint:00000000 $t
+     /tmp/ccmsCeBL.s:463    .text.sys_log_print_uint:00000000 sys_log_print_uint
+     /tmp/ccmsCeBL.s:598    .text.sys_log_print_uint:0000007c $d
+     /tmp/ccmsCeBL.s:606    .rodata.sys_log_print_int.str1.4:00000000 $d
+     /tmp/ccmsCeBL.s:610    .text.sys_log_print_int:00000000 $t
+     /tmp/ccmsCeBL.s:616    .text.sys_log_print_int:00000000 sys_log_print_int
+     /tmp/ccmsCeBL.s:673    .text.sys_log_print_int:00000028 $d
+     /tmp/ccmsCeBL.s:681    .rodata.sys_log_print_float.str1.4:00000000 $d
+     /tmp/ccmsCeBL.s:686    .text.sys_log_print_float:00000000 $t
+     /tmp/ccmsCeBL.s:692    .text.sys_log_print_float:00000000 sys_log_print_float
+     /tmp/ccmsCeBL.s:812    .text.sys_log_print_float:00000090 $d
+     /tmp/ccmsCeBL.s:823    .rodata.sys_log_print_hex.str1.4:00000000 $d
+     /tmp/ccmsCeBL.s:827    .text.sys_log_print_hex:00000000 $t
+     /tmp/ccmsCeBL.s:833    .text.sys_log_print_hex:00000000 sys_log_print_hex
+     /tmp/ccmsCeBL.s:920    .text.sys_log_print_hex:00000068 $d
+     /tmp/ccmsCeBL.s:926    .rodata.sys_log_dump_hex.str1.4:00000000 $d
+     /tmp/ccmsCeBL.s:930    .text.sys_log_dump_hex:00000000 $t
+     /tmp/ccmsCeBL.s:936    .text.sys_log_dump_hex:00000000 sys_log_dump_hex
+     /tmp/ccmsCeBL.s:1019   .text.sys_log_dump_hex:00000030 $d
+     /tmp/ccmsCeBL.s:1025   .text.sys_log_print_str:00000000 $t
+     /tmp/ccmsCeBL.s:1031   .text.sys_log_print_str:00000000 sys_log_print_str
+     /tmp/ccmsCeBL.s:1087   .text.sys_log_print_str:00000020 $d
+     /tmp/ccmsCeBL.s:1093   .rodata.sys_log_print_system_time.str1.4:00000000 $d
+     /tmp/ccmsCeBL.s:1100   .text.sys_log_print_system_time:00000000 $t
+     /tmp/ccmsCeBL.s:1106   .text.sys_log_print_system_time:00000000 sys_log_print_system_time
+     /tmp/ccmsCeBL.s:1143   .text.sys_log_print_system_time:00000024 $d
+     /tmp/ccmsCeBL.s:1149   .rodata.sys_log_print_event.str1.4:00000000 $d
+     /tmp/ccmsCeBL.s:1153   .text.sys_log_print_event:00000000 $t
+     /tmp/ccmsCeBL.s:1159   .text.sys_log_print_event:00000000 sys_log_print_event
+     /tmp/ccmsCeBL.s:1239   .text.sys_log_print_event:00000048 $d
+     /tmp/ccmsCeBL.s:1245   .rodata.sys_log_print_event_from_module.str1.4:00000000 $d
+ARM GAS  /tmp/ccmsCeBL.s 			page 52
+
+
+     /tmp/ccmsCeBL.s:1249   .text.sys_log_print_event_from_module:00000000 $t
+     /tmp/ccmsCeBL.s:1255   .text.sys_log_print_event_from_module:00000000 sys_log_print_event_from_module
+     /tmp/ccmsCeBL.s:1347   .text.sys_log_print_event_from_module:00000060 $d
+     /tmp/ccmsCeBL.s:1354   .rodata.sys_log_print_license_msg.str1.4:00000000 $d
+     /tmp/ccmsCeBL.s:1375   .text.sys_log_print_license_msg:00000000 $t
+     /tmp/ccmsCeBL.s:1381   .text.sys_log_print_license_msg:00000000 sys_log_print_license_msg
+     /tmp/ccmsCeBL.s:1442   .text.sys_log_print_license_msg:00000044 $d
+     /tmp/ccmsCeBL.s:1452   .rodata.sys_log_print_splash_screen.str1.4:00000000 $d
+     /tmp/ccmsCeBL.s:1509   .text.sys_log_print_splash_screen:00000000 $t
+     /tmp/ccmsCeBL.s:1515   .text.sys_log_print_splash_screen:00000000 sys_log_print_splash_screen
+     /tmp/ccmsCeBL.s:1697   .text.sys_log_print_splash_screen:000000f0 $d
+     /tmp/ccmsCeBL.s:1715   .rodata.sys_log_print_firmware_version.str1.4:00000000 $d
+     /tmp/ccmsCeBL.s:1719   .text.sys_log_print_firmware_version:00000000 $t
+     /tmp/ccmsCeBL.s:1725   .text.sys_log_print_firmware_version:00000000 sys_log_print_firmware_version
+     /tmp/ccmsCeBL.s:1753   .text.sys_log_print_firmware_version:00000018 $d
+     /tmp/ccmsCeBL.s:1760   .rodata.sys_log_init.str1.4:00000000 $d
+     /tmp/ccmsCeBL.s:1789   .text.sys_log_init:00000000 $t
+     /tmp/ccmsCeBL.s:1795   .text.sys_log_init:00000000 sys_log_init
+     /tmp/ccmsCeBL.s:1903   .text.sys_log_init:00000084 $d
+
+UNDEFINED SYMBOLS
+sys_log_uart_write_byte
+sys_log_mutex_give
+__aeabi_ui2d
+__aeabi_dadd
+__aeabi_d2uiz
+log10
+__aeabi_f2d
+__aeabi_dmul
+pow
+abs
+xTaskGetTickCount
+sys_log_mutex_take
+sys_log_uart_init
+sys_log_mutex_create

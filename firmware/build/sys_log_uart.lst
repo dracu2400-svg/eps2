@@ -1,0 +1,191 @@
+ARM GAS  /tmp/cc2dnPse.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"sys_log_uart.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "system/sys_log/sys_log_uart.c"
+  20              		.section	.text.sys_log_uart_init,"ax",%progbits
+  21              		.align	1
+  22              		.global	sys_log_uart_init
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	sys_log_uart_init:
+  28              	.LFB0:
+   1:system/sys_log/sys_log_uart.c **** /*
+   2:system/sys_log/sys_log_uart.c ****  * sys_log_uart.c
+   3:system/sys_log/sys_log_uart.c ****  * 
+   4:system/sys_log/sys_log_uart.c ****  * Copyright (C) 2020, SpaceLab.
+   5:system/sys_log/sys_log_uart.c ****  * 
+   6:system/sys_log/sys_log_uart.c ****  * This file is part of EPS 2.0.
+   7:system/sys_log/sys_log_uart.c ****  * 
+   8:system/sys_log/sys_log_uart.c ****  * EPS 2.0 is free software: you can redistribute it and/or modify
+   9:system/sys_log/sys_log_uart.c ****  * it under the terms of the GNU General Public License as published by
+  10:system/sys_log/sys_log_uart.c ****  * the Free Software Foundation, either version 3 of the License, or
+  11:system/sys_log/sys_log_uart.c ****  * (at your option) any later version.
+  12:system/sys_log/sys_log_uart.c ****  * 
+  13:system/sys_log/sys_log_uart.c ****  * EPS 2.0 is distributed in the hope that it will be useful,
+  14:system/sys_log/sys_log_uart.c ****  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  15:system/sys_log/sys_log_uart.c ****  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  16:system/sys_log/sys_log_uart.c ****  * GNU General Public License for more details.
+  17:system/sys_log/sys_log_uart.c ****  * 
+  18:system/sys_log/sys_log_uart.c ****  * You should have received a copy of the GNU General Public License
+  19:system/sys_log/sys_log_uart.c ****  * along with EPS 2.0. If not, see <http://www.gnu.org/licenses/>.
+  20:system/sys_log/sys_log_uart.c ****  * 
+  21:system/sys_log/sys_log_uart.c ****  */
+  22:system/sys_log/sys_log_uart.c **** 
+  23:system/sys_log/sys_log_uart.c **** /**
+  24:system/sys_log/sys_log_uart.c ****  * \brief System log UART implementation.
+  25:system/sys_log/sys_log_uart.c ****  * 
+  26:system/sys_log/sys_log_uart.c ****  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
+  27:system/sys_log/sys_log_uart.c ****  * 
+  28:system/sys_log/sys_log_uart.c ****  * \version 0.1.0
+  29:system/sys_log/sys_log_uart.c ****  * 
+  30:system/sys_log/sys_log_uart.c ****  * \date 2020/10/22
+ARM GAS  /tmp/cc2dnPse.s 			page 2
+
+
+  31:system/sys_log/sys_log_uart.c ****  * 
+  32:system/sys_log/sys_log_uart.c ****  * \defgroup sys_log_uart UART
+  33:system/sys_log/sys_log_uart.c ****  * \ingroup sys_log
+  34:system/sys_log/sys_log_uart.c ****  * \{
+  35:system/sys_log/sys_log_uart.c ****  */
+  36:system/sys_log/sys_log_uart.c **** 
+  37:system/sys_log/sys_log_uart.c **** #include <drivers/uart/uart.h>
+  38:system/sys_log/sys_log_uart.c **** 
+  39:system/sys_log/sys_log_uart.c **** #include "sys_log.h"
+  40:system/sys_log/sys_log_uart.c **** 
+  41:system/sys_log/sys_log_uart.c **** bool sys_log_uart_init()
+  42:system/sys_log/sys_log_uart.c **** {
+  29              		.loc 1 42 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 16
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33 0000 00B5     		push	{lr}
+  34              	.LCFI0:
+  35              		.cfi_def_cfa_offset 4
+  36              		.cfi_offset 14, -4
+  37 0002 85B0     		sub	sp, sp, #20
+  38              	.LCFI1:
+  39              		.cfi_def_cfa_offset 24
+  43:system/sys_log/sys_log_uart.c ****     uart_config_t config;
+  40              		.loc 1 43 5 view .LVU1
+  44:system/sys_log/sys_log_uart.c **** 
+  45:system/sys_log/sys_log_uart.c ****     config.baudrate     = 115200;
+  41              		.loc 1 45 5 view .LVU2
+  42              		.loc 1 45 25 is_stmt 0 view .LVU3
+  43 0004 4FF4E133 		mov	r3, #115200
+  44 0008 0293     		str	r3, [sp, #8]
+  46:system/sys_log/sys_log_uart.c ****     config.data_bits    = 8;
+  45              		.loc 1 46 5 is_stmt 1 view .LVU4
+  46              		.loc 1 46 25 is_stmt 0 view .LVU5
+  47 000a 0823     		movs	r3, #8
+  48 000c 8DF80C30 		strb	r3, [sp, #12]
+  47:system/sys_log/sys_log_uart.c ****     config.parity       = UART_NO_PARITY;
+  49              		.loc 1 47 5 is_stmt 1 view .LVU6
+  50              		.loc 1 47 25 is_stmt 0 view .LVU7
+  51 0010 0023     		movs	r3, #0
+  52 0012 8DF80D30 		strb	r3, [sp, #13]
+  48:system/sys_log/sys_log_uart.c ****     config.stop_bits    = UART_ONE_STOP_BIT;
+  53              		.loc 1 48 5 is_stmt 1 view .LVU8
+  54              		.loc 1 48 25 is_stmt 0 view .LVU9
+  55 0016 8DF80E30 		strb	r3, [sp, #14]
+  49:system/sys_log/sys_log_uart.c **** 
+  50:system/sys_log/sys_log_uart.c ****     return uart_init(UART_PORT_2, config) == 0 ? true : false;
+  56              		.loc 1 50 5 is_stmt 1 view .LVU10
+  57              		.loc 1 50 12 is_stmt 0 view .LVU11
+  58 001a 04AB     		add	r3, sp, #16
+  59 001c 13E90E00 		ldmdb	r3, {r1, r2, r3}
+  60 0020 0220     		movs	r0, #2
+  61 0022 FFF7FEFF 		bl	uart_init
+  62              	.LVL0:
+  51:system/sys_log/sys_log_uart.c **** }
+  63              		.loc 1 51 1 view .LVU12
+  64 0026 B0FA80F0 		clz	r0, r0
+ARM GAS  /tmp/cc2dnPse.s 			page 3
+
+
+  65 002a 4009     		lsrs	r0, r0, #5
+  66 002c 05B0     		add	sp, sp, #20
+  67              	.LCFI2:
+  68              		.cfi_def_cfa_offset 4
+  69              		@ sp needed
+  70 002e 5DF804FB 		ldr	pc, [sp], #4
+  71              		.cfi_endproc
+  72              	.LFE0:
+  74              		.section	.text.sys_log_uart_write_byte,"ax",%progbits
+  75              		.align	1
+  76              		.global	sys_log_uart_write_byte
+  77              		.syntax unified
+  78              		.thumb
+  79              		.thumb_func
+  81              	sys_log_uart_write_byte:
+  82              	.LVL1:
+  83              	.LFB1:
+  52:system/sys_log/sys_log_uart.c **** 
+  53:system/sys_log/sys_log_uart.c **** void sys_log_uart_write_byte(uint8_t byte)
+  54:system/sys_log/sys_log_uart.c **** {
+  84              		.loc 1 54 1 is_stmt 1 view -0
+  85              		.cfi_startproc
+  86              		@ args = 0, pretend = 0, frame = 8
+  87              		@ frame_needed = 0, uses_anonymous_args = 0
+  88              		.loc 1 54 1 is_stmt 0 view .LVU14
+  89 0000 00B5     		push	{lr}
+  90              	.LCFI3:
+  91              		.cfi_def_cfa_offset 4
+  92              		.cfi_offset 14, -4
+  93 0002 83B0     		sub	sp, sp, #12
+  94              	.LCFI4:
+  95              		.cfi_def_cfa_offset 16
+  96 0004 8DF80700 		strb	r0, [sp, #7]
+  55:system/sys_log/sys_log_uart.c ****     uart_write(UART_PORT_2, &byte, 1);
+  97              		.loc 1 55 5 is_stmt 1 view .LVU15
+  98 0008 0122     		movs	r2, #1
+  99 000a 0DF10701 		add	r1, sp, #7
+ 100 000e 0220     		movs	r0, #2
+ 101              	.LVL2:
+ 102              		.loc 1 55 5 is_stmt 0 view .LVU16
+ 103 0010 FFF7FEFF 		bl	uart_write
+ 104              	.LVL3:
+  56:system/sys_log/sys_log_uart.c **** }
+ 105              		.loc 1 56 1 view .LVU17
+ 106 0014 03B0     		add	sp, sp, #12
+ 107              	.LCFI5:
+ 108              		.cfi_def_cfa_offset 4
+ 109              		@ sp needed
+ 110 0016 5DF804FB 		ldr	pc, [sp], #4
+ 111              		.cfi_endproc
+ 112              	.LFE1:
+ 114              		.text
+ 115              	.Letext0:
+ 116              		.file 2 "/usr/lib/gcc/arm-none-eabi/13.2.1/include/stdint.h"
+ 117              		.file 3 "./drivers/uart/uart.h"
+ARM GAS  /tmp/cc2dnPse.s 			page 4
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 sys_log_uart.c
+     /tmp/cc2dnPse.s:21     .text.sys_log_uart_init:00000000 $t
+     /tmp/cc2dnPse.s:27     .text.sys_log_uart_init:00000000 sys_log_uart_init
+     /tmp/cc2dnPse.s:75     .text.sys_log_uart_write_byte:00000000 $t
+     /tmp/cc2dnPse.s:81     .text.sys_log_uart_write_byte:00000000 sys_log_uart_write_byte
+
+UNDEFINED SYMBOLS
+uart_init
+uart_write

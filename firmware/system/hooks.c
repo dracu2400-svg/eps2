@@ -1,34 +1,34 @@
 /*
  * hooks.c
- * 
+ *
  * Copyright (C) 2019, SpaceLab.
- * 
+ *
  * This file is part of EPS 2.0.
- * 
+ *
  * EPS 2.0 is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * EPS 2.0 is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with EPS 2.0. If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 
 /**
- * \brief FreeRTOS hooks implementation.
- * 
+ * \brief FreeRTOS hooks implementation (Ported to STM32L4).
+ *
  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
- * 
- * \version 0.1.0
- * 
+ *
+ * \version 0.2.0 (STM32L4 port)
+ *
  * \date 2020/10/22
- * 
+ *
  * \defgroup hooks FreeRTOS Hooks
  * \ingroup system
  * \{
@@ -36,11 +36,15 @@
 
 #include <FreeRTOS.h>
 #include <task.h>
+#include "core_cm4.h"
 
 void vApplicationIdleHook(void)
 {
-    /* Called on each iteration of the idle task. In this case the idle task just enters a low(ish) power mode */
-    __bis_SR_register(LPM1_bits + GIE);
+    /* Called on each iteration of the idle task.
+     * Enter sleep mode (Wait For Interrupt) to reduce power consumption.
+     * The CPU will wake up on any interrupt.
+     */
+    __WFI();
 }
 
 void vApplicationMallocFailedHook(void)
