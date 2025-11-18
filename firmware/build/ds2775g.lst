@@ -1,0 +1,833 @@
+ARM GAS  /tmp/ccFQuQ8c.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"ds2775g.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "drivers/ds2775g/ds2775g.c"
+  20              		.section	.text.ds2775g_write_data,"ax",%progbits
+  21              		.align	1
+  22              		.global	ds2775g_write_data
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	ds2775g_write_data:
+  28              	.LVL0:
+  29              	.LFB4:
+   1:drivers/ds2775g/ds2775g.c **** /*
+   2:drivers/ds2775g/ds2775g.c ****  * ds2775g.c
+   3:drivers/ds2775g/ds2775g.c ****  * 
+   4:drivers/ds2775g/ds2775g.c ****  * Copyright (C) 2020, SpaceLab.
+   5:drivers/ds2775g/ds2775g.c ****  * 
+   6:drivers/ds2775g/ds2775g.c ****  * This file is part of EPS 2.0.
+   7:drivers/ds2775g/ds2775g.c ****  * 
+   8:drivers/ds2775g/ds2775g.c ****  * EPS 2.0 is free software: you can redistribute it and/or modify
+   9:drivers/ds2775g/ds2775g.c ****  * it under the terms of the GNU General Public License as published by
+  10:drivers/ds2775g/ds2775g.c ****  * the Free Software Foundation, either version 3 of the License, or
+  11:drivers/ds2775g/ds2775g.c ****  * (at your option) any later version.
+  12:drivers/ds2775g/ds2775g.c ****  * 
+  13:drivers/ds2775g/ds2775g.c ****  * EPS 2.0 is distributed in the hope that it will be useful,
+  14:drivers/ds2775g/ds2775g.c ****  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  15:drivers/ds2775g/ds2775g.c ****  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  16:drivers/ds2775g/ds2775g.c ****  * GNU General Public License for more details.
+  17:drivers/ds2775g/ds2775g.c ****  * 
+  18:drivers/ds2775g/ds2775g.c ****  * You should have received a copy of the GNU General Public License
+  19:drivers/ds2775g/ds2775g.c ****  * along with EPS 2.0. If not, see <http://www.gnu.org/licenses/>.
+  20:drivers/ds2775g/ds2775g.c ****  * 
+  21:drivers/ds2775g/ds2775g.c ****  */
+  22:drivers/ds2775g/ds2775g.c **** 
+  23:drivers/ds2775g/ds2775g.c **** /**
+  24:drivers/ds2775g/ds2775g.c ****  * \brief DS2775G+ driver implementation.
+  25:drivers/ds2775g/ds2775g.c ****  * 
+  26:drivers/ds2775g/ds2775g.c ****  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com> and Augusto Cezar Boldori Vassoler <au
+  27:drivers/ds2775g/ds2775g.c ****  * 
+  28:drivers/ds2775g/ds2775g.c ****  * \version 0.2.0
+  29:drivers/ds2775g/ds2775g.c ****  * 
+ARM GAS  /tmp/ccFQuQ8c.s 			page 2
+
+
+  30:drivers/ds2775g/ds2775g.c ****  * \date 2021/06/11
+  31:drivers/ds2775g/ds2775g.c ****  * 
+  32:drivers/ds2775g/ds2775g.c ****  * \addtogroup ds2775g
+  33:drivers/ds2775g/ds2775g.c ****  * \{
+  34:drivers/ds2775g/ds2775g.c ****  */
+  35:drivers/ds2775g/ds2775g.c **** 
+  36:drivers/ds2775g/ds2775g.c **** #include <stdio.h>
+  37:drivers/ds2775g/ds2775g.c **** #include "ds2775g.h"
+  38:drivers/ds2775g/ds2775g.c **** #include <config/config.h>
+  39:drivers/ds2775g/ds2775g.c **** #include <drivers/uart/uart.h>
+  40:drivers/ds2775g/ds2775g.c **** #include <drivers/gpio/gpio.h>
+  41:drivers/ds2775g/ds2775g.c **** 
+  42:drivers/ds2775g/ds2775g.c **** #define ACCUMULATED_CURRENT_MSB (uint8_t)(BAT_MONITOR_CHARGE_VALUE>>8)
+  43:drivers/ds2775g/ds2775g.c **** #define ACCUMULATED_CURRENT_LSB (uint8_t)BAT_MONITOR_CHARGE_VALUE
+  44:drivers/ds2775g/ds2775g.c **** 
+  45:drivers/ds2775g/ds2775g.c **** /**
+  46:drivers/ds2775g/ds2775g.c ****  * \brief Configures the DS2775 batteries monitor.
+  47:drivers/ds2775g/ds2775g.c ****  *
+  48:drivers/ds2775g/ds2775g.c ****  * Configures the DS2775 registers by the following procedure:
+  49:drivers/ds2775g/ds2775g.c ****  * - Generates a reset on the one-wire line
+  50:drivers/ds2775g/ds2775g.c ****  * - Sends the 0xCC general address to the line (only one slave is present)
+  51:drivers/ds2775g/ds2775g.c ****  * - Sends the write command (0x6C)
+  52:drivers/ds2775g/ds2775g.c ****  * - Sends the register address
+  53:drivers/ds2775g/ds2775g.c ****  * - Sends the value to be written
+  54:drivers/ds2775g/ds2775g.c ****  *
+  55:drivers/ds2775g/ds2775g.c ****  * The registers are configured as follows:
+  56:drivers/ds2775g/ds2775g.c ****  *
+  57:drivers/ds2775g/ds2775g.c ****  * <b>Protection Register</b>
+  58:drivers/ds2775g/ds2775g.c ****  * Enable charge and discharge.
+  59:drivers/ds2775g/ds2775g.c ****  *
+  60:drivers/ds2775g/ds2775g.c ****  * <b>Protector Threshold Register</b>
+  61:drivers/ds2775g/ds2775g.c ****  * 0x61 bias used to the current accumulation.
+  62:drivers/ds2775g/ds2775g.c ****  *
+  63:drivers/ds2775g/ds2775g.c ****  * <b>Status Register</b>
+  64:drivers/ds2775g/ds2775g.c ****  * Clear all flags.
+  65:drivers/ds2775g/ds2775g.c ****  *
+  66:drivers/ds2775g/ds2775g.c ****  * <b>Control Register</b>
+  67:drivers/ds2775g/ds2775g.c ****  * Set the undervoltage threshold to 2.6 V.
+  68:drivers/ds2775g/ds2775g.c ****  *
+  69:drivers/ds2775g/ds2775g.c ****  * <b>Overcurrent Threshold Register</b>
+  70:drivers/ds2775g/ds2775g.c ****  * Set the short-circuit current to 15 A, the discharge overcurrent
+  71:drivers/ds2775g/ds2775g.c ****  * to 7.5 A and the charge overcurrent to 5A.
+  72:drivers/ds2775g/ds2775g.c ****  *
+  73:drivers/ds2775g/ds2775g.c ****  * <b>Current Gain Register</b>
+  74:drivers/ds2775g/ds2775g.c ****  * Removes gain from the measurements.
+  75:drivers/ds2775g/ds2775g.c ****  *
+  76:drivers/ds2775g/ds2775g.c ****  * If the Write Accumulated Current build is being used, the Accumulated
+  77:drivers/ds2775g/ds2775g.c ****  * Current Register is written with 3 Ah.
+  78:drivers/ds2775g/ds2775g.c ****  *
+  79:drivers/ds2775g/ds2775g.c ****  * In Debug mode, the data sent is read back to verify if it was
+  80:drivers/ds2775g/ds2775g.c ****  * configured properly.
+  81:drivers/ds2775g/ds2775g.c ****  */
+  82:drivers/ds2775g/ds2775g.c **** 
+  83:drivers/ds2775g/ds2775g.c **** int ds2775g_init(ds2775g_config_t *config)
+  84:drivers/ds2775g/ds2775g.c **** {
+  85:drivers/ds2775g/ds2775g.c ****     config->protection_reg[0] = skip_address;
+  86:drivers/ds2775g/ds2775g.c ****     config->protection_reg[1] = write_data;
+ARM GAS  /tmp/ccFQuQ8c.s 			page 3
+
+
+  87:drivers/ds2775g/ds2775g.c ****     config->protection_reg[2] = protection_register;
+  88:drivers/ds2775g/ds2775g.c ****     config->protection_reg[3] =  0x03;
+  89:drivers/ds2775g/ds2775g.c ****     config->protector_threshold_reg[0] = skip_address;
+  90:drivers/ds2775g/ds2775g.c ****     config->protector_threshold_reg[1] = write_data;
+  91:drivers/ds2775g/ds2775g.c ****     config->protector_threshold_reg[2] = protector_threshold_register;
+  92:drivers/ds2775g/ds2775g.c ****     config->protector_threshold_reg[3] = 0x61;
+  93:drivers/ds2775g/ds2775g.c ****     config->status_reg[0] = skip_address;
+  94:drivers/ds2775g/ds2775g.c ****     config->status_reg[1] = write_data;
+  95:drivers/ds2775g/ds2775g.c ****     config->status_reg[2] = status_register;
+  96:drivers/ds2775g/ds2775g.c ****     config->status_reg[3] = 0x0;
+  97:drivers/ds2775g/ds2775g.c ****     config->control_reg[0] = skip_address;
+  98:drivers/ds2775g/ds2775g.c ****     config->control_reg[1] = write_data;
+  99:drivers/ds2775g/ds2775g.c ****     config->control_reg[2] = control_register;
+ 100:drivers/ds2775g/ds2775g.c ****     config->control_reg[3] = 0x0C;
+ 101:drivers/ds2775g/ds2775g.c ****     config->overcurrent_thresholds_reg[0] = skip_address;
+ 102:drivers/ds2775g/ds2775g.c ****     config->overcurrent_thresholds_reg[1] = write_data;
+ 103:drivers/ds2775g/ds2775g.c ****     config->overcurrent_thresholds_reg[2] = overcurrent_thresholds_register;
+ 104:drivers/ds2775g/ds2775g.c ****     config->overcurrent_thresholds_reg[3] = 0x24;
+ 105:drivers/ds2775g/ds2775g.c ****     config->current_gain_LSB_reg[0] = skip_address;
+ 106:drivers/ds2775g/ds2775g.c ****     config->current_gain_LSB_reg[1] = write_data;
+ 107:drivers/ds2775g/ds2775g.c ****     config->current_gain_LSB_reg[2] = current_gain_LSB_register;
+ 108:drivers/ds2775g/ds2775g.c ****     config->current_gain_LSB_reg[3] = 0x00;
+ 109:drivers/ds2775g/ds2775g.c ****     
+ 110:drivers/ds2775g/ds2775g.c ****     /* Declaring 1-wire pin as P9.1 */
+ 111:drivers/ds2775g/ds2775g.c ****     config->onewire_port = GPIO_PIN_69;
+ 112:drivers/ds2775g/ds2775g.c **** 
+ 113:drivers/ds2775g/ds2775g.c ****     /* Protection register configuration */
+ 114:drivers/ds2775g/ds2775g.c ****     if(ds2775g_write_data(config->onewire_port, config->protection_reg, 0x4) == -1)
+ 115:drivers/ds2775g/ds2775g.c ****     {
+ 116:drivers/ds2775g/ds2775g.c ****         return -1;
+ 117:drivers/ds2775g/ds2775g.c ****     }
+ 118:drivers/ds2775g/ds2775g.c **** 
+ 119:drivers/ds2775g/ds2775g.c ****     /* Protector threshold register configuration */
+ 120:drivers/ds2775g/ds2775g.c ****     if(ds2775g_write_data(config->onewire_port, config->protector_threshold_reg, 0x4) == -1)
+ 121:drivers/ds2775g/ds2775g.c ****     {
+ 122:drivers/ds2775g/ds2775g.c ****         return -1;
+ 123:drivers/ds2775g/ds2775g.c ****     }
+ 124:drivers/ds2775g/ds2775g.c **** 
+ 125:drivers/ds2775g/ds2775g.c ****     /* Status register configuration */
+ 126:drivers/ds2775g/ds2775g.c ****     if(ds2775g_write_data(config->onewire_port, config->status_reg, 0x4) == -1)
+ 127:drivers/ds2775g/ds2775g.c ****     {
+ 128:drivers/ds2775g/ds2775g.c ****         return -1;
+ 129:drivers/ds2775g/ds2775g.c ****     }
+ 130:drivers/ds2775g/ds2775g.c **** 
+ 131:drivers/ds2775g/ds2775g.c ****     /* Control register configuration */
+ 132:drivers/ds2775g/ds2775g.c ****     if(ds2775g_write_data(config->onewire_port, config->control_reg, 0x4) == -1)
+ 133:drivers/ds2775g/ds2775g.c ****     {
+ 134:drivers/ds2775g/ds2775g.c ****         return -1;
+ 135:drivers/ds2775g/ds2775g.c ****     }
+ 136:drivers/ds2775g/ds2775g.c **** 
+ 137:drivers/ds2775g/ds2775g.c ****     /* Current gain LSB register configuration */
+ 138:drivers/ds2775g/ds2775g.c ****     if(ds2775g_write_data(config->onewire_port, config->overcurrent_thresholds_reg, 0x4) == -1)
+ 139:drivers/ds2775g/ds2775g.c ****     {
+ 140:drivers/ds2775g/ds2775g.c ****         return -1;
+ 141:drivers/ds2775g/ds2775g.c ****     }
+ 142:drivers/ds2775g/ds2775g.c **** 
+ 143:drivers/ds2775g/ds2775g.c **** #if RESET_BATTERY_ACCUMULATED_CURRENT == 1
+ARM GAS  /tmp/ccFQuQ8c.s 			page 4
+
+
+ 144:drivers/ds2775g/ds2775g.c **** 
+ 145:drivers/ds2775g/ds2775g.c ****     write_accumulated_current_max_value(config->onewire_port);
+ 146:drivers/ds2775g/ds2775g.c **** 
+ 147:drivers/ds2775g/ds2775g.c **** #endif
+ 148:drivers/ds2775g/ds2775g.c **** 
+ 149:drivers/ds2775g/ds2775g.c **** #if CONFIG_DRIVERS_DEBUG_ENABLED == 1
+ 150:drivers/ds2775g/ds2775g.c **** 
+ 151:drivers/ds2775g/ds2775g.c ****     /* TODO: Legacy code, this should not be here */
+ 152:drivers/ds2775g/ds2775g.c ****     //uart_port_t UART_port = UART_PORT_0;
+ 153:drivers/ds2775g/ds2775g.c **** 
+ 154:drivers/ds2775g/ds2775g.c ****     uint8_t ds2775g_data_sent_back[8] = {0};
+ 155:drivers/ds2775g/ds2775g.c **** 
+ 156:drivers/ds2775g/ds2775g.c ****     /* TODO: Legacy code, there is no more "OW_port" defined, up to corrent debug routine */
+ 157:drivers/ds2775g/ds2775g.c ****     //ds2775g_read_register(OW_port, protection_register, &ds2775g_data_sent_back[0]);
+ 158:drivers/ds2775g/ds2775g.c ****     //ds2775g_read_register(OW_port, protector_threshold_register, &ds2775g_data_sent_back[1]);
+ 159:drivers/ds2775g/ds2775g.c ****     //ds2775g_read_register(OW_port, status_register, &ds2775g_data_sent_back[2]);
+ 160:drivers/ds2775g/ds2775g.c ****     //ds2775g_data_sent_back[2] &= 0xf0;
+ 161:drivers/ds2775g/ds2775g.c ****     //ds2775g_read_register(OW_port, control_register, &ds2775g_data_sent_back[3]);
+ 162:drivers/ds2775g/ds2775g.c ****     //ds2775g_read_register(OW_port, overcurrent_thresholds_register, &ds2775g_data_sent_back[4]);
+ 163:drivers/ds2775g/ds2775g.c ****     //ds2775g_read_register(OW_port, current_gain_LSB_register, &ds2775g_data_sent_back[5]);
+ 164:drivers/ds2775g/ds2775g.c ****     //ds2775g_read_register(OW_port, accumulated_current_MSB_register, &ds2775g_data_sent_back[6]);
+ 165:drivers/ds2775g/ds2775g.c ****     //ds2775g_read_register(OW_port, accumulated_current_LSB_register, &ds2775g_data_sent_back[7]);
+ 166:drivers/ds2775g/ds2775g.c **** 
+ 167:drivers/ds2775g/ds2775g.c ****     uint8_t i = 0;
+ 168:drivers/ds2775g/ds2775g.c ****     uint8_t string[4];
+ 169:drivers/ds2775g/ds2775g.c **** 
+ 170:drivers/ds2775g/ds2775g.c ****     /* TODO: Legacy code, update to newer clean log scheme! */
+ 171:drivers/ds2775g/ds2775g.c ****     //if(uart_avaliable(UART_port)){
+ 172:drivers/ds2775g/ds2775g.c ****     //
+ 173:drivers/ds2775g/ds2775g.c ****     //    for(i = 0; i < 8; i++){
+ 174:drivers/ds2775g/ds2775g.c ****     //          sprintf(string, "%#04x", one_wire_data_sent_back[i]);
+ 175:drivers/ds2775g/ds2775g.c ****     //          uart_write(UART_port, string, 0x4);
+ 176:drivers/ds2775g/ds2775g.c ****     //          if(i != 7){
+ 177:drivers/ds2775g/ds2775g.c ****     //              string = {','};
+ 178:drivers/ds2775g/ds2775g.c ****     //              uart_write(UART_port, string, 0x1);
+ 179:drivers/ds2775g/ds2775g.c ****     //          }
+ 180:drivers/ds2775g/ds2775g.c ****     //          else{
+ 181:drivers/ds2775g/ds2775g.c ****     //              string = {'\r\n'};
+ 182:drivers/ds2775g/ds2775g.c ****     //              uart_write(UART_port, string, 0x4);
+ 183:drivers/ds2775g/ds2775g.c ****     //          }
+ 184:drivers/ds2775g/ds2775g.c ****     //      }
+ 185:drivers/ds2775g/ds2775g.c ****     //
+ 186:drivers/ds2775g/ds2775g.c ****     //}
+ 187:drivers/ds2775g/ds2775g.c ****     //else{
+ 188:drivers/ds2775g/ds2775g.c ****     //    sys_log_print_event_from_module(SYS_LOG_ERROR, UART_MODULE_NAME, "UART bus is not avaliab
+ 189:drivers/ds2775g/ds2775g.c ****     //}
+ 190:drivers/ds2775g/ds2775g.c **** 
+ 191:drivers/ds2775g/ds2775g.c **** #endif //End debug routine
+ 192:drivers/ds2775g/ds2775g.c **** 
+ 193:drivers/ds2775g/ds2775g.c ****     return 0;
+ 194:drivers/ds2775g/ds2775g.c **** }
+ 195:drivers/ds2775g/ds2775g.c **** 
+ 196:drivers/ds2775g/ds2775g.c **** int ds2775g_write_data(onewire_port_t port, uint8_t *data, uint16_t len)
+ 197:drivers/ds2775g/ds2775g.c **** {
+  30              		.loc 1 197 1 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  /tmp/ccFQuQ8c.s 			page 5
+
+
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		.loc 1 197 1 is_stmt 0 view .LVU1
+  35 0000 70B5     		push	{r4, r5, r6, lr}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 16
+  38              		.cfi_offset 4, -16
+  39              		.cfi_offset 5, -12
+  40              		.cfi_offset 6, -8
+  41              		.cfi_offset 14, -4
+  42 0002 0446     		mov	r4, r0
+  43 0004 0D46     		mov	r5, r1
+  44 0006 1646     		mov	r6, r2
+ 198:drivers/ds2775g/ds2775g.c **** 
+ 199:drivers/ds2775g/ds2775g.c ****     /* Master reset */
+ 200:drivers/ds2775g/ds2775g.c ****     if(onewire_reset(port) == 0)
+  45              		.loc 1 200 5 is_stmt 1 view .LVU2
+  46              		.loc 1 200 8 is_stmt 0 view .LVU3
+  47 0008 FFF7FEFF 		bl	onewire_reset
+  48              	.LVL1:
+  49              		.loc 1 200 7 discriminator 1 view .LVU4
+  50 000c 48B1     		cbz	r0, .L3
+ 201:drivers/ds2775g/ds2775g.c ****     {
+ 202:drivers/ds2775g/ds2775g.c ****         return -1;
+ 203:drivers/ds2775g/ds2775g.c ****     }
+ 204:drivers/ds2775g/ds2775g.c **** 
+ 205:drivers/ds2775g/ds2775g.c ****     /* Write EEPROM address, operation, register address and value to the register */
+ 206:drivers/ds2775g/ds2775g.c ****     if(onewire_write_byte(port, data, len) == -1)
+  51              		.loc 1 206 5 is_stmt 1 view .LVU5
+  52              		.loc 1 206 8 is_stmt 0 view .LVU6
+  53 000e 3246     		mov	r2, r6
+  54 0010 2946     		mov	r1, r5
+  55 0012 2046     		mov	r0, r4
+  56 0014 FFF7FEFF 		bl	onewire_write_byte
+  57              	.LVL2:
+  58              		.loc 1 206 7 discriminator 1 view .LVU7
+  59 0018 B0F1FF3F 		cmp	r0, #-1
+  60 001c 00D0     		beq	.L1
+ 207:drivers/ds2775g/ds2775g.c ****     {
+ 208:drivers/ds2775g/ds2775g.c ****         return -1;
+ 209:drivers/ds2775g/ds2775g.c ****     }
+ 210:drivers/ds2775g/ds2775g.c ****     return 0;
+  61              		.loc 1 210 12 view .LVU8
+  62 001e 0020     		movs	r0, #0
+  63              	.L1:
+ 211:drivers/ds2775g/ds2775g.c **** 
+ 212:drivers/ds2775g/ds2775g.c **** }
+  64              		.loc 1 212 1 view .LVU9
+  65 0020 70BD     		pop	{r4, r5, r6, pc}
+  66              	.LVL3:
+  67              	.L3:
+ 202:drivers/ds2775g/ds2775g.c ****     }
+  68              		.loc 1 202 16 view .LVU10
+  69 0022 4FF0FF30 		mov	r0, #-1
+  70 0026 FBE7     		b	.L1
+  71              		.cfi_endproc
+  72              	.LFE4:
+  74              		.section	.text.ds2775g_init,"ax",%progbits
+ARM GAS  /tmp/ccFQuQ8c.s 			page 6
+
+
+  75              		.align	1
+  76              		.global	ds2775g_init
+  77              		.syntax unified
+  78              		.thumb
+  79              		.thumb_func
+  81              	ds2775g_init:
+  82              	.LVL4:
+  83              	.LFB3:
+  84:drivers/ds2775g/ds2775g.c ****     config->protection_reg[0] = skip_address;
+  84              		.loc 1 84 1 is_stmt 1 view -0
+  85              		.cfi_startproc
+  86              		@ args = 0, pretend = 0, frame = 0
+  87              		@ frame_needed = 0, uses_anonymous_args = 0
+  84:drivers/ds2775g/ds2775g.c ****     config->protection_reg[0] = skip_address;
+  88              		.loc 1 84 1 is_stmt 0 view .LVU12
+  89 0000 10B5     		push	{r4, lr}
+  90              	.LCFI1:
+  91              		.cfi_def_cfa_offset 8
+  92              		.cfi_offset 4, -8
+  93              		.cfi_offset 14, -4
+  94 0002 0446     		mov	r4, r0
+  85:drivers/ds2775g/ds2775g.c ****     config->protection_reg[1] = write_data;
+  95              		.loc 1 85 5 is_stmt 1 view .LVU13
+  85:drivers/ds2775g/ds2775g.c ****     config->protection_reg[1] = write_data;
+  96              		.loc 1 85 31 is_stmt 0 view .LVU14
+  97 0004 CC22     		movs	r2, #204
+  98 0006 4270     		strb	r2, [r0, #1]
+  86:drivers/ds2775g/ds2775g.c ****     config->protection_reg[2] = protection_register;
+  99              		.loc 1 86 5 is_stmt 1 view .LVU15
+  86:drivers/ds2775g/ds2775g.c ****     config->protection_reg[2] = protection_register;
+ 100              		.loc 1 86 31 is_stmt 0 view .LVU16
+ 101 0008 6C23     		movs	r3, #108
+ 102 000a 8370     		strb	r3, [r0, #2]
+  87:drivers/ds2775g/ds2775g.c ****     config->protection_reg[3] =  0x03;
+ 103              		.loc 1 87 5 is_stmt 1 view .LVU17
+  87:drivers/ds2775g/ds2775g.c ****     config->protection_reg[3] =  0x03;
+ 104              		.loc 1 87 31 is_stmt 0 view .LVU18
+ 105 000c 0021     		movs	r1, #0
+ 106 000e C170     		strb	r1, [r0, #3]
+  88:drivers/ds2775g/ds2775g.c ****     config->protector_threshold_reg[0] = skip_address;
+ 107              		.loc 1 88 5 is_stmt 1 view .LVU19
+  88:drivers/ds2775g/ds2775g.c ****     config->protector_threshold_reg[0] = skip_address;
+ 108              		.loc 1 88 31 is_stmt 0 view .LVU20
+ 109 0010 0320     		movs	r0, #3
+ 110              	.LVL5:
+  88:drivers/ds2775g/ds2775g.c ****     config->protector_threshold_reg[0] = skip_address;
+ 111              		.loc 1 88 31 view .LVU21
+ 112 0012 2071     		strb	r0, [r4, #4]
+  89:drivers/ds2775g/ds2775g.c ****     config->protector_threshold_reg[1] = write_data;
+ 113              		.loc 1 89 5 is_stmt 1 view .LVU22
+  89:drivers/ds2775g/ds2775g.c ****     config->protector_threshold_reg[1] = write_data;
+ 114              		.loc 1 89 40 is_stmt 0 view .LVU23
+ 115 0014 6271     		strb	r2, [r4, #5]
+  90:drivers/ds2775g/ds2775g.c ****     config->protector_threshold_reg[2] = protector_threshold_register;
+ 116              		.loc 1 90 5 is_stmt 1 view .LVU24
+  90:drivers/ds2775g/ds2775g.c ****     config->protector_threshold_reg[2] = protector_threshold_register;
+ 117              		.loc 1 90 40 is_stmt 0 view .LVU25
+ARM GAS  /tmp/ccFQuQ8c.s 			page 7
+
+
+ 118 0016 A371     		strb	r3, [r4, #6]
+  91:drivers/ds2775g/ds2775g.c ****     config->protector_threshold_reg[3] = 0x61;
+ 119              		.loc 1 91 5 is_stmt 1 view .LVU26
+  91:drivers/ds2775g/ds2775g.c ****     config->protector_threshold_reg[3] = 0x61;
+ 120              		.loc 1 91 40 is_stmt 0 view .LVU27
+ 121 0018 7F20     		movs	r0, #127
+ 122 001a E071     		strb	r0, [r4, #7]
+  92:drivers/ds2775g/ds2775g.c ****     config->status_reg[0] = skip_address;
+ 123              		.loc 1 92 5 is_stmt 1 view .LVU28
+  92:drivers/ds2775g/ds2775g.c ****     config->status_reg[0] = skip_address;
+ 124              		.loc 1 92 40 is_stmt 0 view .LVU29
+ 125 001c 6120     		movs	r0, #97
+ 126 001e 2072     		strb	r0, [r4, #8]
+  93:drivers/ds2775g/ds2775g.c ****     config->status_reg[1] = write_data;
+ 127              		.loc 1 93 5 is_stmt 1 view .LVU30
+  93:drivers/ds2775g/ds2775g.c ****     config->status_reg[1] = write_data;
+ 128              		.loc 1 93 27 is_stmt 0 view .LVU31
+ 129 0020 6272     		strb	r2, [r4, #9]
+  94:drivers/ds2775g/ds2775g.c ****     config->status_reg[2] = status_register;
+ 130              		.loc 1 94 5 is_stmt 1 view .LVU32
+  94:drivers/ds2775g/ds2775g.c ****     config->status_reg[2] = status_register;
+ 131              		.loc 1 94 27 is_stmt 0 view .LVU33
+ 132 0022 A372     		strb	r3, [r4, #10]
+  95:drivers/ds2775g/ds2775g.c ****     config->status_reg[3] = 0x0;
+ 133              		.loc 1 95 5 is_stmt 1 view .LVU34
+  95:drivers/ds2775g/ds2775g.c ****     config->status_reg[3] = 0x0;
+ 134              		.loc 1 95 27 is_stmt 0 view .LVU35
+ 135 0024 0120     		movs	r0, #1
+ 136 0026 E072     		strb	r0, [r4, #11]
+  96:drivers/ds2775g/ds2775g.c ****     config->control_reg[0] = skip_address;
+ 137              		.loc 1 96 5 is_stmt 1 view .LVU36
+  96:drivers/ds2775g/ds2775g.c ****     config->control_reg[0] = skip_address;
+ 138              		.loc 1 96 27 is_stmt 0 view .LVU37
+ 139 0028 2173     		strb	r1, [r4, #12]
+  97:drivers/ds2775g/ds2775g.c ****     config->control_reg[1] = write_data;
+ 140              		.loc 1 97 5 is_stmt 1 view .LVU38
+  97:drivers/ds2775g/ds2775g.c ****     config->control_reg[1] = write_data;
+ 141              		.loc 1 97 28 is_stmt 0 view .LVU39
+ 142 002a 6273     		strb	r2, [r4, #13]
+  98:drivers/ds2775g/ds2775g.c ****     config->control_reg[2] = control_register;
+ 143              		.loc 1 98 5 is_stmt 1 view .LVU40
+  98:drivers/ds2775g/ds2775g.c ****     config->control_reg[2] = control_register;
+ 144              		.loc 1 98 28 is_stmt 0 view .LVU41
+ 145 002c A373     		strb	r3, [r4, #14]
+  99:drivers/ds2775g/ds2775g.c ****     config->control_reg[3] = 0x0C;
+ 146              		.loc 1 99 5 is_stmt 1 view .LVU42
+  99:drivers/ds2775g/ds2775g.c ****     config->control_reg[3] = 0x0C;
+ 147              		.loc 1 99 28 is_stmt 0 view .LVU43
+ 148 002e 6020     		movs	r0, #96
+ 149 0030 E073     		strb	r0, [r4, #15]
+ 100:drivers/ds2775g/ds2775g.c ****     config->overcurrent_thresholds_reg[0] = skip_address;
+ 150              		.loc 1 100 5 is_stmt 1 view .LVU44
+ 100:drivers/ds2775g/ds2775g.c ****     config->overcurrent_thresholds_reg[0] = skip_address;
+ 151              		.loc 1 100 28 is_stmt 0 view .LVU45
+ 152 0032 0C20     		movs	r0, #12
+ 153 0034 2074     		strb	r0, [r4, #16]
+ 101:drivers/ds2775g/ds2775g.c ****     config->overcurrent_thresholds_reg[1] = write_data;
+ARM GAS  /tmp/ccFQuQ8c.s 			page 8
+
+
+ 154              		.loc 1 101 5 is_stmt 1 view .LVU46
+ 101:drivers/ds2775g/ds2775g.c ****     config->overcurrent_thresholds_reg[1] = write_data;
+ 155              		.loc 1 101 43 is_stmt 0 view .LVU47
+ 156 0036 6274     		strb	r2, [r4, #17]
+ 102:drivers/ds2775g/ds2775g.c ****     config->overcurrent_thresholds_reg[2] = overcurrent_thresholds_register;
+ 157              		.loc 1 102 5 is_stmt 1 view .LVU48
+ 102:drivers/ds2775g/ds2775g.c ****     config->overcurrent_thresholds_reg[2] = overcurrent_thresholds_register;
+ 158              		.loc 1 102 43 is_stmt 0 view .LVU49
+ 159 0038 A374     		strb	r3, [r4, #18]
+ 103:drivers/ds2775g/ds2775g.c ****     config->overcurrent_thresholds_reg[3] = 0x24;
+ 160              		.loc 1 103 5 is_stmt 1 view .LVU50
+ 103:drivers/ds2775g/ds2775g.c ****     config->overcurrent_thresholds_reg[3] = 0x24;
+ 161              		.loc 1 103 43 is_stmt 0 view .LVU51
+ 162 003a 7820     		movs	r0, #120
+ 163 003c E074     		strb	r0, [r4, #19]
+ 104:drivers/ds2775g/ds2775g.c ****     config->current_gain_LSB_reg[0] = skip_address;
+ 164              		.loc 1 104 5 is_stmt 1 view .LVU52
+ 104:drivers/ds2775g/ds2775g.c ****     config->current_gain_LSB_reg[0] = skip_address;
+ 165              		.loc 1 104 43 is_stmt 0 view .LVU53
+ 166 003e 2420     		movs	r0, #36
+ 167 0040 2075     		strb	r0, [r4, #20]
+ 105:drivers/ds2775g/ds2775g.c ****     config->current_gain_LSB_reg[1] = write_data;
+ 168              		.loc 1 105 5 is_stmt 1 view .LVU54
+ 105:drivers/ds2775g/ds2775g.c ****     config->current_gain_LSB_reg[1] = write_data;
+ 169              		.loc 1 105 37 is_stmt 0 view .LVU55
+ 170 0042 6275     		strb	r2, [r4, #21]
+ 106:drivers/ds2775g/ds2775g.c ****     config->current_gain_LSB_reg[2] = current_gain_LSB_register;
+ 171              		.loc 1 106 5 is_stmt 1 view .LVU56
+ 106:drivers/ds2775g/ds2775g.c ****     config->current_gain_LSB_reg[2] = current_gain_LSB_register;
+ 172              		.loc 1 106 37 is_stmt 0 view .LVU57
+ 173 0044 A375     		strb	r3, [r4, #22]
+ 107:drivers/ds2775g/ds2775g.c ****     config->current_gain_LSB_reg[3] = 0x00;
+ 174              		.loc 1 107 5 is_stmt 1 view .LVU58
+ 107:drivers/ds2775g/ds2775g.c ****     config->current_gain_LSB_reg[3] = 0x00;
+ 175              		.loc 1 107 37 is_stmt 0 view .LVU59
+ 176 0046 7923     		movs	r3, #121
+ 177 0048 E375     		strb	r3, [r4, #23]
+ 108:drivers/ds2775g/ds2775g.c ****     
+ 178              		.loc 1 108 5 is_stmt 1 view .LVU60
+ 108:drivers/ds2775g/ds2775g.c ****     
+ 179              		.loc 1 108 37 is_stmt 0 view .LVU61
+ 180 004a 2176     		strb	r1, [r4, #24]
+ 111:drivers/ds2775g/ds2775g.c **** 
+ 181              		.loc 1 111 5 is_stmt 1 view .LVU62
+ 111:drivers/ds2775g/ds2775g.c **** 
+ 182              		.loc 1 111 26 is_stmt 0 view .LVU63
+ 183 004c 4520     		movs	r0, #69
+ 184 004e 2146     		mov	r1, r4
+ 185 0050 01F8010B 		strb	r0, [r1], #1
+ 114:drivers/ds2775g/ds2775g.c ****     {
+ 186              		.loc 1 114 5 is_stmt 1 view .LVU64
+ 114:drivers/ds2775g/ds2775g.c ****     {
+ 187              		.loc 1 114 8 is_stmt 0 view .LVU65
+ 188 0054 0422     		movs	r2, #4
+ 189 0056 FFF7FEFF 		bl	ds2775g_write_data
+ 190              	.LVL6:
+ 114:drivers/ds2775g/ds2775g.c ****     {
+ARM GAS  /tmp/ccFQuQ8c.s 			page 9
+
+
+ 191              		.loc 1 114 7 discriminator 1 view .LVU66
+ 192 005a B0F1FF3F 		cmp	r0, #-1
+ 193 005e 24D0     		beq	.L5
+ 120:drivers/ds2775g/ds2775g.c ****     {
+ 194              		.loc 1 120 5 is_stmt 1 view .LVU67
+ 120:drivers/ds2775g/ds2775g.c ****     {
+ 195              		.loc 1 120 55 is_stmt 0 view .LVU68
+ 196 0060 2146     		mov	r1, r4
+ 120:drivers/ds2775g/ds2775g.c ****     {
+ 197              		.loc 1 120 8 view .LVU69
+ 198 0062 11F8050B 		ldrb	r0, [r1], #5	@ zero_extendqisi2
+ 199 0066 0422     		movs	r2, #4
+ 200 0068 FFF7FEFF 		bl	ds2775g_write_data
+ 201              	.LVL7:
+ 120:drivers/ds2775g/ds2775g.c ****     {
+ 202              		.loc 1 120 7 discriminator 1 view .LVU70
+ 203 006c B0F1FF3F 		cmp	r0, #-1
+ 204 0070 1BD0     		beq	.L5
+ 126:drivers/ds2775g/ds2775g.c ****     {
+ 205              		.loc 1 126 5 is_stmt 1 view .LVU71
+ 126:drivers/ds2775g/ds2775g.c ****     {
+ 206              		.loc 1 126 55 is_stmt 0 view .LVU72
+ 207 0072 2146     		mov	r1, r4
+ 126:drivers/ds2775g/ds2775g.c ****     {
+ 208              		.loc 1 126 8 view .LVU73
+ 209 0074 11F8090B 		ldrb	r0, [r1], #9	@ zero_extendqisi2
+ 210 0078 0422     		movs	r2, #4
+ 211 007a FFF7FEFF 		bl	ds2775g_write_data
+ 212              	.LVL8:
+ 126:drivers/ds2775g/ds2775g.c ****     {
+ 213              		.loc 1 126 7 discriminator 1 view .LVU74
+ 214 007e B0F1FF3F 		cmp	r0, #-1
+ 215 0082 12D0     		beq	.L5
+ 132:drivers/ds2775g/ds2775g.c ****     {
+ 216              		.loc 1 132 5 is_stmt 1 view .LVU75
+ 132:drivers/ds2775g/ds2775g.c ****     {
+ 217              		.loc 1 132 55 is_stmt 0 view .LVU76
+ 218 0084 2146     		mov	r1, r4
+ 132:drivers/ds2775g/ds2775g.c ****     {
+ 219              		.loc 1 132 8 view .LVU77
+ 220 0086 11F80D0B 		ldrb	r0, [r1], #13	@ zero_extendqisi2
+ 221 008a 0422     		movs	r2, #4
+ 222 008c FFF7FEFF 		bl	ds2775g_write_data
+ 223              	.LVL9:
+ 132:drivers/ds2775g/ds2775g.c ****     {
+ 224              		.loc 1 132 7 discriminator 1 view .LVU78
+ 225 0090 B0F1FF3F 		cmp	r0, #-1
+ 226 0094 09D0     		beq	.L5
+ 138:drivers/ds2775g/ds2775g.c ****     {
+ 227              		.loc 1 138 5 is_stmt 1 view .LVU79
+ 138:drivers/ds2775g/ds2775g.c ****     {
+ 228              		.loc 1 138 55 is_stmt 0 view .LVU80
+ 229 0096 2146     		mov	r1, r4
+ 138:drivers/ds2775g/ds2775g.c ****     {
+ 230              		.loc 1 138 8 view .LVU81
+ 231 0098 11F8110B 		ldrb	r0, [r1], #17	@ zero_extendqisi2
+ 232 009c 0422     		movs	r2, #4
+ARM GAS  /tmp/ccFQuQ8c.s 			page 10
+
+
+ 233 009e FFF7FEFF 		bl	ds2775g_write_data
+ 234              	.LVL10:
+ 138:drivers/ds2775g/ds2775g.c ****     {
+ 235              		.loc 1 138 7 discriminator 1 view .LVU82
+ 236 00a2 B0F1FF3F 		cmp	r0, #-1
+ 237 00a6 00D0     		beq	.L5
+ 193:drivers/ds2775g/ds2775g.c **** }
+ 238              		.loc 1 193 12 view .LVU83
+ 239 00a8 0020     		movs	r0, #0
+ 240              	.L5:
+ 194:drivers/ds2775g/ds2775g.c **** 
+ 241              		.loc 1 194 1 view .LVU84
+ 242 00aa 10BD     		pop	{r4, pc}
+ 194:drivers/ds2775g/ds2775g.c **** 
+ 243              		.loc 1 194 1 view .LVU85
+ 244              		.cfi_endproc
+ 245              	.LFE3:
+ 247              		.section	.text.ds2775g_read_register,"ax",%progbits
+ 248              		.align	1
+ 249              		.global	ds2775g_read_register
+ 250              		.syntax unified
+ 251              		.thumb
+ 252              		.thumb_func
+ 254              	ds2775g_read_register:
+ 255              	.LVL11:
+ 256              	.LFB5:
+ 213:drivers/ds2775g/ds2775g.c **** 
+ 214:drivers/ds2775g/ds2775g.c **** int ds2775g_read_register(onewire_port_t port, uint8_t register_address, uint8_t *data_read)
+ 215:drivers/ds2775g/ds2775g.c **** {
+ 257              		.loc 1 215 1 is_stmt 1 view -0
+ 258              		.cfi_startproc
+ 259              		@ args = 0, pretend = 0, frame = 8
+ 260              		@ frame_needed = 0, uses_anonymous_args = 0
+ 261              		.loc 1 215 1 is_stmt 0 view .LVU87
+ 262 0000 30B5     		push	{r4, r5, lr}
+ 263              	.LCFI2:
+ 264              		.cfi_def_cfa_offset 12
+ 265              		.cfi_offset 4, -12
+ 266              		.cfi_offset 5, -8
+ 267              		.cfi_offset 14, -4
+ 268 0002 83B0     		sub	sp, sp, #12
+ 269              	.LCFI3:
+ 270              		.cfi_def_cfa_offset 24
+ 271 0004 0446     		mov	r4, r0
+ 272 0006 1546     		mov	r5, r2
+ 216:drivers/ds2775g/ds2775g.c **** 
+ 217:drivers/ds2775g/ds2775g.c ****     uint8_t read_command[3] = {skip_address, read_data, register_address};
+ 273              		.loc 1 217 5 is_stmt 1 view .LVU88
+ 274              		.loc 1 217 13 is_stmt 0 view .LVU89
+ 275 0008 CC23     		movs	r3, #204
+ 276 000a 8DF80430 		strb	r3, [sp, #4]
+ 277 000e 6923     		movs	r3, #105
+ 278 0010 8DF80530 		strb	r3, [sp, #5]
+ 279 0014 8DF80610 		strb	r1, [sp, #6]
+ 218:drivers/ds2775g/ds2775g.c **** 
+ 219:drivers/ds2775g/ds2775g.c ****     /* Generate reset, sends the general address (0xCC) and the read command (0x69) */
+ 220:drivers/ds2775g/ds2775g.c ****     if(ds2775g_write_data(port, read_command, 0x3) == -1)
+ARM GAS  /tmp/ccFQuQ8c.s 			page 11
+
+
+ 280              		.loc 1 220 5 is_stmt 1 view .LVU90
+ 281              		.loc 1 220 8 is_stmt 0 view .LVU91
+ 282 0018 0322     		movs	r2, #3
+ 283              	.LVL12:
+ 284              		.loc 1 220 8 view .LVU92
+ 285 001a 01A9     		add	r1, sp, #4
+ 286              	.LVL13:
+ 287              		.loc 1 220 8 view .LVU93
+ 288 001c FFF7FEFF 		bl	ds2775g_write_data
+ 289              	.LVL14:
+ 290              		.loc 1 220 7 discriminator 1 view .LVU94
+ 291 0020 B0F1FF3F 		cmp	r0, #-1
+ 292 0024 08D0     		beq	.L8
+ 221:drivers/ds2775g/ds2775g.c ****     {
+ 222:drivers/ds2775g/ds2775g.c ****         return -1;
+ 223:drivers/ds2775g/ds2775g.c ****     }
+ 224:drivers/ds2775g/ds2775g.c **** 
+ 225:drivers/ds2775g/ds2775g.c ****     /* Read data */
+ 226:drivers/ds2775g/ds2775g.c ****     if(onewire_read_byte(port, data_read, 0x1) == -1)
+ 293              		.loc 1 226 5 is_stmt 1 view .LVU95
+ 294              		.loc 1 226 8 is_stmt 0 view .LVU96
+ 295 0026 0122     		movs	r2, #1
+ 296 0028 2946     		mov	r1, r5
+ 297 002a 2046     		mov	r0, r4
+ 298 002c FFF7FEFF 		bl	onewire_read_byte
+ 299              	.LVL15:
+ 300              		.loc 1 226 7 discriminator 1 view .LVU97
+ 301 0030 B0F1FF3F 		cmp	r0, #-1
+ 302 0034 00D0     		beq	.L8
+ 227:drivers/ds2775g/ds2775g.c ****     {
+ 228:drivers/ds2775g/ds2775g.c ****         return -1;
+ 229:drivers/ds2775g/ds2775g.c ****     }
+ 230:drivers/ds2775g/ds2775g.c **** 
+ 231:drivers/ds2775g/ds2775g.c ****     return 0;
+ 303              		.loc 1 231 12 view .LVU98
+ 304 0036 0020     		movs	r0, #0
+ 305              	.L8:
+ 232:drivers/ds2775g/ds2775g.c **** 
+ 233:drivers/ds2775g/ds2775g.c **** }
+ 306              		.loc 1 233 1 view .LVU99
+ 307 0038 03B0     		add	sp, sp, #12
+ 308              	.LCFI4:
+ 309              		.cfi_def_cfa_offset 12
+ 310              		@ sp needed
+ 311 003a 30BD     		pop	{r4, r5, pc}
+ 312              		.loc 1 233 1 view .LVU100
+ 313              		.cfi_endproc
+ 314              	.LFE5:
+ 316              		.section	.rodata.write_accumulated_current_max_value.str1.4,"aMS",%progbits,1
+ 317              		.align	2
+ 318              	.LC0:
+ 319 0000 CC481000 		.ascii	"\314H\020\000"
+ 320              		.align	2
+ 321              	.LC1:
+ 322 0004 CC481100 		.ascii	"\314H\021\000"
+ 323              		.section	.text.write_accumulated_current_max_value,"ax",%progbits
+ 324              		.align	1
+ARM GAS  /tmp/ccFQuQ8c.s 			page 12
+
+
+ 325              		.global	write_accumulated_current_max_value
+ 326              		.syntax unified
+ 327              		.thumb
+ 328              		.thumb_func
+ 330              	write_accumulated_current_max_value:
+ 331              	.LVL16:
+ 332              	.LFB6:
+ 234:drivers/ds2775g/ds2775g.c **** 
+ 235:drivers/ds2775g/ds2775g.c **** /*  Write 3Ah to battery accumulated current */
+ 236:drivers/ds2775g/ds2775g.c **** int write_accumulated_current_max_value(onewire_port_t port)
+ 237:drivers/ds2775g/ds2775g.c **** {
+ 333              		.loc 1 237 1 is_stmt 1 view -0
+ 334              		.cfi_startproc
+ 335              		@ args = 0, pretend = 0, frame = 16
+ 336              		@ frame_needed = 0, uses_anonymous_args = 0
+ 337              		.loc 1 237 1 is_stmt 0 view .LVU102
+ 338 0000 10B5     		push	{r4, lr}
+ 339              	.LCFI5:
+ 340              		.cfi_def_cfa_offset 8
+ 341              		.cfi_offset 4, -8
+ 342              		.cfi_offset 14, -4
+ 343 0002 84B0     		sub	sp, sp, #16
+ 344              	.LCFI6:
+ 345              		.cfi_def_cfa_offset 24
+ 346 0004 0446     		mov	r4, r0
+ 238:drivers/ds2775g/ds2775g.c **** 
+ 239:drivers/ds2775g/ds2775g.c ****     uint8_t acc_write_msb[4] = {skip_address, write_data, accumulated_current_MSB_register, ACCUMUL
+ 347              		.loc 1 239 5 is_stmt 1 view .LVU103
+ 348              		.loc 1 239 13 is_stmt 0 view .LVU104
+ 349 0006 1A4B     		ldr	r3, .L14
+ 350 0008 0393     		str	r3, [sp, #12]
+ 240:drivers/ds2775g/ds2775g.c ****     uint8_t acc_copy_msb[3] = {skip_address, copy_data, accumulated_current_MSB_register};
+ 351              		.loc 1 240 5 is_stmt 1 view .LVU105
+ 352              		.loc 1 240 13 is_stmt 0 view .LVU106
+ 353 000a 1A4B     		ldr	r3, .L14+4
+ 354 000c 1B68     		ldr	r3, [r3]
+ 355 000e ADF80830 		strh	r3, [sp, #8]	@ movhi
+ 356 0012 1B0C     		lsrs	r3, r3, #16
+ 357 0014 8DF80A30 		strb	r3, [sp, #10]
+ 241:drivers/ds2775g/ds2775g.c ****     uint8_t acc_write_lsb[4] = {skip_address, write_data, accumulated_current_LSB_register, ACCUMUL
+ 358              		.loc 1 241 5 is_stmt 1 view .LVU107
+ 359              		.loc 1 241 13 is_stmt 0 view .LVU108
+ 360 0018 174B     		ldr	r3, .L14+8
+ 361 001a 0193     		str	r3, [sp, #4]
+ 242:drivers/ds2775g/ds2775g.c ****     uint8_t acc_copy_lsb[3] = {skip_address, copy_data, accumulated_current_LSB_register};
+ 362              		.loc 1 242 5 is_stmt 1 view .LVU109
+ 363              		.loc 1 242 13 is_stmt 0 view .LVU110
+ 364 001c 174B     		ldr	r3, .L14+12
+ 365 001e 1B68     		ldr	r3, [r3]
+ 366 0020 ADF80030 		strh	r3, [sp]	@ movhi
+ 367 0024 1B0C     		lsrs	r3, r3, #16
+ 368 0026 8DF80230 		strb	r3, [sp, #2]
+ 243:drivers/ds2775g/ds2775g.c **** 
+ 244:drivers/ds2775g/ds2775g.c ****     /* Write ACCUMULATED_CURRENT_MSB to the accumulated current MSB register */
+ 245:drivers/ds2775g/ds2775g.c ****     if (ds2775g_write_data(port, acc_write_msb, 0x4) == -1)
+ 369              		.loc 1 245 5 is_stmt 1 view .LVU111
+ 370              		.loc 1 245 9 is_stmt 0 view .LVU112
+ARM GAS  /tmp/ccFQuQ8c.s 			page 13
+
+
+ 371 002a 0422     		movs	r2, #4
+ 372 002c 03A9     		add	r1, sp, #12
+ 373 002e FFF7FEFF 		bl	ds2775g_write_data
+ 374              	.LVL17:
+ 375              		.loc 1 245 8 discriminator 1 view .LVU113
+ 376 0032 B0F1FF3F 		cmp	r0, #-1
+ 377 0036 19D0     		beq	.L11
+ 246:drivers/ds2775g/ds2775g.c ****     {
+ 247:drivers/ds2775g/ds2775g.c ****         return -1;
+ 248:drivers/ds2775g/ds2775g.c ****     }
+ 249:drivers/ds2775g/ds2775g.c **** 
+ 250:drivers/ds2775g/ds2775g.c ****     /* Copy the data from EEPROM shadow RAM  to EEPROM */
+ 251:drivers/ds2775g/ds2775g.c ****     if (ds2775g_write_data(port, acc_copy_msb, 0x3) == -1)
+ 378              		.loc 1 251 5 is_stmt 1 view .LVU114
+ 379              		.loc 1 251 9 is_stmt 0 view .LVU115
+ 380 0038 0322     		movs	r2, #3
+ 381 003a 02A9     		add	r1, sp, #8
+ 382 003c 2046     		mov	r0, r4
+ 383 003e FFF7FEFF 		bl	ds2775g_write_data
+ 384              	.LVL18:
+ 385              		.loc 1 251 8 discriminator 1 view .LVU116
+ 386 0042 B0F1FF3F 		cmp	r0, #-1
+ 387 0046 11D0     		beq	.L11
+ 252:drivers/ds2775g/ds2775g.c ****     {
+ 253:drivers/ds2775g/ds2775g.c ****         return -1;
+ 254:drivers/ds2775g/ds2775g.c ****     }
+ 255:drivers/ds2775g/ds2775g.c **** 
+ 256:drivers/ds2775g/ds2775g.c ****     /* Write ACCUMULATED_CURRENT_LSB to the accumulated current LSB register */
+ 257:drivers/ds2775g/ds2775g.c ****     if (ds2775g_write_data(port, acc_write_lsb, 0x4) == -1)
+ 388              		.loc 1 257 5 is_stmt 1 view .LVU117
+ 389              		.loc 1 257 9 is_stmt 0 view .LVU118
+ 390 0048 0422     		movs	r2, #4
+ 391 004a 0DEB0201 		add	r1, sp, r2
+ 392 004e 2046     		mov	r0, r4
+ 393 0050 FFF7FEFF 		bl	ds2775g_write_data
+ 394              	.LVL19:
+ 395              		.loc 1 257 8 discriminator 1 view .LVU119
+ 396 0054 B0F1FF3F 		cmp	r0, #-1
+ 397 0058 08D0     		beq	.L11
+ 258:drivers/ds2775g/ds2775g.c ****     {
+ 259:drivers/ds2775g/ds2775g.c ****         return -1;
+ 260:drivers/ds2775g/ds2775g.c ****     }
+ 261:drivers/ds2775g/ds2775g.c **** 
+ 262:drivers/ds2775g/ds2775g.c ****     /* Copy the data from EEPROM shadow RAM  to EEPROM */
+ 263:drivers/ds2775g/ds2775g.c ****     if (ds2775g_write_data(port, acc_copy_lsb, 0x3) == -1)
+ 398              		.loc 1 263 5 is_stmt 1 view .LVU120
+ 399              		.loc 1 263 9 is_stmt 0 view .LVU121
+ 400 005a 0322     		movs	r2, #3
+ 401 005c 6946     		mov	r1, sp
+ 402 005e 2046     		mov	r0, r4
+ 403 0060 FFF7FEFF 		bl	ds2775g_write_data
+ 404              	.LVL20:
+ 405              		.loc 1 263 8 discriminator 1 view .LVU122
+ 406 0064 B0F1FF3F 		cmp	r0, #-1
+ 407 0068 00D0     		beq	.L11
+ 264:drivers/ds2775g/ds2775g.c ****     {
+ 265:drivers/ds2775g/ds2775g.c ****         return -1;
+ARM GAS  /tmp/ccFQuQ8c.s 			page 14
+
+
+ 266:drivers/ds2775g/ds2775g.c ****     }
+ 267:drivers/ds2775g/ds2775g.c **** 
+ 268:drivers/ds2775g/ds2775g.c ****     return 0;
+ 408              		.loc 1 268 12 view .LVU123
+ 409 006a 0020     		movs	r0, #0
+ 410              	.L11:
+ 269:drivers/ds2775g/ds2775g.c **** }
+ 411              		.loc 1 269 1 view .LVU124
+ 412 006c 04B0     		add	sp, sp, #16
+ 413              	.LCFI7:
+ 414              		.cfi_def_cfa_offset 8
+ 415              		@ sp needed
+ 416 006e 10BD     		pop	{r4, pc}
+ 417              	.LVL21:
+ 418              	.L15:
+ 419              		.loc 1 269 1 view .LVU125
+ 420              		.align	2
+ 421              	.L14:
+ 422 0070 CC6C100F 		.word	252734668
+ 423 0074 00000000 		.word	.LC0
+ 424 0078 CC6C1150 		.word	1343319244
+ 425 007c 04000000 		.word	.LC1
+ 426              		.cfi_endproc
+ 427              	.LFE6:
+ 429              		.text
+ 430              	.Letext0:
+ 431              		.file 2 "/usr/lib/gcc/arm-none-eabi/13.2.1/include/stdint.h"
+ 432              		.file 3 "./drivers/gpio/gpio.h"
+ 433              		.file 4 "./drivers/onewire/onewire.h"
+ 434              		.file 5 "drivers/ds2775g/ds2775g.h"
+ARM GAS  /tmp/ccFQuQ8c.s 			page 15
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 ds2775g.c
+     /tmp/ccFQuQ8c.s:21     .text.ds2775g_write_data:00000000 $t
+     /tmp/ccFQuQ8c.s:27     .text.ds2775g_write_data:00000000 ds2775g_write_data
+     /tmp/ccFQuQ8c.s:75     .text.ds2775g_init:00000000 $t
+     /tmp/ccFQuQ8c.s:81     .text.ds2775g_init:00000000 ds2775g_init
+     /tmp/ccFQuQ8c.s:248    .text.ds2775g_read_register:00000000 $t
+     /tmp/ccFQuQ8c.s:254    .text.ds2775g_read_register:00000000 ds2775g_read_register
+     /tmp/ccFQuQ8c.s:317    .rodata.write_accumulated_current_max_value.str1.4:00000000 $d
+     /tmp/ccFQuQ8c.s:324    .text.write_accumulated_current_max_value:00000000 $t
+     /tmp/ccFQuQ8c.s:330    .text.write_accumulated_current_max_value:00000000 write_accumulated_current_max_value
+     /tmp/ccFQuQ8c.s:422    .text.write_accumulated_current_max_value:00000070 $d
+
+UNDEFINED SYMBOLS
+onewire_reset
+onewire_write_byte
+onewire_read_byte

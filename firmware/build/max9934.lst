@@ -1,0 +1,223 @@
+ARM GAS  /tmp/ccP5hiy7.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"max9934.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "drivers/max9934/max9934.c"
+  20              		.section	.text.max9934_init,"ax",%progbits
+  21              		.align	1
+  22              		.global	max9934_init
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	max9934_init:
+  28              	.LFB0:
+   1:drivers/max9934/max9934.c **** /*
+   2:drivers/max9934/max9934.c ****  * max9934.c
+   3:drivers/max9934/max9934.c ****  * 
+   4:drivers/max9934/max9934.c ****  * Copyright (C) 2020, SpaceLab.
+   5:drivers/max9934/max9934.c ****  * 
+   6:drivers/max9934/max9934.c ****  * This file is part of EPS 2.0.
+   7:drivers/max9934/max9934.c ****  * 
+   8:drivers/max9934/max9934.c ****  * EPS 2.0 is free software: you can redistribute it and/or modify
+   9:drivers/max9934/max9934.c ****  * it under the terms of the GNU General Public License as published by
+  10:drivers/max9934/max9934.c ****  * the Free Software Foundation, either version 3 of the License, or
+  11:drivers/max9934/max9934.c ****  * (at your option) any later version.
+  12:drivers/max9934/max9934.c ****  * 
+  13:drivers/max9934/max9934.c ****  * EPS 2.0 is distributed in the hope that it will be useful,
+  14:drivers/max9934/max9934.c ****  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  15:drivers/max9934/max9934.c ****  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  16:drivers/max9934/max9934.c ****  * GNU General Public License for more details.
+  17:drivers/max9934/max9934.c ****  * 
+  18:drivers/max9934/max9934.c ****  * You should have received a copy of the GNU General Public License
+  19:drivers/max9934/max9934.c ****  * along with EPS 2.0. If not, see <http://www.gnu.org/licenses/>.
+  20:drivers/max9934/max9934.c ****  * 
+  21:drivers/max9934/max9934.c ****  */
+  22:drivers/max9934/max9934.c **** 
+  23:drivers/max9934/max9934.c **** /**
+  24:drivers/max9934/max9934.c ****  * \brief MAX9934 driver implementation.
+  25:drivers/max9934/max9934.c ****  * 
+  26:drivers/max9934/max9934.c ****  * \authors Gabriel Mariano Marcelino <gabriel.mm8@gmail.com> and Vinicius Pimenta Bernardo <vinici
+  27:drivers/max9934/max9934.c ****  * 
+  28:drivers/max9934/max9934.c ****  * \version 0.2.15
+  29:drivers/max9934/max9934.c ****  * 
+  30:drivers/max9934/max9934.c ****  * \date 2021/01/17
+ARM GAS  /tmp/ccP5hiy7.s 			page 2
+
+
+  31:drivers/max9934/max9934.c ****  * 
+  32:drivers/max9934/max9934.c ****  * \addtogroup max9934
+  33:drivers/max9934/max9934.c ****  * \{
+  34:drivers/max9934/max9934.c ****  */
+  35:drivers/max9934/max9934.c **** 
+  36:drivers/max9934/max9934.c **** #include <system/sys_log/sys_log.h>
+  37:drivers/max9934/max9934.c **** 
+  38:drivers/max9934/max9934.c **** #include "max9934.h"
+  39:drivers/max9934/max9934.c **** 
+  40:drivers/max9934/max9934.c **** int max9934_init(max9934_config_t config)
+  41:drivers/max9934/max9934.c **** {
+  29              		.loc 1 41 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 8
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33 0000 00B5     		push	{lr}
+  34              	.LCFI0:
+  35              		.cfi_def_cfa_offset 4
+  36              		.cfi_offset 14, -4
+  37 0002 83B0     		sub	sp, sp, #12
+  38              	.LCFI1:
+  39              		.cfi_def_cfa_offset 16
+  40 0004 02AB     		add	r3, sp, #8
+  41 0006 03E90300 		stmdb	r3, {r0, r1}
+  42:drivers/max9934/max9934.c ****     #if CONFIG_DRIVERS_DEBUG_ENABLED == 1
+  43:drivers/max9934/max9934.c ****         sys_log_print_event_from_module(SYS_LOG_INFO, MAX9934_MODULE_NAME, "Initializing the MAX993
+  44:drivers/max9934/max9934.c ****         sys_log_new_line();
+  45:drivers/max9934/max9934.c ****     #endif /* CONFIG_DRIVERS_DEBUG_ENABLED */
+  46:drivers/max9934/max9934.c **** 
+  47:drivers/max9934/max9934.c ****     /*
+  48:drivers/max9934/max9934.c ****      *   Not required due to CS tied to high in hardware!
+  49:drivers/max9934/max9934.c ****      *
+  50:drivers/max9934/max9934.c ****      *   if(gpio_init(config.cs_pin, GPIO_MODE_OUTPUT) != 0)
+  51:drivers/max9934/max9934.c ****      *   {
+  52:drivers/max9934/max9934.c ****      *       return -1;
+  53:drivers/max9934/max9934.c ****      *   }
+  54:drivers/max9934/max9934.c ****      *
+  55:drivers/max9934/max9934.c ****      *   if(gpio_set(config.cs_pin, GPIO_STATE_HIGH) != 0)
+  56:drivers/max9934/max9934.c ****      *   {
+  57:drivers/max9934/max9934.c ****      *       return -1;
+  58:drivers/max9934/max9934.c ****      *   }
+  59:drivers/max9934/max9934.c ****      */
+  60:drivers/max9934/max9934.c ****     
+  61:drivers/max9934/max9934.c ****     if(adc_init(config.adc_port, config.adc_config) != 0)
+  42              		.loc 1 61 5 view .LVU1
+  43              		.loc 1 61 8 is_stmt 0 view .LVU2
+  44 000a DDF80210 		ldr	r1, [sp, #2]	@ unaligned
+  45 000e BDF80620 		ldrh	r2, [sp, #6]
+  46 0012 9DF80000 		ldrb	r0, [sp]	@ zero_extendqisi2
+  47 0016 FFF7FEFF 		bl	adc_init
+  48              	.LVL0:
+  49              		.loc 1 61 7 discriminator 1 view .LVU3
+  50 001a 10B9     		cbnz	r0, .L5
+  51              	.L1:
+  62:drivers/max9934/max9934.c ****     {
+  63:drivers/max9934/max9934.c ****         #if CONFIG_DRIVERS_DEBUG_ENABLED == 1
+  64:drivers/max9934/max9934.c ****             sys_log_print_event_from_module(SYS_LOG_ERROR, MAX9934_MODULE_NAME, "Error initializing
+ARM GAS  /tmp/ccP5hiy7.s 			page 3
+
+
+  65:drivers/max9934/max9934.c ****             sys_log_new_line();
+  66:drivers/max9934/max9934.c ****         #endif /* CONFIG_DRIVERS_DEBUG_ENABLED */
+  67:drivers/max9934/max9934.c ****         return -1;
+  68:drivers/max9934/max9934.c ****     }
+  69:drivers/max9934/max9934.c **** 
+  70:drivers/max9934/max9934.c ****     return 0;
+  71:drivers/max9934/max9934.c **** }
+  52              		.loc 1 71 1 view .LVU4
+  53 001c 03B0     		add	sp, sp, #12
+  54              	.LCFI2:
+  55              		.cfi_remember_state
+  56              		.cfi_def_cfa_offset 4
+  57              		@ sp needed
+  58 001e 5DF804FB 		ldr	pc, [sp], #4
+  59              	.L5:
+  60              	.LCFI3:
+  61              		.cfi_restore_state
+  67:drivers/max9934/max9934.c ****     }
+  62              		.loc 1 67 16 view .LVU5
+  63 0022 4FF0FF30 		mov	r0, #-1
+  64 0026 F9E7     		b	.L1
+  65              		.cfi_endproc
+  66              	.LFE0:
+  68              		.section	.text.max9934_read,"ax",%progbits
+  69              		.align	1
+  70              		.global	max9934_read
+  71              		.syntax unified
+  72              		.thumb
+  73              		.thumb_func
+  75              	max9934_read:
+  76              	.LVL1:
+  77              	.LFB1:
+  72:drivers/max9934/max9934.c **** 
+  73:drivers/max9934/max9934.c **** /*
+  74:drivers/max9934/max9934.c ****  *   Not required due to CS tied to high in hardware!
+  75:drivers/max9934/max9934.c ****  *
+  76:drivers/max9934/max9934.c ****  *   int max9934_enable(max9934_config_t config)
+  77:drivers/max9934/max9934.c ****  *   {
+  78:drivers/max9934/max9934.c ****  *       return gpio_set_state(config.cs_pin, GPIO_STATE_HIGH);
+  79:drivers/max9934/max9934.c ****  *   }
+  80:drivers/max9934/max9934.c ****  *
+  81:drivers/max9934/max9934.c ****  *   int max9934_disable(max9934_config_t config)
+  82:drivers/max9934/max9934.c ****  *   {
+  83:drivers/max9934/max9934.c ****  *       return gpio_set_state(config.cs_pin, GPIO_STATE_LOW);
+  84:drivers/max9934/max9934.c ****  *   }
+  85:drivers/max9934/max9934.c ****  */
+  86:drivers/max9934/max9934.c **** 
+  87:drivers/max9934/max9934.c **** int max9934_read(max9934_config_t config, uint16_t *raw_val)
+  88:drivers/max9934/max9934.c **** {
+  78              		.loc 1 88 1 is_stmt 1 view -0
+  79              		.cfi_startproc
+  80              		@ args = 0, pretend = 0, frame = 8
+  81              		@ frame_needed = 0, uses_anonymous_args = 0
+  82              		.loc 1 88 1 is_stmt 0 view .LVU7
+  83 0000 00B5     		push	{lr}
+  84              	.LCFI4:
+  85              		.cfi_def_cfa_offset 4
+ARM GAS  /tmp/ccP5hiy7.s 			page 4
+
+
+  86              		.cfi_offset 14, -4
+  87 0002 83B0     		sub	sp, sp, #12
+  88              	.LCFI5:
+  89              		.cfi_def_cfa_offset 16
+  90 0004 02AB     		add	r3, sp, #8
+  91 0006 03E90300 		stmdb	r3, {r0, r1}
+  89:drivers/max9934/max9934.c ****     return adc_read(config.adc_port, raw_val);
+  92              		.loc 1 89 5 is_stmt 1 view .LVU8
+  93              		.loc 1 89 12 is_stmt 0 view .LVU9
+  94 000a 1146     		mov	r1, r2
+  95 000c 9DF80000 		ldrb	r0, [sp]	@ zero_extendqisi2
+  96 0010 FFF7FEFF 		bl	adc_read
+  97              	.LVL2:
+  90:drivers/max9934/max9934.c **** }
+  98              		.loc 1 90 1 view .LVU10
+  99 0014 03B0     		add	sp, sp, #12
+ 100              	.LCFI6:
+ 101              		.cfi_def_cfa_offset 4
+ 102              		@ sp needed
+ 103 0016 5DF804FB 		ldr	pc, [sp], #4
+ 104              		.cfi_endproc
+ 105              	.LFE1:
+ 107              		.text
+ 108              	.Letext0:
+ 109              		.file 2 "/usr/lib/gcc/arm-none-eabi/13.2.1/include/stdint.h"
+ 110              		.file 3 "./drivers/adc/adc.h"
+ 111              		.file 4 "drivers/max9934/max9934.h"
+ARM GAS  /tmp/ccP5hiy7.s 			page 5
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 max9934.c
+     /tmp/ccP5hiy7.s:21     .text.max9934_init:00000000 $t
+     /tmp/ccP5hiy7.s:27     .text.max9934_init:00000000 max9934_init
+     /tmp/ccP5hiy7.s:69     .text.max9934_read:00000000 $t
+     /tmp/ccP5hiy7.s:75     .text.max9934_read:00000000 max9934_read
+
+UNDEFINED SYMBOLS
+adc_init
+adc_read

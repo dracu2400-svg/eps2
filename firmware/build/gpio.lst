@@ -1,0 +1,921 @@
+ARM GAS  /tmp/ccNZ5Q4i.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"gpio.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "drivers/gpio/gpio.c"
+  20              		.section	.text.gpio_enable_port_clock,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	gpio_enable_port_clock:
+  27              	.LVL0:
+  28              	.LFB12:
+   1:drivers/gpio/gpio.c **** /*
+   2:drivers/gpio/gpio.c ****  * gpio.c
+   3:drivers/gpio/gpio.c ****  *
+   4:drivers/gpio/gpio.c ****  * Copyright (C) 2019, SpaceLab.
+   5:drivers/gpio/gpio.c ****  *
+   6:drivers/gpio/gpio.c ****  * This file is part of EPS 2.0.
+   7:drivers/gpio/gpio.c ****  *
+   8:drivers/gpio/gpio.c ****  * EPS 2.0 is free software: you can redistribute it and/or modify
+   9:drivers/gpio/gpio.c ****  * it under the terms of the GNU General Public License as published by
+  10:drivers/gpio/gpio.c ****  * the Free Software Foundation, either version 3 of the License, or
+  11:drivers/gpio/gpio.c ****  * (at your option) any later version.
+  12:drivers/gpio/gpio.c ****  *
+  13:drivers/gpio/gpio.c ****  * EPS 2.0 is distributed in the hope that it will be useful,
+  14:drivers/gpio/gpio.c ****  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  15:drivers/gpio/gpio.c ****  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  16:drivers/gpio/gpio.c ****  * GNU General Public License for more details.
+  17:drivers/gpio/gpio.c ****  *
+  18:drivers/gpio/gpio.c ****  * You should have received a copy of the GNU General Public License
+  19:drivers/gpio/gpio.c ****  * along with EPS 2.0. If not, see <http://www.gnu.org/licenses/>.
+  20:drivers/gpio/gpio.c ****  *
+  21:drivers/gpio/gpio.c ****  */
+  22:drivers/gpio/gpio.c **** 
+  23:drivers/gpio/gpio.c **** /**
+  24:drivers/gpio/gpio.c ****  * \brief GPIO driver implementation (Ported to STM32L4).
+  25:drivers/gpio/gpio.c ****  *
+  26:drivers/gpio/gpio.c ****  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
+  27:drivers/gpio/gpio.c ****  *
+  28:drivers/gpio/gpio.c ****  * \version 0.2.0 (STM32L4 port)
+  29:drivers/gpio/gpio.c ****  *
+  30:drivers/gpio/gpio.c ****  * \date 2020/10/24
+ARM GAS  /tmp/ccNZ5Q4i.s 			page 2
+
+
+  31:drivers/gpio/gpio.c ****  *
+  32:drivers/gpio/gpio.c ****  * \addtogroup gpio
+  33:drivers/gpio/gpio.c ****  * \{
+  34:drivers/gpio/gpio.c ****  */
+  35:drivers/gpio/gpio.c **** 
+  36:drivers/gpio/gpio.c **** #include "stm32l476xx.h"
+  37:drivers/gpio/gpio.c **** 
+  38:drivers/gpio/gpio.c **** #include <config/config.h>
+  39:drivers/gpio/gpio.c **** #include <system/sys_log/sys_log.h>
+  40:drivers/gpio/gpio.c **** 
+  41:drivers/gpio/gpio.c **** #include "gpio.h"
+  42:drivers/gpio/gpio.c **** 
+  43:drivers/gpio/gpio.c **** /**
+  44:drivers/gpio/gpio.c ****  * \brief STM32 pin mapping structure.
+  45:drivers/gpio/gpio.c ****  */
+  46:drivers/gpio/gpio.c **** typedef struct {
+  47:drivers/gpio/gpio.c ****     GPIO_TypeDef *port;     /**< GPIO port (GPIOA, GPIOB, GPIOC). */
+  48:drivers/gpio/gpio.c ****     uint8_t pin;            /**< Pin number (0-15). */
+  49:drivers/gpio/gpio.c **** } stm32_pin_t;
+  50:drivers/gpio/gpio.c **** 
+  51:drivers/gpio/gpio.c **** /**
+  52:drivers/gpio/gpio.c ****  * \brief GPIO pin mapping table (GPIO_PIN_x → STM32 port/pin).
+  53:drivers/gpio/gpio.c ****  *
+  54:drivers/gpio/gpio.c ****  * Based on STM32_PIN_MAPPING.md:
+  55:drivers/gpio/gpio.c ****  * - GPIO_PIN_0-7:   PA0-PA7
+  56:drivers/gpio/gpio.c ****  * - GPIO_PIN_8-15:  PB0-PB7
+  57:drivers/gpio/gpio.c ****  * - GPIO_PIN_16-23: PC0-PC7
+  58:drivers/gpio/gpio.c ****  * - GPIO_PIN_24-31: PA8-PA15
+  59:drivers/gpio/gpio.c ****  * - GPIO_PIN_32+:   Not mapped (reserved for future expansion)
+  60:drivers/gpio/gpio.c ****  */
+  61:drivers/gpio/gpio.c **** static const stm32_pin_t pin_map[] = {
+  62:drivers/gpio/gpio.c ****     [GPIO_PIN_0]  = {GPIOA, 0},   /* PA0  - LED_STATUS */
+  63:drivers/gpio/gpio.c ****     [GPIO_PIN_1]  = {GPIOA, 1},   /* PA1  - UART_TX2 */
+  64:drivers/gpio/gpio.c ****     [GPIO_PIN_2]  = {GPIOA, 2},   /* PA2  - UART_RX2 */
+  65:drivers/gpio/gpio.c ****     [GPIO_PIN_3]  = {GPIOA, 3},   /* PA3  - ADC_IN3 */
+  66:drivers/gpio/gpio.c ****     [GPIO_PIN_4]  = {GPIOA, 4},   /* PA4  - SPI1_NSS */
+  67:drivers/gpio/gpio.c ****     [GPIO_PIN_5]  = {GPIOA, 5},   /* PA5  - SPI1_SCK */
+  68:drivers/gpio/gpio.c ****     [GPIO_PIN_6]  = {GPIOA, 6},   /* PA6  - SPI1_MISO */
+  69:drivers/gpio/gpio.c ****     [GPIO_PIN_7]  = {GPIOA, 7},   /* PA7  - SPI1_MOSI */
+  70:drivers/gpio/gpio.c ****     [GPIO_PIN_8]  = {GPIOB, 0},   /* PB0  - ADC_IN15 */
+  71:drivers/gpio/gpio.c ****     [GPIO_PIN_9]  = {GPIOB, 1},   /* PB1  - ADC_IN16 */
+  72:drivers/gpio/gpio.c ****     [GPIO_PIN_10] = {GPIOB, 2},   /* PB2  - GPIO */
+  73:drivers/gpio/gpio.c ****     [GPIO_PIN_11] = {GPIOB, 3},   /* PB3  - SPI2_NSS */
+  74:drivers/gpio/gpio.c ****     [GPIO_PIN_12] = {GPIOB, 4},   /* PB4  - SPI2_MISO */
+  75:drivers/gpio/gpio.c ****     [GPIO_PIN_13] = {GPIOB, 5},   /* PB5  - SPI2_MOSI */
+  76:drivers/gpio/gpio.c ****     [GPIO_PIN_14] = {GPIOB, 6},   /* PB6  - UART_TX1 */
+  77:drivers/gpio/gpio.c ****     [GPIO_PIN_15] = {GPIOB, 7},   /* PB7  - UART_RX1 */
+  78:drivers/gpio/gpio.c ****     [GPIO_PIN_16] = {GPIOB, 8},   /* PB8  - I2C1_SCL */
+  79:drivers/gpio/gpio.c ****     [GPIO_PIN_17] = {GPIOB, 9},   /* PB9  - I2C1_SDA */
+  80:drivers/gpio/gpio.c ****     [GPIO_PIN_18] = {GPIOB, 10},  /* PB10 - UART_TX3 */
+  81:drivers/gpio/gpio.c ****     [GPIO_PIN_19] = {GPIOB, 11},  /* PB11 - UART_RX3 */
+  82:drivers/gpio/gpio.c ****     [GPIO_PIN_20] = {GPIOB, 12},  /* PB12 - SPI2_NSS_ALT */
+  83:drivers/gpio/gpio.c ****     [GPIO_PIN_21] = {GPIOB, 13},  /* PB13 - SPI2_SCK */
+  84:drivers/gpio/gpio.c ****     [GPIO_PIN_22] = {GPIOB, 14},  /* PB14 - GPIO */
+  85:drivers/gpio/gpio.c ****     [GPIO_PIN_23] = {GPIOB, 15},  /* PB15 - GPIO */
+  86:drivers/gpio/gpio.c ****     [GPIO_PIN_24] = {GPIOC, 0},   /* PC0  - ADC_IN1 */
+  87:drivers/gpio/gpio.c ****     [GPIO_PIN_25] = {GPIOC, 1},   /* PC1  - ADC_IN2 */
+ARM GAS  /tmp/ccNZ5Q4i.s 			page 3
+
+
+  88:drivers/gpio/gpio.c ****     [GPIO_PIN_26] = {GPIOC, 2},   /* PC2  - ADC_IN3 */
+  89:drivers/gpio/gpio.c ****     [GPIO_PIN_27] = {GPIOC, 3},   /* PC3  - ADC_IN4 */
+  90:drivers/gpio/gpio.c ****     [GPIO_PIN_28] = {GPIOC, 4},   /* PC4  - GPIO */
+  91:drivers/gpio/gpio.c ****     [GPIO_PIN_29] = {GPIOC, 5},   /* PC5  - GPIO */
+  92:drivers/gpio/gpio.c ****     [GPIO_PIN_30] = {GPIOC, 6},   /* PC6  - GPIO */
+  93:drivers/gpio/gpio.c ****     [GPIO_PIN_31] = {GPIOC, 7},   /* PC7  - GPIO */
+  94:drivers/gpio/gpio.c **** };
+  95:drivers/gpio/gpio.c **** 
+  96:drivers/gpio/gpio.c **** #define PIN_MAP_SIZE    (sizeof(pin_map) / sizeof(pin_map[0]))
+  97:drivers/gpio/gpio.c **** 
+  98:drivers/gpio/gpio.c **** /**
+  99:drivers/gpio/gpio.c ****  * \brief Enables the clock for a given GPIO port.
+ 100:drivers/gpio/gpio.c ****  *
+ 101:drivers/gpio/gpio.c ****  * \param[in] port is the GPIO port to enable clock for.
+ 102:drivers/gpio/gpio.c ****  *
+ 103:drivers/gpio/gpio.c ****  * \return None.
+ 104:drivers/gpio/gpio.c ****  */
+ 105:drivers/gpio/gpio.c **** static void gpio_enable_port_clock(GPIO_TypeDef *port)
+ 106:drivers/gpio/gpio.c **** {
+  29              		.loc 1 106 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+ 107:drivers/gpio/gpio.c ****     if (port == GPIOA)
+  34              		.loc 1 107 5 view .LVU1
+  35              		.loc 1 107 8 is_stmt 0 view .LVU2
+  36 0000 B0F1904F 		cmp	r0, #1207959552
+  37 0004 06D0     		beq	.L5
+ 108:drivers/gpio/gpio.c ****     {
+ 109:drivers/gpio/gpio.c ****         RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
+ 110:drivers/gpio/gpio.c ****     }
+ 111:drivers/gpio/gpio.c ****     else if (port == GPIOB)
+  38              		.loc 1 111 10 is_stmt 1 view .LVU3
+  39              		.loc 1 111 13 is_stmt 0 view .LVU4
+  40 0006 0C4B     		ldr	r3, .L8
+  41 0008 9842     		cmp	r0, r3
+  42 000a 09D0     		beq	.L6
+ 112:drivers/gpio/gpio.c ****     {
+ 113:drivers/gpio/gpio.c ****         RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
+ 114:drivers/gpio/gpio.c ****     }
+ 115:drivers/gpio/gpio.c ****     else if (port == GPIOC)
+  43              		.loc 1 115 10 is_stmt 1 view .LVU5
+  44              		.loc 1 115 13 is_stmt 0 view .LVU6
+  45 000c 0B4B     		ldr	r3, .L8+4
+  46 000e 9842     		cmp	r0, r3
+  47 0010 0CD0     		beq	.L7
+  48              	.L1:
+ 116:drivers/gpio/gpio.c ****     {
+ 117:drivers/gpio/gpio.c ****         RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;
+ 118:drivers/gpio/gpio.c ****     }
+ 119:drivers/gpio/gpio.c **** }
+  49              		.loc 1 119 1 view .LVU7
+  50 0012 7047     		bx	lr
+  51              	.L5:
+ 109:drivers/gpio/gpio.c ****     }
+  52              		.loc 1 109 9 is_stmt 1 view .LVU8
+ARM GAS  /tmp/ccNZ5Q4i.s 			page 4
+
+
+ 109:drivers/gpio/gpio.c ****     }
+  53              		.loc 1 109 12 is_stmt 0 view .LVU9
+  54 0014 0A4A     		ldr	r2, .L8+8
+  55 0016 D36C     		ldr	r3, [r2, #76]
+ 109:drivers/gpio/gpio.c ****     }
+  56              		.loc 1 109 22 view .LVU10
+  57 0018 43F00103 		orr	r3, r3, #1
+  58 001c D364     		str	r3, [r2, #76]
+  59 001e 7047     		bx	lr
+  60              	.L6:
+ 113:drivers/gpio/gpio.c ****     }
+  61              		.loc 1 113 9 is_stmt 1 view .LVU11
+ 113:drivers/gpio/gpio.c ****     }
+  62              		.loc 1 113 12 is_stmt 0 view .LVU12
+  63 0020 074A     		ldr	r2, .L8+8
+  64 0022 D36C     		ldr	r3, [r2, #76]
+ 113:drivers/gpio/gpio.c ****     }
+  65              		.loc 1 113 22 view .LVU13
+  66 0024 43F00203 		orr	r3, r3, #2
+  67 0028 D364     		str	r3, [r2, #76]
+  68 002a 7047     		bx	lr
+  69              	.L7:
+ 117:drivers/gpio/gpio.c ****     }
+  70              		.loc 1 117 9 is_stmt 1 view .LVU14
+ 117:drivers/gpio/gpio.c ****     }
+  71              		.loc 1 117 12 is_stmt 0 view .LVU15
+  72 002c 044A     		ldr	r2, .L8+8
+  73 002e D36C     		ldr	r3, [r2, #76]
+ 117:drivers/gpio/gpio.c ****     }
+  74              		.loc 1 117 22 view .LVU16
+  75 0030 43F00403 		orr	r3, r3, #4
+  76 0034 D364     		str	r3, [r2, #76]
+  77              		.loc 1 119 1 view .LVU17
+  78 0036 ECE7     		b	.L1
+  79              	.L9:
+  80              		.align	2
+  81              	.L8:
+  82 0038 00040048 		.word	1207960576
+  83 003c 00080048 		.word	1207961600
+  84 0040 00100240 		.word	1073876992
+  85              		.cfi_endproc
+  86              	.LFE12:
+  88              		.section	.text.gpio_init,"ax",%progbits
+  89              		.align	1
+  90              		.global	gpio_init
+  91              		.syntax unified
+  92              		.thumb
+  93              		.thumb_func
+  95              	gpio_init:
+  96              	.LVL1:
+  97              	.LFB13:
+ 120:drivers/gpio/gpio.c **** 
+ 121:drivers/gpio/gpio.c **** int gpio_init(gpio_pin_t pin, gpio_config_t config)
+ 122:drivers/gpio/gpio.c **** {
+  98              		.loc 1 122 1 is_stmt 1 view -0
+  99              		.cfi_startproc
+ 100              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  /tmp/ccNZ5Q4i.s 			page 5
+
+
+ 101              		@ frame_needed = 0, uses_anonymous_args = 0
+ 123:drivers/gpio/gpio.c ****     /* Validate pin number */
+ 124:drivers/gpio/gpio.c ****     if (pin >= PIN_MAP_SIZE)
+ 102              		.loc 1 124 5 view .LVU19
+ 103              		.loc 1 124 8 is_stmt 0 view .LVU20
+ 104 0000 1F28     		cmp	r0, #31
+ 105 0002 2ED8     		bhi	.L13
+ 122:drivers/gpio/gpio.c ****     /* Validate pin number */
+ 106              		.loc 1 122 1 view .LVU21
+ 107 0004 70B5     		push	{r4, r5, r6, lr}
+ 108              	.LCFI0:
+ 109              		.cfi_def_cfa_offset 16
+ 110              		.cfi_offset 4, -16
+ 111              		.cfi_offset 5, -12
+ 112              		.cfi_offset 6, -8
+ 113              		.cfi_offset 14, -4
+ 114 0006 0D46     		mov	r5, r1
+ 115              	.LVL2:
+ 125:drivers/gpio/gpio.c ****     {
+ 126:drivers/gpio/gpio.c ****     #if CONFIG_DRIVERS_DEBUG_ENABLED == 1
+ 127:drivers/gpio/gpio.c ****         sys_log_print_event_from_module(SYS_LOG_ERROR, GPIO_MODULE_NAME, "Invalid pin to initialize
+ 128:drivers/gpio/gpio.c ****         sys_log_new_line();
+ 129:drivers/gpio/gpio.c ****     #endif /* CONFIG_DRIVERS_DEBUG_ENABLED */
+ 130:drivers/gpio/gpio.c ****         return -1;  /* Invalid GPIO pin */
+ 131:drivers/gpio/gpio.c ****     }
+ 132:drivers/gpio/gpio.c **** 
+ 133:drivers/gpio/gpio.c ****     GPIO_TypeDef *port = pin_map[pin].port;
+ 116              		.loc 1 133 5 is_stmt 1 view .LVU22
+ 117              		.loc 1 133 19 is_stmt 0 view .LVU23
+ 118 0008 194B     		ldr	r3, .L19
+ 119 000a 53F83040 		ldr	r4, [r3, r0, lsl #3]
+ 120              	.LVL3:
+ 134:drivers/gpio/gpio.c ****     uint8_t pin_num = pin_map[pin].pin;
+ 121              		.loc 1 134 5 is_stmt 1 view .LVU24
+ 122              		.loc 1 134 13 is_stmt 0 view .LVU25
+ 123 000e 03EBC003 		add	r3, r3, r0, lsl #3
+ 124 0012 1E79     		ldrb	r6, [r3, #4]	@ zero_extendqisi2
+ 125              	.LVL4:
+ 135:drivers/gpio/gpio.c **** 
+ 136:drivers/gpio/gpio.c ****     /* Enable GPIO port clock */
+ 137:drivers/gpio/gpio.c ****     gpio_enable_port_clock(port);
+ 126              		.loc 1 137 5 is_stmt 1 view .LVU26
+ 127 0014 2046     		mov	r0, r4
+ 128              	.LVL5:
+ 129              		.loc 1 137 5 is_stmt 0 view .LVU27
+ 130 0016 FFF7FEFF 		bl	gpio_enable_port_clock
+ 131              	.LVL6:
+ 138:drivers/gpio/gpio.c **** 
+ 139:drivers/gpio/gpio.c ****     /* Configure pin mode in MODER register */
+ 140:drivers/gpio/gpio.c ****     /* MODER: 00 = Input, 01 = Output, 10 = Alternate function, 11 = Analog */
+ 141:drivers/gpio/gpio.c ****     uint32_t moder = port->MODER;
+ 132              		.loc 1 141 5 is_stmt 1 view .LVU28
+ 133              		.loc 1 141 14 is_stmt 0 view .LVU29
+ 134 001a 2168     		ldr	r1, [r4]
+ 135              	.LVL7:
+ 142:drivers/gpio/gpio.c ****     moder &= ~(0x3UL << (pin_num * 2));  /* Clear mode bits */
+ 136              		.loc 1 142 5 is_stmt 1 view .LVU30
+ARM GAS  /tmp/ccNZ5Q4i.s 			page 6
+
+
+ 137              		.loc 1 142 34 is_stmt 0 view .LVU31
+ 138 001c 7200     		lsls	r2, r6, #1
+ 139              		.loc 1 142 22 view .LVU32
+ 140 001e 0323     		movs	r3, #3
+ 141 0020 9340     		lsls	r3, r3, r2
+ 142              		.loc 1 142 14 view .LVU33
+ 143 0022 D843     		mvns	r0, r3
+ 144              		.loc 1 142 11 view .LVU34
+ 145 0024 21EA0301 		bic	r1, r1, r3
+ 146              	.LVL8:
+ 143:drivers/gpio/gpio.c **** 
+ 144:drivers/gpio/gpio.c ****     if (config.mode == GPIO_MODE_OUTPUT_PIN)
+ 147              		.loc 1 144 5 is_stmt 1 view .LVU35
+ 148              		.loc 1 144 15 is_stmt 0 view .LVU36
+ 149 0028 EDB2     		uxtb	r5, r5
+ 150              	.LVL9:
+ 151              		.loc 1 144 8 view .LVU37
+ 152 002a 95B9     		cbnz	r5, .L12
+ 153              	.LBB2:
+ 145:drivers/gpio/gpio.c ****     {
+ 146:drivers/gpio/gpio.c ****         moder |= (0x1UL << (pin_num * 2));  /* Set to output mode (01) */
+ 154              		.loc 1 146 9 is_stmt 1 view .LVU38
+ 155              		.loc 1 146 25 is_stmt 0 view .LVU39
+ 156 002c 0123     		movs	r3, #1
+ 157 002e 03FA02F2 		lsl	r2, r3, r2
+ 158              		.loc 1 146 15 view .LVU40
+ 159 0032 1143     		orrs	r1, r1, r2
+ 160              	.LVL10:
+ 147:drivers/gpio/gpio.c ****         port->MODER = moder;
+ 161              		.loc 1 147 9 is_stmt 1 view .LVU41
+ 162              		.loc 1 147 21 is_stmt 0 view .LVU42
+ 163 0034 2160     		str	r1, [r4]
+ 148:drivers/gpio/gpio.c **** 
+ 149:drivers/gpio/gpio.c ****         /* Configure output type as push-pull (default) */
+ 150:drivers/gpio/gpio.c ****         port->OTYPER &= ~(1UL << pin_num);  /* 0 = Push-pull */
+ 164              		.loc 1 150 9 is_stmt 1 view .LVU43
+ 165              		.loc 1 150 13 is_stmt 0 view .LVU44
+ 166 0036 6168     		ldr	r1, [r4, #4]
+ 167              	.LVL11:
+ 168              		.loc 1 150 31 view .LVU45
+ 169 0038 B340     		lsls	r3, r3, r6
+ 170              		.loc 1 150 22 view .LVU46
+ 171 003a 21EA0303 		bic	r3, r1, r3
+ 172 003e 6360     		str	r3, [r4, #4]
+ 173              	.LVL12:
+ 151:drivers/gpio/gpio.c **** 
+ 152:drivers/gpio/gpio.c ****         /* Set output speed to medium (default) */
+ 153:drivers/gpio/gpio.c ****         uint32_t ospeedr = port->OSPEEDR;
+ 174              		.loc 1 153 9 is_stmt 1 view .LVU47
+ 175              		.loc 1 153 18 is_stmt 0 view .LVU48
+ 176 0040 A368     		ldr	r3, [r4, #8]
+ 177              	.LVL13:
+ 154:drivers/gpio/gpio.c ****         ospeedr &= ~(0x3UL << (pin_num * 2));
+ 178              		.loc 1 154 9 is_stmt 1 view .LVU49
+ 179              		.loc 1 154 17 is_stmt 0 view .LVU50
+ 180 0042 0340     		ands	r3, r3, r0
+ 181              	.LVL14:
+ARM GAS  /tmp/ccNZ5Q4i.s 			page 7
+
+
+ 155:drivers/gpio/gpio.c ****         ospeedr |= (0x1UL << (pin_num * 2));  /* 01 = Medium speed */
+ 182              		.loc 1 155 9 is_stmt 1 view .LVU51
+ 183              		.loc 1 155 17 is_stmt 0 view .LVU52
+ 184 0044 1A43     		orrs	r2, r2, r3
+ 185              	.LVL15:
+ 156:drivers/gpio/gpio.c ****         port->OSPEEDR = ospeedr;
+ 186              		.loc 1 156 9 is_stmt 1 view .LVU53
+ 187              		.loc 1 156 23 is_stmt 0 view .LVU54
+ 188 0046 A260     		str	r2, [r4, #8]
+ 157:drivers/gpio/gpio.c **** 
+ 158:drivers/gpio/gpio.c ****         /* No pull-up/pull-down (default) */
+ 159:drivers/gpio/gpio.c ****         uint32_t pupdr = port->PUPDR;
+ 189              		.loc 1 159 9 is_stmt 1 view .LVU55
+ 190              		.loc 1 159 18 is_stmt 0 view .LVU56
+ 191 0048 E368     		ldr	r3, [r4, #12]
+ 192              	.LVL16:
+ 160:drivers/gpio/gpio.c ****         pupdr &= ~(0x3UL << (pin_num * 2));  /* 00 = No pull-up/pull-down */
+ 193              		.loc 1 160 9 is_stmt 1 view .LVU57
+ 194              		.loc 1 160 15 is_stmt 0 view .LVU58
+ 195 004a 0340     		ands	r3, r3, r0
+ 196              	.LVL17:
+ 161:drivers/gpio/gpio.c ****         port->PUPDR = pupdr;
+ 197              		.loc 1 161 9 is_stmt 1 view .LVU59
+ 198              		.loc 1 161 21 is_stmt 0 view .LVU60
+ 199 004c E360     		str	r3, [r4, #12]
+ 200              	.LBE2:
+ 162:drivers/gpio/gpio.c ****     }
+ 163:drivers/gpio/gpio.c ****     else if (config.mode == GPIO_MODE_INPUT_PIN)
+ 164:drivers/gpio/gpio.c ****     {
+ 165:drivers/gpio/gpio.c ****         moder |= (0x0UL << (pin_num * 2));  /* Set to input mode (00) */
+ 166:drivers/gpio/gpio.c ****         port->MODER = moder;
+ 167:drivers/gpio/gpio.c **** 
+ 168:drivers/gpio/gpio.c ****         /* Configure pull-up/pull-down as floating (default) */
+ 169:drivers/gpio/gpio.c ****         uint32_t pupdr = port->PUPDR;
+ 170:drivers/gpio/gpio.c ****         pupdr &= ~(0x3UL << (pin_num * 2));  /* 00 = No pull-up/pull-down */
+ 171:drivers/gpio/gpio.c ****         port->PUPDR = pupdr;
+ 172:drivers/gpio/gpio.c ****     }
+ 173:drivers/gpio/gpio.c ****     else
+ 174:drivers/gpio/gpio.c ****     {
+ 175:drivers/gpio/gpio.c ****     #if CONFIG_DRIVERS_DEBUG_ENABLED == 1
+ 176:drivers/gpio/gpio.c ****         sys_log_print_event_from_module(SYS_LOG_ERROR, GPIO_MODULE_NAME, "Invalid mode during the i
+ 177:drivers/gpio/gpio.c ****         sys_log_new_line();
+ 178:drivers/gpio/gpio.c ****     #endif /* CONFIG_DRIVERS_DEBUG_ENABLED */
+ 179:drivers/gpio/gpio.c ****         return -1;  /* Invalid mode */
+ 180:drivers/gpio/gpio.c ****     }
+ 181:drivers/gpio/gpio.c **** 
+ 182:drivers/gpio/gpio.c ****     return 0;
+ 201              		.loc 1 182 12 view .LVU61
+ 202 004e 0020     		movs	r0, #0
+ 203              	.LVL18:
+ 204              	.L10:
+ 183:drivers/gpio/gpio.c **** }
+ 205              		.loc 1 183 1 view .LVU62
+ 206 0050 70BD     		pop	{r4, r5, r6, pc}
+ 207              	.LVL19:
+ 208              	.L12:
+ 163:drivers/gpio/gpio.c ****     {
+ARM GAS  /tmp/ccNZ5Q4i.s 			page 8
+
+
+ 209              		.loc 1 163 10 is_stmt 1 view .LVU63
+ 163:drivers/gpio/gpio.c ****     {
+ 210              		.loc 1 163 13 is_stmt 0 view .LVU64
+ 211 0052 012D     		cmp	r5, #1
+ 212 0054 08D1     		bne	.L14
+ 213              	.LBB3:
+ 165:drivers/gpio/gpio.c ****         port->MODER = moder;
+ 214              		.loc 1 165 9 is_stmt 1 view .LVU65
+ 166:drivers/gpio/gpio.c **** 
+ 215              		.loc 1 166 9 view .LVU66
+ 166:drivers/gpio/gpio.c **** 
+ 216              		.loc 1 166 21 is_stmt 0 view .LVU67
+ 217 0056 2160     		str	r1, [r4]
+ 169:drivers/gpio/gpio.c ****         pupdr &= ~(0x3UL << (pin_num * 2));  /* 00 = No pull-up/pull-down */
+ 218              		.loc 1 169 9 is_stmt 1 view .LVU68
+ 169:drivers/gpio/gpio.c ****         pupdr &= ~(0x3UL << (pin_num * 2));  /* 00 = No pull-up/pull-down */
+ 219              		.loc 1 169 18 is_stmt 0 view .LVU69
+ 220 0058 E368     		ldr	r3, [r4, #12]
+ 221              	.LVL20:
+ 170:drivers/gpio/gpio.c ****         port->PUPDR = pupdr;
+ 222              		.loc 1 170 9 is_stmt 1 view .LVU70
+ 170:drivers/gpio/gpio.c ****         port->PUPDR = pupdr;
+ 223              		.loc 1 170 15 is_stmt 0 view .LVU71
+ 224 005a 1840     		ands	r0, r0, r3
+ 225              	.LVL21:
+ 171:drivers/gpio/gpio.c ****     }
+ 226              		.loc 1 171 9 is_stmt 1 view .LVU72
+ 171:drivers/gpio/gpio.c ****     }
+ 227              		.loc 1 171 21 is_stmt 0 view .LVU73
+ 228 005c E060     		str	r0, [r4, #12]
+ 229              	.LBE3:
+ 182:drivers/gpio/gpio.c **** }
+ 230              		.loc 1 182 12 view .LVU74
+ 231 005e 0020     		movs	r0, #0
+ 232              	.LVL22:
+ 182:drivers/gpio/gpio.c **** }
+ 233              		.loc 1 182 12 view .LVU75
+ 234 0060 F6E7     		b	.L10
+ 235              	.LVL23:
+ 236              	.L13:
+ 237              	.LCFI1:
+ 238              		.cfi_def_cfa_offset 0
+ 239              		.cfi_restore 4
+ 240              		.cfi_restore 5
+ 241              		.cfi_restore 6
+ 242              		.cfi_restore 14
+ 130:drivers/gpio/gpio.c ****     }
+ 243              		.loc 1 130 16 view .LVU76
+ 244 0062 4FF0FF30 		mov	r0, #-1
+ 245              	.LVL24:
+ 246              		.loc 1 183 1 view .LVU77
+ 247 0066 7047     		bx	lr
+ 248              	.LVL25:
+ 249              	.L14:
+ 250              	.LCFI2:
+ 251              		.cfi_def_cfa_offset 16
+ 252              		.cfi_offset 4, -16
+ARM GAS  /tmp/ccNZ5Q4i.s 			page 9
+
+
+ 253              		.cfi_offset 5, -12
+ 254              		.cfi_offset 6, -8
+ 255              		.cfi_offset 14, -4
+ 179:drivers/gpio/gpio.c ****     }
+ 256              		.loc 1 179 16 view .LVU78
+ 257 0068 4FF0FF30 		mov	r0, #-1
+ 258 006c F0E7     		b	.L10
+ 259              	.L20:
+ 260 006e 00BF     		.align	2
+ 261              	.L19:
+ 262 0070 00000000 		.word	pin_map
+ 263              		.cfi_endproc
+ 264              	.LFE13:
+ 266              		.section	.text.gpio_set_state,"ax",%progbits
+ 267              		.align	1
+ 268              		.global	gpio_set_state
+ 269              		.syntax unified
+ 270              		.thumb
+ 271              		.thumb_func
+ 273              	gpio_set_state:
+ 274              	.LVL26:
+ 275              	.LFB14:
+ 184:drivers/gpio/gpio.c **** 
+ 185:drivers/gpio/gpio.c **** int gpio_set_state(gpio_pin_t pin, bool level)
+ 186:drivers/gpio/gpio.c **** {
+ 276              		.loc 1 186 1 is_stmt 1 view -0
+ 277              		.cfi_startproc
+ 278              		@ args = 0, pretend = 0, frame = 0
+ 279              		@ frame_needed = 0, uses_anonymous_args = 0
+ 280              		@ link register save eliminated.
+ 187:drivers/gpio/gpio.c ****     /* Validate pin number */
+ 188:drivers/gpio/gpio.c ****     if (pin >= PIN_MAP_SIZE)
+ 281              		.loc 1 188 5 view .LVU80
+ 282              		.loc 1 188 8 is_stmt 0 view .LVU81
+ 283 0000 1F28     		cmp	r0, #31
+ 284 0002 13D8     		bhi	.L24
+ 189:drivers/gpio/gpio.c ****     {
+ 190:drivers/gpio/gpio.c ****     #if CONFIG_DRIVERS_DEBUG_ENABLED == 1
+ 191:drivers/gpio/gpio.c ****         sys_log_print_event_from_module(SYS_LOG_ERROR, GPIO_MODULE_NAME, "Invalid pin to set!");
+ 192:drivers/gpio/gpio.c ****         sys_log_new_line();
+ 193:drivers/gpio/gpio.c ****     #endif /* CONFIG_DRIVERS_DEBUG_ENABLED */
+ 194:drivers/gpio/gpio.c ****         return -1;  /* Invalid GPIO pin */
+ 195:drivers/gpio/gpio.c ****     }
+ 196:drivers/gpio/gpio.c **** 
+ 197:drivers/gpio/gpio.c ****     GPIO_TypeDef *port = pin_map[pin].port;
+ 285              		.loc 1 197 5 is_stmt 1 view .LVU82
+ 286              		.loc 1 197 19 is_stmt 0 view .LVU83
+ 287 0004 0B4B     		ldr	r3, .L25
+ 288 0006 53F83020 		ldr	r2, [r3, r0, lsl #3]
+ 289              	.LVL27:
+ 198:drivers/gpio/gpio.c ****     uint8_t pin_num = pin_map[pin].pin;
+ 290              		.loc 1 198 5 is_stmt 1 view .LVU84
+ 291              		.loc 1 198 13 is_stmt 0 view .LVU85
+ 292 000a 03EBC003 		add	r3, r3, r0, lsl #3
+ 293 000e 1B79     		ldrb	r3, [r3, #4]	@ zero_extendqisi2
+ 294              	.LVL28:
+ 199:drivers/gpio/gpio.c **** 
+ARM GAS  /tmp/ccNZ5Q4i.s 			page 10
+
+
+ 200:drivers/gpio/gpio.c ****     /* Use BSRR register for atomic bit set/reset */
+ 201:drivers/gpio/gpio.c ****     /* BSRR bits [15:0] = set bits, bits [31:16] = reset bits */
+ 202:drivers/gpio/gpio.c ****     if (level)
+ 295              		.loc 1 202 5 is_stmt 1 view .LVU86
+ 296              		.loc 1 202 8 is_stmt 0 view .LVU87
+ 297 0010 29B1     		cbz	r1, .L23
+ 203:drivers/gpio/gpio.c ****     {
+ 204:drivers/gpio/gpio.c ****         port->BSRR = (1UL << pin_num);  /* Set bit */
+ 298              		.loc 1 204 9 is_stmt 1 view .LVU88
+ 299              		.loc 1 204 27 is_stmt 0 view .LVU89
+ 300 0012 0121     		movs	r1, #1
+ 301              	.LVL29:
+ 302              		.loc 1 204 27 view .LVU90
+ 303 0014 01FA03F3 		lsl	r3, r1, r3
+ 304              	.LVL30:
+ 305              		.loc 1 204 20 view .LVU91
+ 306 0018 9361     		str	r3, [r2, #24]
+ 205:drivers/gpio/gpio.c ****     }
+ 206:drivers/gpio/gpio.c ****     else
+ 207:drivers/gpio/gpio.c ****     {
+ 208:drivers/gpio/gpio.c ****         port->BSRR = (1UL << (pin_num + 16));  /* Reset bit */
+ 209:drivers/gpio/gpio.c ****     }
+ 210:drivers/gpio/gpio.c **** 
+ 211:drivers/gpio/gpio.c ****     return 0;
+ 307              		.loc 1 211 12 view .LVU92
+ 308 001a 0020     		movs	r0, #0
+ 309              	.LVL31:
+ 310              		.loc 1 211 12 view .LVU93
+ 311 001c 7047     		bx	lr
+ 312              	.LVL32:
+ 313              	.L23:
+ 208:drivers/gpio/gpio.c ****     }
+ 314              		.loc 1 208 9 is_stmt 1 view .LVU94
+ 208:drivers/gpio/gpio.c ****     }
+ 315              		.loc 1 208 39 is_stmt 0 view .LVU95
+ 316 001e 1033     		adds	r3, r3, #16
+ 317              	.LVL33:
+ 208:drivers/gpio/gpio.c ****     }
+ 318              		.loc 1 208 27 view .LVU96
+ 319 0020 0121     		movs	r1, #1
+ 320              	.LVL34:
+ 208:drivers/gpio/gpio.c ****     }
+ 321              		.loc 1 208 27 view .LVU97
+ 322 0022 01FA03F3 		lsl	r3, r1, r3
+ 323              	.LVL35:
+ 208:drivers/gpio/gpio.c ****     }
+ 324              		.loc 1 208 20 view .LVU98
+ 325 0026 9361     		str	r3, [r2, #24]
+ 326              		.loc 1 211 12 view .LVU99
+ 327 0028 0020     		movs	r0, #0
+ 328              	.LVL36:
+ 329              		.loc 1 211 12 view .LVU100
+ 330 002a 7047     		bx	lr
+ 331              	.LVL37:
+ 332              	.L24:
+ 194:drivers/gpio/gpio.c ****     }
+ 333              		.loc 1 194 16 view .LVU101
+ARM GAS  /tmp/ccNZ5Q4i.s 			page 11
+
+
+ 334 002c 4FF0FF30 		mov	r0, #-1
+ 335              	.LVL38:
+ 212:drivers/gpio/gpio.c **** }
+ 336              		.loc 1 212 1 view .LVU102
+ 337 0030 7047     		bx	lr
+ 338              	.L26:
+ 339 0032 00BF     		.align	2
+ 340              	.L25:
+ 341 0034 00000000 		.word	pin_map
+ 342              		.cfi_endproc
+ 343              	.LFE14:
+ 345              		.section	.text.gpio_get_state,"ax",%progbits
+ 346              		.align	1
+ 347              		.global	gpio_get_state
+ 348              		.syntax unified
+ 349              		.thumb
+ 350              		.thumb_func
+ 352              	gpio_get_state:
+ 353              	.LVL39:
+ 354              	.LFB15:
+ 213:drivers/gpio/gpio.c **** 
+ 214:drivers/gpio/gpio.c **** int gpio_get_state(gpio_pin_t pin)
+ 215:drivers/gpio/gpio.c **** {
+ 355              		.loc 1 215 1 is_stmt 1 view -0
+ 356              		.cfi_startproc
+ 357              		@ args = 0, pretend = 0, frame = 0
+ 358              		@ frame_needed = 0, uses_anonymous_args = 0
+ 359              		@ link register save eliminated.
+ 216:drivers/gpio/gpio.c ****     /* Validate pin number */
+ 217:drivers/gpio/gpio.c ****     if (pin >= PIN_MAP_SIZE)
+ 360              		.loc 1 217 5 view .LVU104
+ 361              		.loc 1 217 8 is_stmt 0 view .LVU105
+ 362 0000 1F28     		cmp	r0, #31
+ 363 0002 0CD8     		bhi	.L29
+ 218:drivers/gpio/gpio.c ****     {
+ 219:drivers/gpio/gpio.c ****     #if CONFIG_DRIVERS_DEBUG_ENABLED == 1
+ 220:drivers/gpio/gpio.c ****         sys_log_print_event_from_module(SYS_LOG_ERROR, GPIO_MODULE_NAME, "Invalid pin to read!");
+ 221:drivers/gpio/gpio.c ****         sys_log_new_line();
+ 222:drivers/gpio/gpio.c ****     #endif /* CONFIG_DRIVERS_DEBUG_ENABLED */
+ 223:drivers/gpio/gpio.c ****         return -1;  /* Invalid GPIO pin */
+ 224:drivers/gpio/gpio.c ****     }
+ 225:drivers/gpio/gpio.c **** 
+ 226:drivers/gpio/gpio.c ****     GPIO_TypeDef *port = pin_map[pin].port;
+ 364              		.loc 1 226 5 is_stmt 1 view .LVU106
+ 365              		.loc 1 226 19 is_stmt 0 view .LVU107
+ 366 0004 084B     		ldr	r3, .L31
+ 367 0006 53F83010 		ldr	r1, [r3, r0, lsl #3]
+ 368              	.LVL40:
+ 227:drivers/gpio/gpio.c ****     uint8_t pin_num = pin_map[pin].pin;
+ 369              		.loc 1 227 5 is_stmt 1 view .LVU108
+ 370              		.loc 1 227 13 is_stmt 0 view .LVU109
+ 371 000a 03EBC003 		add	r3, r3, r0, lsl #3
+ 372 000e 1A79     		ldrb	r2, [r3, #4]	@ zero_extendqisi2
+ 373              	.LVL41:
+ 228:drivers/gpio/gpio.c **** 
+ 229:drivers/gpio/gpio.c ****     /* Read pin state from IDR (Input Data Register) */
+ 230:drivers/gpio/gpio.c ****     if (port->IDR & (1UL << pin_num))
+ARM GAS  /tmp/ccNZ5Q4i.s 			page 12
+
+
+ 374              		.loc 1 230 5 is_stmt 1 view .LVU110
+ 375              		.loc 1 230 13 is_stmt 0 view .LVU111
+ 376 0010 0B69     		ldr	r3, [r1, #16]
+ 377              	.LVL42:
+ 378              		.loc 1 230 9 view .LVU112
+ 379 0012 D340     		lsrs	r3, r3, r2
+ 380              		.loc 1 230 8 view .LVU113
+ 381 0014 13F0010F 		tst	r3, #1
+ 382 0018 04D0     		beq	.L30
+ 231:drivers/gpio/gpio.c ****     {
+ 232:drivers/gpio/gpio.c ****         return 1;  /* Pin is HIGH */
+ 383              		.loc 1 232 16 view .LVU114
+ 384 001a 0120     		movs	r0, #1
+ 385              	.LVL43:
+ 386              		.loc 1 232 16 view .LVU115
+ 387 001c 7047     		bx	lr
+ 388              	.LVL44:
+ 389              	.L29:
+ 223:drivers/gpio/gpio.c ****     }
+ 390              		.loc 1 223 16 view .LVU116
+ 391 001e 4FF0FF30 		mov	r0, #-1
+ 392              	.LVL45:
+ 223:drivers/gpio/gpio.c ****     }
+ 393              		.loc 1 223 16 view .LVU117
+ 394 0022 7047     		bx	lr
+ 395              	.LVL46:
+ 396              	.L30:
+ 233:drivers/gpio/gpio.c ****     }
+ 234:drivers/gpio/gpio.c ****     else
+ 235:drivers/gpio/gpio.c ****     {
+ 236:drivers/gpio/gpio.c ****         return 0;  /* Pin is LOW */
+ 397              		.loc 1 236 16 view .LVU118
+ 398 0024 0020     		movs	r0, #0
+ 399              	.LVL47:
+ 237:drivers/gpio/gpio.c ****     }
+ 238:drivers/gpio/gpio.c **** }
+ 400              		.loc 1 238 1 view .LVU119
+ 401 0026 7047     		bx	lr
+ 402              	.L32:
+ 403              		.align	2
+ 404              	.L31:
+ 405 0028 00000000 		.word	pin_map
+ 406              		.cfi_endproc
+ 407              	.LFE15:
+ 409              		.section	.text.gpio_toggle,"ax",%progbits
+ 410              		.align	1
+ 411              		.global	gpio_toggle
+ 412              		.syntax unified
+ 413              		.thumb
+ 414              		.thumb_func
+ 416              	gpio_toggle:
+ 417              	.LVL48:
+ 418              	.LFB16:
+ 239:drivers/gpio/gpio.c **** 
+ 240:drivers/gpio/gpio.c **** int gpio_toggle(gpio_pin_t pin)
+ 241:drivers/gpio/gpio.c **** {
+ 419              		.loc 1 241 1 is_stmt 1 view -0
+ARM GAS  /tmp/ccNZ5Q4i.s 			page 13
+
+
+ 420              		.cfi_startproc
+ 421              		@ args = 0, pretend = 0, frame = 0
+ 422              		@ frame_needed = 0, uses_anonymous_args = 0
+ 423              		@ link register save eliminated.
+ 242:drivers/gpio/gpio.c ****     /* Validate pin number */
+ 243:drivers/gpio/gpio.c ****     if (pin >= PIN_MAP_SIZE)
+ 424              		.loc 1 243 5 view .LVU121
+ 425              		.loc 1 243 8 is_stmt 0 view .LVU122
+ 426 0000 1F28     		cmp	r0, #31
+ 427 0002 0CD8     		bhi	.L35
+ 244:drivers/gpio/gpio.c ****     {
+ 245:drivers/gpio/gpio.c ****     #if CONFIG_DRIVERS_DEBUG_ENABLED == 1
+ 246:drivers/gpio/gpio.c ****         sys_log_print_event_from_module(SYS_LOG_ERROR, GPIO_MODULE_NAME, "Invalid pin to toggle!");
+ 247:drivers/gpio/gpio.c ****         sys_log_new_line();
+ 248:drivers/gpio/gpio.c ****     #endif /* CONFIG_DRIVERS_DEBUG_ENABLED */
+ 249:drivers/gpio/gpio.c ****         return -1;  /* Invalid GPIO pin */
+ 250:drivers/gpio/gpio.c ****     }
+ 251:drivers/gpio/gpio.c **** 
+ 252:drivers/gpio/gpio.c ****     GPIO_TypeDef *port = pin_map[pin].port;
+ 428              		.loc 1 252 5 is_stmt 1 view .LVU123
+ 429              		.loc 1 252 19 is_stmt 0 view .LVU124
+ 430 0004 074B     		ldr	r3, .L36
+ 431 0006 53F83010 		ldr	r1, [r3, r0, lsl #3]
+ 432              	.LVL49:
+ 253:drivers/gpio/gpio.c ****     uint8_t pin_num = pin_map[pin].pin;
+ 433              		.loc 1 253 5 is_stmt 1 view .LVU125
+ 434              		.loc 1 253 13 is_stmt 0 view .LVU126
+ 435 000a 03EBC003 		add	r3, r3, r0, lsl #3
+ 436 000e 1879     		ldrb	r0, [r3, #4]	@ zero_extendqisi2
+ 437              	.LVL50:
+ 254:drivers/gpio/gpio.c **** 
+ 255:drivers/gpio/gpio.c ****     /* Toggle pin state using ODR register */
+ 256:drivers/gpio/gpio.c ****     port->ODR ^= (1UL << pin_num);
+ 438              		.loc 1 256 5 is_stmt 1 view .LVU127
+ 439              		.loc 1 256 9 is_stmt 0 view .LVU128
+ 440 0010 4B69     		ldr	r3, [r1, #20]
+ 441              	.LVL51:
+ 442              		.loc 1 256 23 view .LVU129
+ 443 0012 0122     		movs	r2, #1
+ 444 0014 8240     		lsls	r2, r2, r0
+ 445              		.loc 1 256 15 view .LVU130
+ 446 0016 5340     		eors	r3, r3, r2
+ 447 0018 4B61     		str	r3, [r1, #20]
+ 257:drivers/gpio/gpio.c **** 
+ 258:drivers/gpio/gpio.c ****     return 0;
+ 448              		.loc 1 258 5 is_stmt 1 view .LVU131
+ 449              		.loc 1 258 12 is_stmt 0 view .LVU132
+ 450 001a 0020     		movs	r0, #0
+ 451 001c 7047     		bx	lr
+ 452              	.LVL52:
+ 453              	.L35:
+ 249:drivers/gpio/gpio.c ****     }
+ 454              		.loc 1 249 16 view .LVU133
+ 455 001e 4FF0FF30 		mov	r0, #-1
+ 456              	.LVL53:
+ 259:drivers/gpio/gpio.c **** }
+ 457              		.loc 1 259 1 view .LVU134
+ARM GAS  /tmp/ccNZ5Q4i.s 			page 14
+
+
+ 458 0022 7047     		bx	lr
+ 459              	.L37:
+ 460              		.align	2
+ 461              	.L36:
+ 462 0024 00000000 		.word	pin_map
+ 463              		.cfi_endproc
+ 464              	.LFE16:
+ 466              		.section	.rodata.pin_map,"a"
+ 467              		.align	2
+ 470              	pin_map:
+ 471 0000 00000048 		.word	1207959552
+ 472 0004 00       		.byte	0
+ 473 0005 000000   		.space	3
+ 474 0008 00000048 		.word	1207959552
+ 475 000c 01       		.byte	1
+ 476 000d 000000   		.space	3
+ 477 0010 00000048 		.word	1207959552
+ 478 0014 02       		.byte	2
+ 479 0015 000000   		.space	3
+ 480 0018 00000048 		.word	1207959552
+ 481 001c 03       		.byte	3
+ 482 001d 000000   		.space	3
+ 483 0020 00000048 		.word	1207959552
+ 484 0024 04       		.byte	4
+ 485 0025 000000   		.space	3
+ 486 0028 00000048 		.word	1207959552
+ 487 002c 05       		.byte	5
+ 488 002d 000000   		.space	3
+ 489 0030 00000048 		.word	1207959552
+ 490 0034 06       		.byte	6
+ 491 0035 000000   		.space	3
+ 492 0038 00000048 		.word	1207959552
+ 493 003c 07       		.byte	7
+ 494 003d 000000   		.space	3
+ 495 0040 00040048 		.word	1207960576
+ 496 0044 00       		.byte	0
+ 497 0045 000000   		.space	3
+ 498 0048 00040048 		.word	1207960576
+ 499 004c 01       		.byte	1
+ 500 004d 000000   		.space	3
+ 501 0050 00040048 		.word	1207960576
+ 502 0054 02       		.byte	2
+ 503 0055 000000   		.space	3
+ 504 0058 00040048 		.word	1207960576
+ 505 005c 03       		.byte	3
+ 506 005d 000000   		.space	3
+ 507 0060 00040048 		.word	1207960576
+ 508 0064 04       		.byte	4
+ 509 0065 000000   		.space	3
+ 510 0068 00040048 		.word	1207960576
+ 511 006c 05       		.byte	5
+ 512 006d 000000   		.space	3
+ 513 0070 00040048 		.word	1207960576
+ 514 0074 06       		.byte	6
+ 515 0075 000000   		.space	3
+ 516 0078 00040048 		.word	1207960576
+ 517 007c 07       		.byte	7
+ARM GAS  /tmp/ccNZ5Q4i.s 			page 15
+
+
+ 518 007d 000000   		.space	3
+ 519 0080 00040048 		.word	1207960576
+ 520 0084 08       		.byte	8
+ 521 0085 000000   		.space	3
+ 522 0088 00040048 		.word	1207960576
+ 523 008c 09       		.byte	9
+ 524 008d 000000   		.space	3
+ 525 0090 00040048 		.word	1207960576
+ 526 0094 0A       		.byte	10
+ 527 0095 000000   		.space	3
+ 528 0098 00040048 		.word	1207960576
+ 529 009c 0B       		.byte	11
+ 530 009d 000000   		.space	3
+ 531 00a0 00040048 		.word	1207960576
+ 532 00a4 0C       		.byte	12
+ 533 00a5 000000   		.space	3
+ 534 00a8 00040048 		.word	1207960576
+ 535 00ac 0D       		.byte	13
+ 536 00ad 000000   		.space	3
+ 537 00b0 00040048 		.word	1207960576
+ 538 00b4 0E       		.byte	14
+ 539 00b5 000000   		.space	3
+ 540 00b8 00040048 		.word	1207960576
+ 541 00bc 0F       		.byte	15
+ 542 00bd 000000   		.space	3
+ 543 00c0 00080048 		.word	1207961600
+ 544 00c4 00       		.byte	0
+ 545 00c5 000000   		.space	3
+ 546 00c8 00080048 		.word	1207961600
+ 547 00cc 01       		.byte	1
+ 548 00cd 000000   		.space	3
+ 549 00d0 00080048 		.word	1207961600
+ 550 00d4 02       		.byte	2
+ 551 00d5 000000   		.space	3
+ 552 00d8 00080048 		.word	1207961600
+ 553 00dc 03       		.byte	3
+ 554 00dd 000000   		.space	3
+ 555 00e0 00080048 		.word	1207961600
+ 556 00e4 04       		.byte	4
+ 557 00e5 000000   		.space	3
+ 558 00e8 00080048 		.word	1207961600
+ 559 00ec 05       		.byte	5
+ 560 00ed 000000   		.space	3
+ 561 00f0 00080048 		.word	1207961600
+ 562 00f4 06       		.byte	6
+ 563 00f5 000000   		.space	3
+ 564 00f8 00080048 		.word	1207961600
+ 565 00fc 07       		.byte	7
+ 566 00fd 000000   		.space	3
+ 567              		.text
+ 568              	.Letext0:
+ 569              		.file 2 "/usr/lib/gcc/arm-none-eabi/13.2.1/include/stdint.h"
+ 570              		.file 3 "./stm32l476xx.h"
+ 571              		.file 4 "drivers/gpio/gpio.h"
+ARM GAS  /tmp/ccNZ5Q4i.s 			page 16
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 gpio.c
+     /tmp/ccNZ5Q4i.s:21     .text.gpio_enable_port_clock:00000000 $t
+     /tmp/ccNZ5Q4i.s:26     .text.gpio_enable_port_clock:00000000 gpio_enable_port_clock
+     /tmp/ccNZ5Q4i.s:82     .text.gpio_enable_port_clock:00000038 $d
+     /tmp/ccNZ5Q4i.s:89     .text.gpio_init:00000000 $t
+     /tmp/ccNZ5Q4i.s:95     .text.gpio_init:00000000 gpio_init
+     /tmp/ccNZ5Q4i.s:262    .text.gpio_init:00000070 $d
+     /tmp/ccNZ5Q4i.s:470    .rodata.pin_map:00000000 pin_map
+     /tmp/ccNZ5Q4i.s:267    .text.gpio_set_state:00000000 $t
+     /tmp/ccNZ5Q4i.s:273    .text.gpio_set_state:00000000 gpio_set_state
+     /tmp/ccNZ5Q4i.s:341    .text.gpio_set_state:00000034 $d
+     /tmp/ccNZ5Q4i.s:346    .text.gpio_get_state:00000000 $t
+     /tmp/ccNZ5Q4i.s:352    .text.gpio_get_state:00000000 gpio_get_state
+     /tmp/ccNZ5Q4i.s:405    .text.gpio_get_state:00000028 $d
+     /tmp/ccNZ5Q4i.s:410    .text.gpio_toggle:00000000 $t
+     /tmp/ccNZ5Q4i.s:416    .text.gpio_toggle:00000000 gpio_toggle
+     /tmp/ccNZ5Q4i.s:462    .text.gpio_toggle:00000024 $d
+     /tmp/ccNZ5Q4i.s:467    .rodata.pin_map:00000000 $d
+
+NO UNDEFINED SYMBOLS

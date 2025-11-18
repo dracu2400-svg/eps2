@@ -1,4 +1,4 @@
-ARM GAS  /tmp/ccmsCeBL.s 			page 1
+ARM GAS  /tmp/ccNv8T2n.s 			page 1
 
 
    1              		.cpu cortex-m4
@@ -58,7 +58,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
   27:system/sys_log/sys_log.c ****  * 
   28:system/sys_log/sys_log.c ****  * \version 0.1.2
   29:system/sys_log/sys_log.c ****  * 
-ARM GAS  /tmp/ccmsCeBL.s 			page 2
+ARM GAS  /tmp/ccNv8T2n.s 			page 2
 
 
   30:system/sys_log/sys_log.c ****  * \date 2020/10/22
@@ -118,7 +118,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
   84:system/sys_log/sys_log.c ****     }
   85:system/sys_log/sys_log.c ****     else
   86:system/sys_log/sys_log.c ****     {
-ARM GAS  /tmp/ccmsCeBL.s 			page 3
+ARM GAS  /tmp/ccNv8T2n.s 			page 3
 
 
   87:system/sys_log/sys_log.c ****         return -1;
@@ -178,7 +178,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  141:system/sys_log/sys_log.c ****             case SYS_LOG_INFO:
  142:system/sys_log/sys_log.c ****                 sys_log_set_color(SYS_LOG_INFO_COLOR);
  143:system/sys_log/sys_log.c ****                 break;
-ARM GAS  /tmp/ccmsCeBL.s 			page 4
+ARM GAS  /tmp/ccNv8T2n.s 			page 4
 
 
  144:system/sys_log/sys_log.c ****             case SYS_LOG_WARNING:
@@ -238,7 +238,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  198:system/sys_log/sys_log.c ****         {
  199:system/sys_log/sys_log.c ****             sys_log_print_byte(msg[i]);
  200:system/sys_log/sys_log.c ****             i++;
-ARM GAS  /tmp/ccmsCeBL.s 			page 5
+ARM GAS  /tmp/ccNv8T2n.s 			page 5
 
 
  201:system/sys_log/sys_log.c ****         }
@@ -298,7 +298,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  255:system/sys_log/sys_log.c ****         else
  256:system/sys_log/sys_log.c ****         {
  257:system/sys_log/sys_log.c ****             uint8_t uint_str[10];               /* 32-bits = decimal with 10 digits */
-ARM GAS  /tmp/ccmsCeBL.s 			page 6
+ARM GAS  /tmp/ccNv8T2n.s 			page 6
 
 
  258:system/sys_log/sys_log.c **** 
@@ -358,7 +358,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  312:system/sys_log/sys_log.c ****         }
  313:system/sys_log/sys_log.c **** 
  314:system/sys_log/sys_log.c ****         sys_log_print_digit((uint8_t)(hex >> 4) & 0x0F);
-ARM GAS  /tmp/ccmsCeBL.s 			page 7
+ARM GAS  /tmp/ccNv8T2n.s 			page 7
 
 
  315:system/sys_log/sys_log.c ****         sys_log_print_digit((uint8_t)(hex & 0x0F));
@@ -418,7 +418,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
   33              		@ frame_needed = 0, uses_anonymous_args = 0
   34              		.loc 1 365 1 is_stmt 0 view .LVU1
   35 0000 08B5     		push	{r3, lr}
-ARM GAS  /tmp/ccmsCeBL.s 			page 8
+ARM GAS  /tmp/ccNv8T2n.s 			page 8
 
 
   36              	.LCFI0:
@@ -478,7 +478,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
   84              		.cfi_offset 5, -8
   85              		.cfi_offset 14, -4
  194:system/sys_log/sys_log.c ****     {
-ARM GAS  /tmp/ccmsCeBL.s 			page 9
+ARM GAS  /tmp/ccNv8T2n.s 			page 9
 
 
   86              		.loc 1 194 5 is_stmt 1 view .LVU10
@@ -538,7 +538,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  128              	.LBE2:
  129              		.cfi_endproc
  130              	.LFE11:
-ARM GAS  /tmp/ccmsCeBL.s 			page 10
+ARM GAS  /tmp/ccNv8T2n.s 			page 10
 
 
  132              		.section	.rodata.sys_log_reset_color.str1.4,"aMS",%progbits,1
@@ -598,7 +598,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  180              		.align	2
  181              	.LC5:
  182 0020 1B5B313B 		.ascii	"\033[1;34m\000"
-ARM GAS  /tmp/ccmsCeBL.s 			page 11
+ARM GAS  /tmp/ccNv8T2n.s 			page 11
 
 
  182      33346D00 
@@ -658,7 +658,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
   96:system/sys_log/sys_log.c ****             break;
  230              		.loc 1 96 13 is_stmt 0 view .LVU30
  231 0014 FFF7FEFF 		bl	sys_log_print_msg
-ARM GAS  /tmp/ccmsCeBL.s 			page 12
+ARM GAS  /tmp/ccNv8T2n.s 			page 12
 
 
  232              	.LVL14:
@@ -718,7 +718,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  273 0034 FFF7FEFF 		bl	sys_log_print_msg
  274              	.LVL26:
  109:system/sys_log/sys_log.c ****         case SYS_LOG_COLOR_MAGENTA:
-ARM GAS  /tmp/ccmsCeBL.s 			page 13
+ARM GAS  /tmp/ccNv8T2n.s 			page 13
 
 
  275              		.loc 1 109 13 is_stmt 1 view .LVU44
@@ -778,7 +778,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  318 005c 08000000 		.word	.LC2
  319 0060 10000000 		.word	.LC3
  320 0064 18000000 		.word	.LC4
-ARM GAS  /tmp/ccmsCeBL.s 			page 14
+ARM GAS  /tmp/ccNv8T2n.s 			page 14
 
 
  321 0068 20000000 		.word	.LC5
@@ -838,7 +838,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  369              	.LVL40:
  213:system/sys_log/sys_log.c **** 
  370              		.loc 1 213 1 is_stmt 0 view .LVU64
-ARM GAS  /tmp/ccmsCeBL.s 			page 15
+ARM GAS  /tmp/ccNv8T2n.s 			page 15
 
 
  371 0018 F6E7     		b	.L34
@@ -898,7 +898,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  225:system/sys_log/sys_log.c ****         }
  417              		.loc 1 225 13 is_stmt 0 view .LVU75
  418 0012 C0B2     		uxtb	r0, r0
-ARM GAS  /tmp/ccmsCeBL.s 			page 16
+ARM GAS  /tmp/ccNv8T2n.s 			page 16
 
 
  419              	.LVL43:
@@ -958,7 +958,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  467              		.cfi_startproc
  468              		@ args = 0, pretend = 0, frame = 16
  469              		@ frame_needed = 0, uses_anonymous_args = 0
-ARM GAS  /tmp/ccmsCeBL.s 			page 17
+ARM GAS  /tmp/ccNv8T2n.s 			page 17
 
 
  249:system/sys_log/sys_log.c ****     {
@@ -1018,7 +1018,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  512 001a FFF7FEFF 		bl	__aeabi_ui2d
  513              	.LVL55:
  259:system/sys_log/sys_log.c **** 
-ARM GAS  /tmp/ccmsCeBL.s 			page 18
+ARM GAS  /tmp/ccNv8T2n.s 			page 18
 
 
  514              		.loc 1 259 30 view .LVU96
@@ -1078,7 +1078,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  555              		.loc 1 262 32 discriminator 3 view .LVU109
  556 005a DBB2     		uxtb	r3, r3
  557              	.LVL63:
-ARM GAS  /tmp/ccmsCeBL.s 			page 19
+ARM GAS  /tmp/ccNv8T2n.s 			page 19
 
 
  262:system/sys_log/sys_log.c ****             {
@@ -1138,7 +1138,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  603              	.LFE15:
  605              		.section	.rodata.sys_log_print_int.str1.4,"aMS",%progbits,1
  606              		.align	2
-ARM GAS  /tmp/ccmsCeBL.s 			page 20
+ARM GAS  /tmp/ccNv8T2n.s 			page 20
 
 
  607              	.LC10:
@@ -1198,7 +1198,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  282:system/sys_log/sys_log.c ****             sys_log_print_msg("-");
  652              		.loc 1 282 18 is_stmt 0 view .LVU129
  653 0016 0028     		cmp	r0, #0
-ARM GAS  /tmp/ccmsCeBL.s 			page 21
+ARM GAS  /tmp/ccNv8T2n.s 			page 21
 
 
  654 0018 B8BF     		it	lt
@@ -1258,7 +1258,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  706              		.cfi_offset 14, -4
  707 0002 2DED028B 		vpush.64	{d8}
  708              	.LCFI14:
-ARM GAS  /tmp/ccmsCeBL.s 			page 22
+ARM GAS  /tmp/ccNv8T2n.s 			page 22
 
 
  709              		.cfi_def_cfa_offset 24
@@ -1318,7 +1318,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  749 0038 FFF7FEFF 		bl	__aeabi_ui2d
  750              	.LVL83:
  751 003c 41EC110B 		vmov	d1, r0, r1
-ARM GAS  /tmp/ccmsCeBL.s 			page 23
+ARM GAS  /tmp/ccNv8T2n.s 			page 23
 
 
  752 0040 9FED130B 		vldr.64	d0, .L78
@@ -1378,7 +1378,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  797 0074 FFF7FEFF 		bl	__aeabi_f2d
  798              	.LVL93:
  799 0078 41EC100B 		vmov	d0, r0, r1
-ARM GAS  /tmp/ccmsCeBL.s 			page 24
+ARM GAS  /tmp/ccNv8T2n.s 			page 24
 
 
  800 007c FFF7FEFF 		bl	abs
@@ -1438,7 +1438,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  848              		.loc 1 291 1 view .LVU163
  849 0008 10B5     		push	{r4, lr}
  850              	.LCFI17:
-ARM GAS  /tmp/ccmsCeBL.s 			page 25
+ARM GAS  /tmp/ccNv8T2n.s 			page 25
 
 
  851              		.cfi_def_cfa_offset 8
@@ -1498,7 +1498,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  892              		.loc 1 299 13 view .LVU176
  893 003a C4F30360 		ubfx	r0, r4, #24, #4
  894 003e FFF7FEFF 		bl	sys_log_print_digit
-ARM GAS  /tmp/ccmsCeBL.s 			page 26
+ARM GAS  /tmp/ccNv8T2n.s 			page 26
 
 
  895              	.LVL104:
@@ -1558,7 +1558,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  944              		.loc 1 321 31 is_stmt 0 view .LVU183
  945 0000 0B4B     		ldr	r3, .L105
  946 0002 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
-ARM GAS  /tmp/ccmsCeBL.s 			page 27
+ARM GAS  /tmp/ccNv8T2n.s 			page 27
 
 
  321:system/sys_log/sys_log.c ****     {
@@ -1618,7 +1618,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  330:system/sys_log/sys_log.c ****             }
  992              		.loc 1 330 17 is_stmt 0 view .LVU193
  993              	.LBE8:
-ARM GAS  /tmp/ccmsCeBL.s 			page 28
+ARM GAS  /tmp/ccNv8T2n.s 			page 28
 
 
  320:system/sys_log/sys_log.c ****     if (sys_log_current_level >= CONFIG_GLOBAL_LOG_LEVEL)
@@ -1678,7 +1678,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1043              		.cfi_offset 4, -12
  1044              		.cfi_offset 5, -8
  1045              		.cfi_offset 14, -4
-ARM GAS  /tmp/ccmsCeBL.s 			page 29
+ARM GAS  /tmp/ccNv8T2n.s 			page 29
 
 
  236:system/sys_log/sys_log.c ****     {
@@ -1738,7 +1738,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1087 0020 00000000 		.word	sys_log_current_level
  1088              	.LBE10:
  1089              		.cfi_endproc
-ARM GAS  /tmp/ccmsCeBL.s 			page 30
+ARM GAS  /tmp/ccNv8T2n.s 			page 30
 
 
  1090              	.LFE14:
@@ -1798,7 +1798,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1136 001c FFF7FEFF 		bl	sys_log_reset_color
  1137              	.LVL130:
  381:system/sys_log/sys_log.c **** }
-ARM GAS  /tmp/ccmsCeBL.s 			page 31
+ARM GAS  /tmp/ccNv8T2n.s 			page 31
 
 
  1138              		.loc 1 381 1 is_stmt 0 view .LVU221
@@ -1858,7 +1858,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1186 000a 38BD     		pop	{r3, r4, r5, pc}
  1187              	.LVL133:
  1188              	.L125:
-ARM GAS  /tmp/ccmsCeBL.s 			page 32
+ARM GAS  /tmp/ccNv8T2n.s 			page 32
 
 
  156:system/sys_log/sys_log.c **** 
@@ -1918,7 +1918,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1230              		.loc 1 148 17 view .LVU242
  1231 0040 0120     		movs	r0, #1
  1232 0042 FFF7FEFF 		bl	sys_log_set_color
-ARM GAS  /tmp/ccmsCeBL.s 			page 33
+ARM GAS  /tmp/ccNv8T2n.s 			page 33
 
 
  1233              	.LVL140:
@@ -1978,7 +1978,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1281 000c 0446     		mov	r4, r0
  1282 000e 0E46     		mov	r6, r1
  1283 0010 1546     		mov	r5, r2
-ARM GAS  /tmp/ccmsCeBL.s 			page 34
+ARM GAS  /tmp/ccNv8T2n.s 			page 34
 
 
  163:system/sys_log/sys_log.c **** 
@@ -2038,7 +2038,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1326              	.LVL150:
  190:system/sys_log/sys_log.c **** 
  1327              		.loc 1 190 1 is_stmt 0 view .LVU263
-ARM GAS  /tmp/ccmsCeBL.s 			page 35
+ARM GAS  /tmp/ccNv8T2n.s 			page 35
 
 
  1328 004e 70BD     		pop	{r4, r5, r6, pc}
@@ -2098,7 +2098,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1365              	.LC21:
  1366 0098 756E6465 		.ascii	"under certain conditions.\000"
  1366      72206365 
-ARM GAS  /tmp/ccmsCeBL.s 			page 36
+ARM GAS  /tmp/ccNv8T2n.s 			page 36
 
 
  1366      72746169 
@@ -2158,7 +2158,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1401 000e FFF7FEFF 		bl	sys_log_print_msg
  1402              	.LVL156:
  388:system/sys_log/sys_log.c ****     sys_log_new_line();
-ARM GAS  /tmp/ccmsCeBL.s 			page 37
+ARM GAS  /tmp/ccNv8T2n.s 			page 37
 
 
  1403              		.loc 1 388 5 view .LVU272
@@ -2218,7 +2218,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1447 0058 E8000000 		.word	.LC23
  1448              		.cfi_endproc
  1449              	.LFE22:
-ARM GAS  /tmp/ccmsCeBL.s 			page 38
+ARM GAS  /tmp/ccNv8T2n.s 			page 38
 
 
  1451              		.section	.rodata.sys_log_print_splash_screen.str1.4,"aMS",%progbits,1
@@ -2278,7 +2278,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1470      205F5F5F 
  1470      7C205F20 
  1471 0143 7C5F5F20 		.ascii	"|__   ..........\000"
-ARM GAS  /tmp/ccmsCeBL.s 			page 39
+ARM GAS  /tmp/ccNv8T2n.s 			page 39
 
 
  1471      20202E2E 
@@ -2338,7 +2338,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1490 0264 2E2E2E2E 		.ascii	"..........        _____ ____  ____    ____    ___  "
  1490      2E2E2E2E 
  1490      2E2E2020 
-ARM GAS  /tmp/ccmsCeBL.s 			page 40
+ARM GAS  /tmp/ccNv8T2n.s 			page 40
 
 
  1490      20202020 
@@ -2398,7 +2398,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1507      00
  1508              		.section	.text.sys_log_print_splash_screen,"ax",%progbits
  1509              		.align	1
-ARM GAS  /tmp/ccmsCeBL.s 			page 41
+ARM GAS  /tmp/ccNv8T2n.s 			page 41
 
 
  1510              		.global	sys_log_print_splash_screen
@@ -2458,7 +2458,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  409:system/sys_log/sys_log.c ****     sys_log_new_line();
  1555              		.loc 1 409 5 view .LVU291
  1556 002a FFF7FEFF 		bl	sys_log_new_line
-ARM GAS  /tmp/ccmsCeBL.s 			page 42
+ARM GAS  /tmp/ccNv8T2n.s 			page 42
 
 
  1557              	.LVL174:
@@ -2518,7 +2518,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1599 0068 FFF7FEFF 		bl	sys_log_new_line
  1600              	.LVL186:
  422:system/sys_log/sys_log.c ****     sys_log_print_msg("..........       |_|                                     ..........");
-ARM GAS  /tmp/ccmsCeBL.s 			page 43
+ARM GAS  /tmp/ccNv8T2n.s 			page 43
 
 
  1601              		.loc 1 422 5 view .LVU304
@@ -2578,7 +2578,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1643              		.loc 1 434 5 view .LVU316
  1644 00a8 1E48     		ldr	r0, .L146+52
  1645 00aa FFF7FEFF 		bl	sys_log_print_msg
-ARM GAS  /tmp/ccmsCeBL.s 			page 44
+ARM GAS  /tmp/ccNv8T2n.s 			page 44
 
 
  1646              	.LVL199:
@@ -2638,7 +2638,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1688              	.LVL211:
  447:system/sys_log/sys_log.c ****     sys_log_new_line();
  1689              		.loc 1 447 5 view .LVU329
-ARM GAS  /tmp/ccmsCeBL.s 			page 45
+ARM GAS  /tmp/ccNv8T2n.s 			page 45
 
 
  1690 00ea FFF7FEFF 		bl	sys_log_new_line
@@ -2698,7 +2698,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  453:system/sys_log/sys_log.c ****     sys_log_print_msg(FIRMWARE_VERSION);
  1740              		.loc 1 453 5 view .LVU333
  1741 0008 0448     		ldr	r0, .L150+4
-ARM GAS  /tmp/ccmsCeBL.s 			page 46
+ARM GAS  /tmp/ccNv8T2n.s 			page 46
 
 
  1742 000a FFF7FEFF 		bl	sys_log_print_msg
@@ -2758,7 +2758,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1778      654C6162 
  1778      00
  1779 007d 000000   		.align	2
-ARM GAS  /tmp/ccmsCeBL.s 			page 47
+ARM GAS  /tmp/ccNv8T2n.s 			page 47
 
 
  1780              	.LC45:
@@ -2818,7 +2818,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1823 0016 1B4C     		ldr	r4, .L156
  1824 0018 2046     		mov	r0, r4
  1825 001a FFF7FEFF 		bl	sys_log_print_msg
-ARM GAS  /tmp/ccmsCeBL.s 			page 48
+ARM GAS  /tmp/ccNv8T2n.s 			page 48
 
 
  1826              	.LVL220:
@@ -2878,7 +2878,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1868 0058 1248     		ldr	r0, .L156+32
  1869 005a FFF7FEFF 		bl	sys_log_print_msg
  1870              	.LVL232:
-ARM GAS  /tmp/ccmsCeBL.s 			page 49
+ARM GAS  /tmp/ccNv8T2n.s 			page 49
 
 
   75:system/sys_log/sys_log.c ****         sys_log_print_msg("===================================================================");
@@ -2938,7 +2938,7 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1918              	sys_log_current_level:
  1919 0000 01       		.byte	1
  1920              		.text
-ARM GAS  /tmp/ccmsCeBL.s 			page 50
+ARM GAS  /tmp/ccNv8T2n.s 			page 50
 
 
  1921              	.Letext0:
@@ -2948,88 +2948,88 @@ ARM GAS  /tmp/ccmsCeBL.s 			page 1
  1925              		.file 5 "freertos/include/task.h"
  1926              		.file 6 "<built-in>"
  1927              		.file 7 "/usr/include/newlib/math.h"
-ARM GAS  /tmp/ccmsCeBL.s 			page 51
+ARM GAS  /tmp/ccNv8T2n.s 			page 51
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 sys_log.c
-     /tmp/ccmsCeBL.s:21     .text.sys_log_print_byte:00000000 $t
-     /tmp/ccmsCeBL.s:27     .text.sys_log_print_byte:00000000 sys_log_print_byte
-     /tmp/ccmsCeBL.s:60     .text.sys_log_print_byte:00000010 $d
-     /tmp/ccmsCeBL.s:1918   .data.sys_log_current_level:00000000 sys_log_current_level
-     /tmp/ccmsCeBL.s:65     .text.sys_log_print_msg:00000000 $t
-     /tmp/ccmsCeBL.s:71     .text.sys_log_print_msg:00000000 sys_log_print_msg
-     /tmp/ccmsCeBL.s:127    .text.sys_log_print_msg:00000020 $d
-     /tmp/ccmsCeBL.s:133    .rodata.sys_log_reset_color.str1.4:00000000 $d
-     /tmp/ccmsCeBL.s:137    .text.sys_log_reset_color:00000000 $t
-     /tmp/ccmsCeBL.s:143    .text.sys_log_reset_color:00000000 sys_log_reset_color
-     /tmp/ccmsCeBL.s:163    .text.sys_log_reset_color:0000000c $d
-     /tmp/ccmsCeBL.s:168    .rodata.sys_log_set_color.str1.4:00000000 $d
-     /tmp/ccmsCeBL.s:193    .text.sys_log_set_color:00000000 $t
-     /tmp/ccmsCeBL.s:199    .text.sys_log_set_color:00000000 sys_log_set_color
-     /tmp/ccmsCeBL.s:217    .text.sys_log_set_color:0000000a $d
-     /tmp/ccmsCeBL.s:225    .text.sys_log_set_color:00000012 $t
-     /tmp/ccmsCeBL.s:317    .text.sys_log_set_color:00000058 $d
-     /tmp/ccmsCeBL.s:329    .rodata.sys_log_new_line.str1.4:00000000 $d
-     /tmp/ccmsCeBL.s:333    .text.sys_log_new_line:00000000 $t
-     /tmp/ccmsCeBL.s:339    .text.sys_log_new_line:00000000 sys_log_new_line
-     /tmp/ccmsCeBL.s:375    .text.sys_log_new_line:0000001c $d
-     /tmp/ccmsCeBL.s:381    .text.sys_log_print_digit:00000000 $t
-     /tmp/ccmsCeBL.s:387    .text.sys_log_print_digit:00000000 sys_log_print_digit
-     /tmp/ccmsCeBL.s:449    .text.sys_log_print_digit:0000002c $d
-     /tmp/ccmsCeBL.s:457    .text.sys_log_print_uint:00000000 $t
-     /tmp/ccmsCeBL.s:463    .text.sys_log_print_uint:00000000 sys_log_print_uint
-     /tmp/ccmsCeBL.s:598    .text.sys_log_print_uint:0000007c $d
-     /tmp/ccmsCeBL.s:606    .rodata.sys_log_print_int.str1.4:00000000 $d
-     /tmp/ccmsCeBL.s:610    .text.sys_log_print_int:00000000 $t
-     /tmp/ccmsCeBL.s:616    .text.sys_log_print_int:00000000 sys_log_print_int
-     /tmp/ccmsCeBL.s:673    .text.sys_log_print_int:00000028 $d
-     /tmp/ccmsCeBL.s:681    .rodata.sys_log_print_float.str1.4:00000000 $d
-     /tmp/ccmsCeBL.s:686    .text.sys_log_print_float:00000000 $t
-     /tmp/ccmsCeBL.s:692    .text.sys_log_print_float:00000000 sys_log_print_float
-     /tmp/ccmsCeBL.s:812    .text.sys_log_print_float:00000090 $d
-     /tmp/ccmsCeBL.s:823    .rodata.sys_log_print_hex.str1.4:00000000 $d
-     /tmp/ccmsCeBL.s:827    .text.sys_log_print_hex:00000000 $t
-     /tmp/ccmsCeBL.s:833    .text.sys_log_print_hex:00000000 sys_log_print_hex
-     /tmp/ccmsCeBL.s:920    .text.sys_log_print_hex:00000068 $d
-     /tmp/ccmsCeBL.s:926    .rodata.sys_log_dump_hex.str1.4:00000000 $d
-     /tmp/ccmsCeBL.s:930    .text.sys_log_dump_hex:00000000 $t
-     /tmp/ccmsCeBL.s:936    .text.sys_log_dump_hex:00000000 sys_log_dump_hex
-     /tmp/ccmsCeBL.s:1019   .text.sys_log_dump_hex:00000030 $d
-     /tmp/ccmsCeBL.s:1025   .text.sys_log_print_str:00000000 $t
-     /tmp/ccmsCeBL.s:1031   .text.sys_log_print_str:00000000 sys_log_print_str
-     /tmp/ccmsCeBL.s:1087   .text.sys_log_print_str:00000020 $d
-     /tmp/ccmsCeBL.s:1093   .rodata.sys_log_print_system_time.str1.4:00000000 $d
-     /tmp/ccmsCeBL.s:1100   .text.sys_log_print_system_time:00000000 $t
-     /tmp/ccmsCeBL.s:1106   .text.sys_log_print_system_time:00000000 sys_log_print_system_time
-     /tmp/ccmsCeBL.s:1143   .text.sys_log_print_system_time:00000024 $d
-     /tmp/ccmsCeBL.s:1149   .rodata.sys_log_print_event.str1.4:00000000 $d
-     /tmp/ccmsCeBL.s:1153   .text.sys_log_print_event:00000000 $t
-     /tmp/ccmsCeBL.s:1159   .text.sys_log_print_event:00000000 sys_log_print_event
-     /tmp/ccmsCeBL.s:1239   .text.sys_log_print_event:00000048 $d
-     /tmp/ccmsCeBL.s:1245   .rodata.sys_log_print_event_from_module.str1.4:00000000 $d
-ARM GAS  /tmp/ccmsCeBL.s 			page 52
+     /tmp/ccNv8T2n.s:21     .text.sys_log_print_byte:00000000 $t
+     /tmp/ccNv8T2n.s:27     .text.sys_log_print_byte:00000000 sys_log_print_byte
+     /tmp/ccNv8T2n.s:60     .text.sys_log_print_byte:00000010 $d
+     /tmp/ccNv8T2n.s:1918   .data.sys_log_current_level:00000000 sys_log_current_level
+     /tmp/ccNv8T2n.s:65     .text.sys_log_print_msg:00000000 $t
+     /tmp/ccNv8T2n.s:71     .text.sys_log_print_msg:00000000 sys_log_print_msg
+     /tmp/ccNv8T2n.s:127    .text.sys_log_print_msg:00000020 $d
+     /tmp/ccNv8T2n.s:133    .rodata.sys_log_reset_color.str1.4:00000000 $d
+     /tmp/ccNv8T2n.s:137    .text.sys_log_reset_color:00000000 $t
+     /tmp/ccNv8T2n.s:143    .text.sys_log_reset_color:00000000 sys_log_reset_color
+     /tmp/ccNv8T2n.s:163    .text.sys_log_reset_color:0000000c $d
+     /tmp/ccNv8T2n.s:168    .rodata.sys_log_set_color.str1.4:00000000 $d
+     /tmp/ccNv8T2n.s:193    .text.sys_log_set_color:00000000 $t
+     /tmp/ccNv8T2n.s:199    .text.sys_log_set_color:00000000 sys_log_set_color
+     /tmp/ccNv8T2n.s:217    .text.sys_log_set_color:0000000a $d
+     /tmp/ccNv8T2n.s:225    .text.sys_log_set_color:00000012 $t
+     /tmp/ccNv8T2n.s:317    .text.sys_log_set_color:00000058 $d
+     /tmp/ccNv8T2n.s:329    .rodata.sys_log_new_line.str1.4:00000000 $d
+     /tmp/ccNv8T2n.s:333    .text.sys_log_new_line:00000000 $t
+     /tmp/ccNv8T2n.s:339    .text.sys_log_new_line:00000000 sys_log_new_line
+     /tmp/ccNv8T2n.s:375    .text.sys_log_new_line:0000001c $d
+     /tmp/ccNv8T2n.s:381    .text.sys_log_print_digit:00000000 $t
+     /tmp/ccNv8T2n.s:387    .text.sys_log_print_digit:00000000 sys_log_print_digit
+     /tmp/ccNv8T2n.s:449    .text.sys_log_print_digit:0000002c $d
+     /tmp/ccNv8T2n.s:457    .text.sys_log_print_uint:00000000 $t
+     /tmp/ccNv8T2n.s:463    .text.sys_log_print_uint:00000000 sys_log_print_uint
+     /tmp/ccNv8T2n.s:598    .text.sys_log_print_uint:0000007c $d
+     /tmp/ccNv8T2n.s:606    .rodata.sys_log_print_int.str1.4:00000000 $d
+     /tmp/ccNv8T2n.s:610    .text.sys_log_print_int:00000000 $t
+     /tmp/ccNv8T2n.s:616    .text.sys_log_print_int:00000000 sys_log_print_int
+     /tmp/ccNv8T2n.s:673    .text.sys_log_print_int:00000028 $d
+     /tmp/ccNv8T2n.s:681    .rodata.sys_log_print_float.str1.4:00000000 $d
+     /tmp/ccNv8T2n.s:686    .text.sys_log_print_float:00000000 $t
+     /tmp/ccNv8T2n.s:692    .text.sys_log_print_float:00000000 sys_log_print_float
+     /tmp/ccNv8T2n.s:812    .text.sys_log_print_float:00000090 $d
+     /tmp/ccNv8T2n.s:823    .rodata.sys_log_print_hex.str1.4:00000000 $d
+     /tmp/ccNv8T2n.s:827    .text.sys_log_print_hex:00000000 $t
+     /tmp/ccNv8T2n.s:833    .text.sys_log_print_hex:00000000 sys_log_print_hex
+     /tmp/ccNv8T2n.s:920    .text.sys_log_print_hex:00000068 $d
+     /tmp/ccNv8T2n.s:926    .rodata.sys_log_dump_hex.str1.4:00000000 $d
+     /tmp/ccNv8T2n.s:930    .text.sys_log_dump_hex:00000000 $t
+     /tmp/ccNv8T2n.s:936    .text.sys_log_dump_hex:00000000 sys_log_dump_hex
+     /tmp/ccNv8T2n.s:1019   .text.sys_log_dump_hex:00000030 $d
+     /tmp/ccNv8T2n.s:1025   .text.sys_log_print_str:00000000 $t
+     /tmp/ccNv8T2n.s:1031   .text.sys_log_print_str:00000000 sys_log_print_str
+     /tmp/ccNv8T2n.s:1087   .text.sys_log_print_str:00000020 $d
+     /tmp/ccNv8T2n.s:1093   .rodata.sys_log_print_system_time.str1.4:00000000 $d
+     /tmp/ccNv8T2n.s:1100   .text.sys_log_print_system_time:00000000 $t
+     /tmp/ccNv8T2n.s:1106   .text.sys_log_print_system_time:00000000 sys_log_print_system_time
+     /tmp/ccNv8T2n.s:1143   .text.sys_log_print_system_time:00000024 $d
+     /tmp/ccNv8T2n.s:1149   .rodata.sys_log_print_event.str1.4:00000000 $d
+     /tmp/ccNv8T2n.s:1153   .text.sys_log_print_event:00000000 $t
+     /tmp/ccNv8T2n.s:1159   .text.sys_log_print_event:00000000 sys_log_print_event
+     /tmp/ccNv8T2n.s:1239   .text.sys_log_print_event:00000048 $d
+     /tmp/ccNv8T2n.s:1245   .rodata.sys_log_print_event_from_module.str1.4:00000000 $d
+ARM GAS  /tmp/ccNv8T2n.s 			page 52
 
 
-     /tmp/ccmsCeBL.s:1249   .text.sys_log_print_event_from_module:00000000 $t
-     /tmp/ccmsCeBL.s:1255   .text.sys_log_print_event_from_module:00000000 sys_log_print_event_from_module
-     /tmp/ccmsCeBL.s:1347   .text.sys_log_print_event_from_module:00000060 $d
-     /tmp/ccmsCeBL.s:1354   .rodata.sys_log_print_license_msg.str1.4:00000000 $d
-     /tmp/ccmsCeBL.s:1375   .text.sys_log_print_license_msg:00000000 $t
-     /tmp/ccmsCeBL.s:1381   .text.sys_log_print_license_msg:00000000 sys_log_print_license_msg
-     /tmp/ccmsCeBL.s:1442   .text.sys_log_print_license_msg:00000044 $d
-     /tmp/ccmsCeBL.s:1452   .rodata.sys_log_print_splash_screen.str1.4:00000000 $d
-     /tmp/ccmsCeBL.s:1509   .text.sys_log_print_splash_screen:00000000 $t
-     /tmp/ccmsCeBL.s:1515   .text.sys_log_print_splash_screen:00000000 sys_log_print_splash_screen
-     /tmp/ccmsCeBL.s:1697   .text.sys_log_print_splash_screen:000000f0 $d
-     /tmp/ccmsCeBL.s:1715   .rodata.sys_log_print_firmware_version.str1.4:00000000 $d
-     /tmp/ccmsCeBL.s:1719   .text.sys_log_print_firmware_version:00000000 $t
-     /tmp/ccmsCeBL.s:1725   .text.sys_log_print_firmware_version:00000000 sys_log_print_firmware_version
-     /tmp/ccmsCeBL.s:1753   .text.sys_log_print_firmware_version:00000018 $d
-     /tmp/ccmsCeBL.s:1760   .rodata.sys_log_init.str1.4:00000000 $d
-     /tmp/ccmsCeBL.s:1789   .text.sys_log_init:00000000 $t
-     /tmp/ccmsCeBL.s:1795   .text.sys_log_init:00000000 sys_log_init
-     /tmp/ccmsCeBL.s:1903   .text.sys_log_init:00000084 $d
+     /tmp/ccNv8T2n.s:1249   .text.sys_log_print_event_from_module:00000000 $t
+     /tmp/ccNv8T2n.s:1255   .text.sys_log_print_event_from_module:00000000 sys_log_print_event_from_module
+     /tmp/ccNv8T2n.s:1347   .text.sys_log_print_event_from_module:00000060 $d
+     /tmp/ccNv8T2n.s:1354   .rodata.sys_log_print_license_msg.str1.4:00000000 $d
+     /tmp/ccNv8T2n.s:1375   .text.sys_log_print_license_msg:00000000 $t
+     /tmp/ccNv8T2n.s:1381   .text.sys_log_print_license_msg:00000000 sys_log_print_license_msg
+     /tmp/ccNv8T2n.s:1442   .text.sys_log_print_license_msg:00000044 $d
+     /tmp/ccNv8T2n.s:1452   .rodata.sys_log_print_splash_screen.str1.4:00000000 $d
+     /tmp/ccNv8T2n.s:1509   .text.sys_log_print_splash_screen:00000000 $t
+     /tmp/ccNv8T2n.s:1515   .text.sys_log_print_splash_screen:00000000 sys_log_print_splash_screen
+     /tmp/ccNv8T2n.s:1697   .text.sys_log_print_splash_screen:000000f0 $d
+     /tmp/ccNv8T2n.s:1715   .rodata.sys_log_print_firmware_version.str1.4:00000000 $d
+     /tmp/ccNv8T2n.s:1719   .text.sys_log_print_firmware_version:00000000 $t
+     /tmp/ccNv8T2n.s:1725   .text.sys_log_print_firmware_version:00000000 sys_log_print_firmware_version
+     /tmp/ccNv8T2n.s:1753   .text.sys_log_print_firmware_version:00000018 $d
+     /tmp/ccNv8T2n.s:1760   .rodata.sys_log_init.str1.4:00000000 $d
+     /tmp/ccNv8T2n.s:1789   .text.sys_log_init:00000000 $t
+     /tmp/ccNv8T2n.s:1795   .text.sys_log_init:00000000 sys_log_init
+     /tmp/ccNv8T2n.s:1903   .text.sys_log_init:00000084 $d
 
 UNDEFINED SYMBOLS
 sys_log_uart_write_byte
